@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ワンバランス 経営ダッシュボード</title>
+<link rel="manifest" href="manifest.json?v=1">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ワンバランス">
+<meta name="theme-color" content="#DB444C">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --red:#DB444C;
+    --red-dark:#B83039;
+    --teal:#5BB9CD;
+    --teal-dark:#3E97AB;
+    --bg:#F6F3EF;
+    --card:#FFFFFF;
+    --text:#2B2B2B;
+    --text-light:#767676;
+    --border:#EAE4DC;
+    --radius:18px;
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-top:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    touch-action:manipulation;
+    overscroll-behavior:none;
+  }
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","M PLUS Rounded 1c","Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:calc(78px + var(--safe-bottom));
+  }
+  button, input, textarea{
+    font-family:inherit;
+    touch-action:manipulation;
+  }
+  a{ color:inherit; }
+
+  /* ===== Header ===== */
+  header.app-header{
+    background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);
+    color:#fff;
+    padding:calc(18px + var(--safe-top)) 20px 18px;
+    text-align:center;
+    position:sticky;
+    top:0;
+    z-index:20;
+    box-shadow:0 2px 10px rgba(0,0,0,0.12);
+  }
+  header.app-header .logo-row{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  header.app-header img{
+    width:34px;height:34px;border-radius:9px;
+  }
+  header.app-header h1{
+    font-size:18px;
+    margin:0;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+  header.app-header p{
+    margin:4px 0 0;
+    font-size:11.5px;
+    opacity:.85;
+  }
+
+  /* ===== Tabs (mobile: bottom fixed / desktop: top) ===== */
+  nav.tabs{
+    display:flex;
+    background:#fff;
+    border-top:1px solid var(--border);
+    position:fixed;
+    bottom:0;left:0;right:0;
+    z-index:30;
+    padding-bottom:var(--safe-bottom);
+    box-shadow:0 -2px 10px rgba(0,0,0,0.06);
+  }
+  nav.tabs button{
+    flex:1;
+    background:none;border:none;
+    padding:9px 2px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--text-light);
+    font-size:10.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  nav.tabs button .ic{ font-size:19px; line-height:1; }
+  nav.tabs button.active{ color:var(--red); }
+  nav.tabs button.active .ic{ transform:translateY(-1px); }
+
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:18px 16px 24px;
+  }
+  section.tab{ display:none; }
+  section.tab.active{ display:block; animation:fadeIn .25s ease; }
+  @keyframes fadeIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+  h2.section-title{
+    font-size:16px;
+    font-weight:800;
+    margin:4px 0 14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  h2.section-title .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--red);
+  }
+
+  /* ===== Philosophy ===== */
+  .phi-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:22px 20px;
+    margin-bottom:14px;
+    box-shadow:0 3px 14px rgba(0,0,0,0.05);
+    border:1px solid var(--border);
+  }
+  .phi-label{
+    display:inline-block;
+    font-size:11px;
+    font-weight:800;
+    color:#fff;
+    background:var(--red);
+    padding:4px 12px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  .phi-card.teal .phi-label{ background:var(--teal); }
+  .phi-card.dark .phi-label{ background:var(--text); }
+  .phi-text{
+    font-size:17px;
+    font-weight:800;
+    line-height:1.6;
+    margin:0 0 6px;
+  }
+  .phi-sub{
+    font-size:13px;
+    color:var(--text-light);
+    line-height:1.7;
+    margin:0;
+  }
+
+  /* ===== Share ===== */
+  .share-list{ display:flex;flex-direction:column;gap:12px; margin-bottom:16px;}
+  .share-item{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    display:flex;
+    gap:14px;
+    align-items:center;
+  }
+  .share-qr{
+    width:84px;height:84px;flex:none;
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .share-qr img{ width:100%;height:100%; }
+  .share-info{ flex:1;min-width:0; }
+  .share-info .name{ font-weight:800;font-size:14px;margin:0 0 4px; }
+  .share-info .url{
+    font-size:12px;color:var(--text-light);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    margin:0 0 8px;
+  }
+  .share-actions{ display:flex;gap:8px; }
+  .btn{
+    border:none;
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn-copy{ background:var(--teal); color:#fff; }
+  .btn-copy.copied{ background:#3FA85A; }
+  .btn-del{ background:#F1EBE4; color:var(--text-light); }
+  .btn-primary{
+    background:var(--red);color:#fff;
+    padding:12px 18px;border-radius:12px;font-size:14px;
+    width:100%;
+  }
+  .add-card{
+    background:var(--card);
+    border:1.5px dashed #D9CFC4;
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .add-card.open{ border-style:solid; }
+  .add-toggle{
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    color:var(--red);font-weight:800;font-size:14px;
+    background:none;border:none;width:100%;padding:6px;cursor:pointer;
+  }
+  .add-form{ display:none;margin-top:12px;flex-direction:column;gap:10px; }
+  .add-form.show{ display:flex; }
+  .add-form input{
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:11px 12px;
+    font-size:14px;
+    width:100%;
+  }
+  .empty-hint{
+    text-align:center;color:var(--text-light);font-size:12.5px;
+    padding:18px 0;
+  }
+
+  /* ===== Goals ===== */
+  .goal-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  @media (min-width:760px){
+    .goal-grid{ grid-template-columns:1fr 1fr; }
+  }
+  .goal-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+  }
+  .goal-card h3{
+    font-size:15px;margin:0 0 12px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .goal-card h3 .badge{
+    width:28px;height:28px;border-radius:9px;
+    background:var(--teal);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;flex:none;
+  }
+  .goal-row{ margin-bottom:10px; }
+  .goal-row label{
+    display:block;font-size:11.5px;font-weight:700;
+    color:var(--text-light);margin-bottom:4px;
+  }
+  .goal-row input, .goal-row textarea{
+    width:100%;
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:9px 11px;
+    font-size:14px;
+    background:#FCFAF8;
+  }
+  .goal-row textarea{ min-height:64px;resize:vertical;line-height:1.5; }
+  .goal-nums{ display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
+  .save-hint{
+    font-size:11px;color:var(--teal-dark);
+    text-align:right;margin-top:2px;height:14px;
+  }
+
+  /* ===== Emergency ===== */
+  .em-hero{
+    background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);
+    color:#fff;border-radius:var(--radius);
+    padding:20px;text-align:center;margin-bottom:16px;
+  }
+  .em-hero .em-icon{ font-size:32px; }
+  .em-hero h2{ margin:6px 0 4px;font-size:19px;font-weight:900; }
+  .em-hero p{ margin:0;font-size:12.5px;opacity:.9; }
+  .em-call{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#fff;color:var(--red);
+    font-weight:800;font-size:14px;
+    padding:10px 20px;border-radius:999px;
+    margin-top:12px;text-decoration:none;
+  }
+  .em-steps{ list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px; }
+  .em-steps li{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:14px;padding:14px 14px 14px 12px;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .em-steps .num{
+    flex:none;width:26px;height:26px;border-radius:50%;
+    background:var(--teal);color:#fff;font-weight:800;font-size:13px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .em-steps .step-text{ font-size:13.5px;line-height:1.6; }
+  .em-steps .step-text b{ font-size:14px; }
+  .em-note{
+    font-size:11.5px;color:var(--text-light);
+    background:#F1EBE4;border-radius:12px;padding:12px 14px;line-height:1.6;
+  }
+
+  ::selection{ background:var(--teal);color:#fff; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo-row">
+    <img src="apple-touch-icon.png?v=1" alt="logo">
+    <h1>ワンバランス 経営ダッシュボード</h1>
+  </div>
+  <p id="today-label"></p>
+</header>
+
+<main>
+
+  <!-- 会社理念 -->
+  <section class="tab active" id="tab-philosophy">
+    <h2 class="section-title"><span class="dot"></span>会社理念</h2>
+
+    <div class="phi-card">
+      <span class="phi-label">フィロソフィー</span>
+      <p class="phi-text">心と体を元気に。カッコよく、素敵にする。</p>
+    </div>
+
+    <div class="phi-card teal">
+      <span class="phi-label">ミッション</span>
+      <p class="phi-text">ボクシング革命を起こす。</p>
+      <p class="phi-sub">「小さい・怖い・キツい」というイメージを、「楽しい」に変える。</p>
+    </div>
+
+    <div class="phi-card dark">
+      <span class="phi-label">ビジョン</span>
+      <p class="phi-text">日本一、始めやすいボクシングジムにする。</p>
+    </div>
+  </section>
+
+  <!-- シェア -->
+  <section class="tab" id="tab-share">
+    <h2 class="section-title"><span class="dot"></span>シェア（QRコード・URL）</h2>
+
+    <div class="share-list" id="share-list"></div>
+
+    <div class="add-card" id="add-card">
+      <button class="add-toggle" id="add-toggle">＋ QR・URLを追加</button>
+      <div class="add-form" id="add-form">
+        <input type="text" id="add-name" placeholder="名称（例：公式LINE、ジムHP、YouTube）">
+        <input type="url" id="add-url" placeholder="URL（https://から入力）">
+        <button class="btn btn-primary" id="add-submit">追加してQRコードを作成</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 事業目標 -->
+  <section class="tab" id="tab-goals">
+    <h2 class="section-title"><span class="dot"></span>各事業 今年の目標</h2>
+    <div class="goal-grid" id="goal-grid"></div>
+  </section>
+
+  <!-- 緊急マニュアル -->
+  <section class="tab" id="tab-emergency">
+    <h2 class="section-title"><span class="dot"></span>緊急マニュアル</h2>
+
+    <div class="em-hero">
+      <div class="em-icon">⚠️</div>
+      <h2>熱中症になったら</h2>
+      <p>気づいた人がすぐ動く。落ち着いて順番に対応してください。</p>
+      <a class="em-call" href="tel:119">📞 119番へ電話する</a>
+    </div>
+
+    <ol class="em-steps">
+      <li><span class="num">1</span><span class="step-text"><b>意識・反応を確認する。</b><br>呼びかけて反応があるか、受け答えができるかを見る。</span></li>
+      <li><span class="num">2</span><span class="step-text"><b>涼しい場所へ移動させる。</b><br>日陰、またはエアコンの効いた室内へ。衣服（ベルト・胴着など）を緩める。</span></li>
+      <li><span class="num">3</span><span class="step-text"><b>体を冷やす。</b><br>首・脇の下・太ももの付け根を保冷剤や濡れタオルで冷却。うちわ・扇風機で送風する。</span></li>
+      <li><span class="num">4</span><span class="step-text"><b>水分・塩分を補給する。</b><br>本人の意識がはっきりしていて自分で飲める場合のみ、スポーツドリンクや経口補水液を少しずつ。</span></li>
+      <li><span class="num">5</span><span class="step-text"><b>症状を観察する。</b><br>めまい、頭痛、吐き気、けいれん、意識がもうろうとしていないかを確認する。</span></li>
+      <li><span class="num">6</span><span class="step-text"><b>危険サインがあれば、ただちに119番。</b><br>「呼びかけへの反応がない」「けいれんしている」「自分で水が飲めない」「症状が良くならない」場合は迷わず救急要請。</span></li>
+      <li><span class="num">7</span><span class="step-text"><b>到着まで冷却と観察を続ける。</b><br>一人にせず、状態の変化を見守る。</span></li>
+    </ol>
+
+    <div class="em-note">
+      ※本マニュアルは一般的な熱中症対応の目安です。医学的な診断・処置に代わるものではありません。少しでも異常を感じたら、ためらわず119番へ連絡してください。
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="tab-philosophy"><span class="ic">🏆</span>理念</button>
+  <button class="tab-btn" data-tab="tab-share"><span class="ic">🔗</span>シェア</button>
+  <button class="tab-btn" data-tab="tab-goals"><span class="ic">🎯</span>事業目標</button>
+  <button class="tab-btn" data-tab="tab-emergency"><span class="ic">⚠️</span>緊急</button>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- 日付表示 ---- */
+  var d = new Date();
+  document.getElementById('today-label').textContent =
+    d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 更新';
+
+  /* ---- タブ切り替え ---- */
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabSections = document.querySelectorAll('section.tab');
+  tabBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      tabSections.forEach(function(s){ s.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      window.scrollTo({top:0, behavior:'instant'});
+    });
+  });
+
+  /* =========================================================
+     事業目標（現在の会員数 / 単月目標 / 年間目標 / やること）
+     ========================================================= */
+  var BUSINESSES = [
+    { id:'boxing',  icon:'🥊', name:'ボクシングジム' },
+    { id:'onetre',  icon:'💪', name:'ONE-TRE パーソナル' },
+    { id:'bodycare',icon:'🧘', name:'ボディケア' },
+    { id:'youtube', icon:'▶️', name:'YouTube' }
+  ];
+  var GOALS_KEY = 'wb_goals_v1';
+
+  function loadGoals(){
+    try{
+      return JSON.parse(localStorage.getItem(GOALS_KEY)) || {};
+    }catch(e){ return {}; }
+  }
+  function saveGoals(data){
+    localStorage.setItem(GOALS_KEY, JSON.stringify(data));
+  }
+
+  var goalsData = loadGoals();
+  var grid = document.getElementById('goal-grid');
+
+  BUSINESSES.forEach(function(biz){
+    var g = goalsData[biz.id] || { members:'', monthly:'', yearly:'', actions:'' };
+
+    var card = document.createElement('div');
+    card.className = 'goal-card';
+    card.innerHTML =
+      '<h3><span class="badge">' + biz.icon + '</span>' + biz.name + '</h3>' +
+      '<div class="goal-nums">' +
+        '<div class="goal-row"><label>現在の会員数</label><input type="text" inputmode="numeric" data-field="members" value="' + esc(g.members) + '" placeholder="例：120"></div>' +
+        '<div class="goal-row"><label>単月目標</label><input type="text" inputmode="numeric" data-field="monthly" value="' + esc(g.monthly) + '" placeholder="例：10"></div>' +
+        '<div class="goal-row"><label>年間目標</label><input type="text" inputmode="numeric" data-field="yearly" value="' + esc(g.yearly) + '" placeholder="例：150"></div>' +
+      '</div>' +
+      '<div class="goal-row"><label>そのために何をするか</label><textarea data-field="actions" placeholder="具体的なアクションを記入">' + esc(g.actions) + '</textarea></div>' +
+      '<div class="save-hint" data-hint></div>';
+
+    grid.appendChild(card);
+
+    var hintEl = card.querySelector('[data-hint]');
+    var timer = null;
+    card.querySelectorAll('[data-field]').forEach(function(el){
+      el.addEventListener('input', function(){
+        var current = loadGoals();
+        var entry = current[biz.id] || {};
+        entry[el.dataset.field] = el.value;
+        current[biz.id] = entry;
+        saveGoals(current);
+        hintEl.textContent = '保存しました';
+        clearTimeout(timer);
+        timer = setTimeout(function(){ hintEl.textContent=''; }, 1200);
+      });
+    });
+  });
+
+  function esc(str){
+    if(!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* =========================================================
+     シェア（QRコード & URL / 自由に追加）
+     ========================================================= */
+  var LINKS_KEY = 'wb_share_links_v1';
+
+  function loadLinks(){
+    try{
+      return JSON.parse(localStorage.getItem(LINKS_KEY)) || [];
+    }catch(e){ return []; }
+  }
+  function saveLinks(list){
+    localStorage.setItem(LINKS_KEY, JSON.stringify(list));
+  }
+
+  var shareListEl = document.getElementById('share-list');
+
+  function renderLinks(){
+    var links = loadLinks();
+    shareListEl.innerHTML = '';
+
+    if(links.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty-hint';
+      empty.textContent = 'まだ登録がありません。下の「＋ QR・URLを追加」から登録してください。';
+      shareListEl.appendChild(empty);
+      return;
+    }
+
+    links.forEach(function(link, idx){
+      var item = document.createElement('div');
+      item.className = 'share-item';
+
+      var qrBox = document.createElement('div');
+      qrBox.className = 'share-qr';
+      item.appendChild(qrBox);
+
+      var info = document.createElement('div');
+      info.className = 'share-info';
+      info.innerHTML =
+        '<p class="name">' + esc(link.name) + '</p>' +
+        '<p class="url">' + esc(link.url) + '</p>' +
+        '<div class="share-actions">' +
+          '<button class="btn btn-copy" data-copy="' + idx + '">URLをコピー</button>' +
+          '<button class="btn btn-del" data-del="' + idx + '">削除</button>' +
+        '</div>';
+      item.appendChild(info);
+
+      shareListEl.appendChild(item);
+
+      // QRコード生成
+      try{
+        new QRCode(qrBox, {
+          text: link.url,
+          width: 84,
+          height: 84,
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }catch(e){ qrBox.textContent = 'QR'; }
+    });
+
+    // コピー処理
+    shareListEl.querySelectorAll('[data-copy]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = Number(btn.dataset.copy);
+        var links = loadLinks();
+        var url = links[idx] ? links[idx].url : '';
+        copyText(url, btn);
+      });
+    });
+
+    // 削除処理
+    shareListEl.querySelectorAll('[data-del]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = Number(btn.dataset.del);
+        var links = loadLinks();
+        if(confirm('「' + links[idx].name + '」を削除しますか？')){
+          links.splice(idx,1);
+          saveLinks(links);
+          renderLinks();
+        }
+      });
+    });
+  }
+
+  function copyText(text, btn){
+    function done(){
+      if(btn){
+        var orig = btn.textContent;
+        btn.textContent = 'コピーしました';
+        btn.classList.add('copied');
+        setTimeout(function(){
+          btn.textContent = orig;
+          btn.classList.remove('copied');
+        }, 1400);
+      }
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
+    }else{
+      fallbackCopy(text);
+      done();
+    }
+  }
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+
+  renderLinks();
+
+  /* 追加フォームの開閉 */
+  var addToggle = document.getElementById('add-toggle');
+  var addForm = document.getElementById('add-form');
+  var addCard = document.getElementById('add-card');
+  addToggle.addEventListener('click', function(){
+    addForm.classList.toggle('show');
+    addCard.classList.toggle('open');
+    addToggle.textContent = addForm.classList.contains('show') ? '－ 閉じる' : '＋ QR・URLを追加';
+  });
+
+  document.getElementById('add-submit').addEventListener('click', function(){
+    var nameEl = document.getElementById('add-name');
+    var urlEl = document.getElementById('add-url');
+    var name = nameEl.value.trim();
+    var url = urlEl.value.trim();
+
+    if(!name || !url){
+      alert('名称とURLの両方を入力してください。');
+      return;
+    }
+    if(!/^https?:\/\//i.test(url)){
+      alert('URLは http:// または https:// から入力してください。');
+      return;
+    }
+
+    var links = loadLinks();
+    links.push({ name:name, url:url });
+    saveLinks(links);
+
+    nameEl.value = '';
+    urlEl.value = '';
+    addForm.classList.remove('show');
+    addCard.classList.remove('open');
+    addToggle.textContent = '＋ QR・URLを追加';
+
+    renderLinks();
+  });
+
+})();
+</script>
+</body>
+</html>
