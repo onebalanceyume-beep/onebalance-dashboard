@@ -341,12 +341,14 @@
   <!-- シェア -->
   <section class="tab" id="tab-share">
     <h2 class="section-title"><span class="dot"></span>シェア（QRコード・URL）</h2>
+    <div class="biz-switch" id="share-biz-switch"></div>
     <div class="share-list" id="share-list"></div>
     <div class="add-card" id="add-card">
       <button class="add-toggle" id="add-toggle">＋ QR・URLを追加</button>
       <div class="add-form" id="add-form">
         <input type="text" id="add-name" placeholder="名称（例：公式LINE、ジムHP、YouTube）">
         <input type="url" id="add-url" placeholder="URL（https://から入力）">
+        <select class="ed-input" id="add-biz"></select>
         <button class="btn btn-primary" id="add-submit">追加してQRコードを作成</button>
       </div>
     </div>
@@ -681,7 +683,10 @@
     html += '<div class="goal-diff">';
     html += '<div class="d-item"><div class="d-num" id="diff-target">-</div><div class="d-label">目標まで</div></div>';
     html += '<div class="d-item"><div class="d-num" id="diff-lastyear">-</div><div class="d-label">昨年比</div></div>';
+    html += '<div class="d-item"><div class="d-num" id="diff-months">-</div><div class="d-label">残り月数</div></div>';
+    html += '<div class="d-item"><div class="d-num" id="diff-permonth">-</div><div class="d-label">月あたり必要</div></div>';
     html += '</div>';
+    html += '<p class="ed-sub" id="goal-pace-note" style="text-align:center;"></p>';
     html += '<div class="chart-wrap"><canvas id="goal-chart"></canvas></div>';
     if(biz.id === 'boxing'){
       html += '<p class="ed-sub" id="goal-sync-note" style="margin-top:8px;">会員マスタと同期中…</p>';
@@ -788,6 +793,32 @@
       }else{
         var d = cur - last;
         diffLastEl.textContent = (d>=0?'+':'') + d;
+      }
+
+      var diffMonthsEl = document.getElementById('diff-months');
+      var diffPerMonthEl = document.getElementById('diff-permonth');
+      var paceNoteEl = document.getElementById('goal-pace-note');
+      var todayReal = new Date();
+      var remainMonths;
+      if(currentYear < todayReal.getFullYear()) remainMonths = 0;
+      else if(currentYear > todayReal.getFullYear()) remainMonths = 12;
+      else remainMonths = 12 - todayReal.getMonth();
+      if(diffMonthsEl) diffMonthsEl.textContent = remainMonths + 'ヶ月';
+      if(diffPerMonthEl && paceNoteEl){
+        if(goal.current==='' && goal.target===''){
+          diffPerMonthEl.textContent = '-';
+          paceNoteEl.textContent = '';
+        }else if(remainMonths <= 0){
+          diffPerMonthEl.textContent = '-';
+          paceNoteEl.textContent = '今年の残り期間がありません';
+        }else if(diffTarget <= 0){
+          diffPerMonthEl.textContent = '0人';
+          paceNoteEl.textContent = '目標に到達済みです';
+        }else{
+          var perMonth = Math.ceil(diffTarget / remainMonths);
+          diffPerMonthEl.textContent = perMonth + '人';
+          paceNoteEl.textContent = '12月末まで残り' + remainMonths + 'ヶ月。目標まで' + diffTarget + '人 → 月' + perMonth + '人ペースが必要';
+        }
       }
 
       var ctx = document.getElementById('goal-chart');
@@ -1064,30 +1095,58 @@
   function saveLinks(list){ saveJSON(LINKS_KEY, list); }
   var shareListEl = document.getElementById('share-list');
 
+  var SHARE_FILTERS = [{ id:'all', name:'すべて' }, { id:'common', name:'共通' }]
+    .concat(BUSINESSES.map(function(b){ return { id:b.id, name:b.name }; }));
+  var currentShareFilter = localStorage.getItem('wb_share_filter') || 'all';
+
+  var shareBizSwitchEl = document.getElementById('share-biz-switch');
+  SHARE_FILTERS.forEach(function(f){
+    var btn = document.createElement('button');
+    btn.textContent = f.name;
+    if(f.id === currentShareFilter) btn.classList.add('active');
+    btn.addEventListener('click', function(){
+      currentShareFilter = f.id;
+      localStorage.setItem('wb_share_filter', currentShareFilter);
+      shareBizSwitchEl.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      renderLinks();
+    });
+    shareBizSwitchEl.appendChild(btn);
+  });
+
+  var addBizSelect = document.getElementById('add-biz');
+  SHARE_FILTERS.filter(function(f){ return f.id !== 'all'; }).forEach(function(f){
+    var opt = document.createElement('option');
+    opt.value = f.id; opt.textContent = f.name;
+    addBizSelect.appendChild(opt);
+  });
+
   function renderLinks(){
     var links = loadLinks();
+    var filtered = (currentShareFilter === 'all') ? links : links.filter(function(l){ return (l.biz || 'common') === currentShareFilter; });
     shareListEl.innerHTML = '';
-    if(links.length === 0){
+    if(filtered.length === 0){
       var empty = document.createElement('div');
       empty.className = 'empty-hint';
       empty.textContent = 'まだ登録がありません。下の「＋ QR・URLを追加」から登録してください。';
       shareListEl.appendChild(empty);
       return;
     }
-    links.forEach(function(link, idx){
+    filtered.forEach(function(link){
       var item = document.createElement('div');
       item.className = 'share-item';
       var qrBox = document.createElement('div');
       qrBox.className = 'share-qr';
       item.appendChild(qrBox);
+      var bizLabel = (SHARE_FILTERS.filter(function(f){ return f.id === (link.biz||'common'); })[0] || {name:'共通'}).name;
       var info = document.createElement('div');
       info.className = 'share-info';
       info.innerHTML =
-        '<p class="name">' + esc(link.name) + '</p>' +
+        '<p class="name">' + esc(link.name) + '　<span style="color:#B4B2A9;font-weight:600;">[' + esc(bizLabel) + ']</span></p>' +
         '<p class="url">' + esc(link.url) + '</p>' +
         '<div class="share-actions">' +
-          '<button class="btn btn-copy" data-copy="' + idx + '">URLをコピー</button>' +
-          '<button class="btn btn-del" data-del="' + idx + '">削除</button>' +
+          '<button class="btn btn-copy" data-copy="' + esc(link.id) + '">URLをコピー</button>' +
+          '<button class="btn btn-del" data-del="' + esc(link.id) + '">削除</button>' +
         '</div>';
       item.appendChild(info);
       shareListEl.appendChild(item);
@@ -1097,18 +1156,18 @@
     });
     shareListEl.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        var idx = Number(btn.dataset.copy);
         var links = loadLinks();
-        var url = links[idx] ? links[idx].url : '';
-        copyText(url, btn);
+        var link = links.filter(function(l){ return String(l.id) === btn.dataset.copy; })[0];
+        copyText(link ? link.url : '', btn);
       });
     });
     shareListEl.querySelectorAll('[data-del]').forEach(function(btn){
       btn.addEventListener('click', function(){
-        var idx = Number(btn.dataset.del);
         var links = loadLinks();
-        if(confirm('「' + links[idx].name + '」を削除しますか？')){
-          links.splice(idx,1);
+        var link = links.filter(function(l){ return String(l.id) === btn.dataset.del; })[0];
+        if(!link) return;
+        if(confirm('「' + link.name + '」を削除しますか？')){
+          links = links.filter(function(l){ return String(l.id) !== btn.dataset.del; });
           saveLinks(links);
           renderLinks();
         }
@@ -1148,12 +1207,13 @@
   document.getElementById('add-submit').addEventListener('click', function(){
     var nameEl = document.getElementById('add-name');
     var urlEl = document.getElementById('add-url');
+    var bizEl = document.getElementById('add-biz');
     var name = nameEl.value.trim();
     var url = urlEl.value.trim();
     if(!name || !url){ alert('名称とURLの両方を入力してください。'); return; }
     if(!/^https?:\/\//i.test(url)){ alert('URLは http:// または https:// から入力してください。'); return; }
     var links = loadLinks();
-    links.push({ name:name, url:url });
+    links.push({ id:'l'+Date.now(), name:name, url:url, biz:bizEl.value });
     saveLinks(links);
     nameEl.value=''; urlEl.value='';
     addForm.classList.remove('show'); addCard.classList.remove('open');
