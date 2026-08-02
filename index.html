@@ -1136,7 +1136,7 @@
     var filters = [{ id:'all', name:'すべて' }].concat(getShareCats());
     filters.forEach(function(f){
       var btn = document.createElement('button');
-      btn.textContent = f.name;
+      btn.innerHTML = bizButtonHtml(f.name);
       if(f.id === currentShareFilter) btn.classList.add('active');
       btn.addEventListener('click', function(){
         currentShareFilter = f.id;
