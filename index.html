@@ -349,6 +349,7 @@
         <input type="text" id="add-name" placeholder="名称（例：公式LINE、ジムHP、YouTube）">
         <input type="url" id="add-url" placeholder="URL（https://から入力）">
         <select class="ed-input" id="add-biz"></select>
+        <input type="text" id="add-biz-new" placeholder="新しいカテゴリ名" style="display:none;">
         <button class="btn btn-primary" id="add-submit">追加してQRコードを作成</button>
       </div>
     </div>
@@ -616,10 +617,17 @@
     return BUSINESSES[0];
   }
 
+  function bizButtonHtml(name){
+    if(name.indexOf('ワンバランス') === 0){
+      return 'ワンバランス<br>' + esc(name.slice('ワンバランス'.length));
+    }
+    return esc(name);
+  }
+
   var bizSwitchEl = document.getElementById('biz-switch');
   BUSINESSES.forEach(function(b){
     var btn = document.createElement('button');
-    btn.textContent = b.name;
+    btn.innerHTML = bizButtonHtml(b.name);
     btn.dataset.biz = b.id;
     if(b.id === currentBiz) btn.classList.add('active');
     btn.addEventListener('click', function(){
@@ -1091,34 +1099,77 @@
      シェア（QRコード & URL）
      ========================================================= */
   var LINKS_KEY = 'wb_share_links_v1';
-  function loadLinks(){ return loadJSON(LINKS_KEY, []); }
+  function loadLinks(){
+    var links = loadJSON(LINKS_KEY, []);
+    var changed = false;
+    links.forEach(function(l, i){
+      if(!l.id){ l.id = 'l' + Date.now() + '_' + i; changed = true; }
+      if(l.biz === undefined || l.biz === null){ l.biz = 'common'; changed = true; }
+    });
+    if(changed) saveJSON(LINKS_KEY, links);
+    return links;
+  }
   function saveLinks(list){ saveJSON(LINKS_KEY, list); }
   var shareListEl = document.getElementById('share-list');
 
-  var SHARE_FILTERS = [{ id:'all', name:'すべて' }, { id:'common', name:'共通' }]
-    .concat(BUSINESSES.map(function(b){ return { id:b.id, name:b.name }; }));
-  var currentShareFilter = localStorage.getItem('wb_share_filter') || 'all';
+  var SHARE_CUSTOM_KEY = 'wb_share_custom_cats_v1';
+  function loadCustomShareCats(){ return loadJSON(SHARE_CUSTOM_KEY, []); }
+  function saveCustomShareCats(list){ saveJSON(SHARE_CUSTOM_KEY, list); }
 
-  var shareBizSwitchEl = document.getElementById('share-biz-switch');
-  SHARE_FILTERS.forEach(function(f){
-    var btn = document.createElement('button');
-    btn.textContent = f.name;
-    if(f.id === currentShareFilter) btn.classList.add('active');
-    btn.addEventListener('click', function(){
-      currentShareFilter = f.id;
-      localStorage.setItem('wb_share_filter', currentShareFilter);
-      shareBizSwitchEl.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      renderLinks();
+  function getShareCats(){
+    var base = [{ id:'common', name:'共通' }].concat(BUSINESSES.map(function(b){ return { id:b.id, name:b.name }; }));
+    loadCustomShareCats().forEach(function(name){
+      if(!base.some(function(b){ return b.id === name; })){
+        base.push({ id:name, name:name });
+      }
     });
-    shareBizSwitchEl.appendChild(btn);
-  });
+    return base;
+  }
 
+  var currentShareFilter = localStorage.getItem('wb_share_filter') || 'all';
+  var shareBizSwitchEl = document.getElementById('share-biz-switch');
   var addBizSelect = document.getElementById('add-biz');
-  SHARE_FILTERS.filter(function(f){ return f.id !== 'all'; }).forEach(function(f){
-    var opt = document.createElement('option');
-    opt.value = f.id; opt.textContent = f.name;
-    addBizSelect.appendChild(opt);
+  var addBizNewInput = document.getElementById('add-biz-new');
+
+  function renderShareFilterRow(){
+    shareBizSwitchEl.innerHTML = '';
+    var filters = [{ id:'all', name:'すべて' }].concat(getShareCats());
+    filters.forEach(function(f){
+      var btn = document.createElement('button');
+      btn.textContent = f.name;
+      if(f.id === currentShareFilter) btn.classList.add('active');
+      btn.addEventListener('click', function(){
+        currentShareFilter = f.id;
+        localStorage.setItem('wb_share_filter', currentShareFilter);
+        renderShareFilterRow();
+        renderLinks();
+      });
+      shareBizSwitchEl.appendChild(btn);
+    });
+  }
+  renderShareFilterRow();
+
+  function renderAddBizSelect(){
+    var prevVal = addBizSelect.value;
+    addBizSelect.innerHTML = '';
+    getShareCats().forEach(function(f){
+      var opt = document.createElement('option');
+      opt.value = f.id; opt.textContent = f.name;
+      addBizSelect.appendChild(opt);
+    });
+    var newOpt = document.createElement('option');
+    newOpt.value = '__new__';
+    newOpt.textContent = '＋ 新しいカテゴリを追加';
+    addBizSelect.appendChild(newOpt);
+    if(prevVal && Array.prototype.some.call(addBizSelect.options, function(o){ return o.value===prevVal; })){
+      addBizSelect.value = prevVal;
+    }
+    addBizNewInput.style.display = (addBizSelect.value === '__new__') ? '' : 'none';
+  }
+  renderAddBizSelect();
+  addBizSelect.addEventListener('change', function(){
+    addBizNewInput.style.display = (this.value === '__new__') ? '' : 'none';
+    if(this.value === '__new__') addBizNewInput.focus();
   });
 
   function renderLinks(){
@@ -1138,7 +1189,7 @@
       var qrBox = document.createElement('div');
       qrBox.className = 'share-qr';
       item.appendChild(qrBox);
-      var bizLabel = (SHARE_FILTERS.filter(function(f){ return f.id === (link.biz||'common'); })[0] || {name:'共通'}).name;
+      var bizLabel = (getShareCats().filter(function(f){ return f.id === (link.biz||'common'); })[0] || {name:(link.biz||'共通')}).name;
       var info = document.createElement('div');
       info.className = 'share-info';
       info.innerHTML =
@@ -1208,16 +1259,32 @@
     var nameEl = document.getElementById('add-name');
     var urlEl = document.getElementById('add-url');
     var bizEl = document.getElementById('add-biz');
+    var bizNewEl = document.getElementById('add-biz-new');
     var name = nameEl.value.trim();
     var url = urlEl.value.trim();
     if(!name || !url){ alert('名称とURLの両方を入力してください。'); return; }
     if(!/^https?:\/\//i.test(url)){ alert('URLは http:// または https:// から入力してください。'); return; }
+
+    var bizValue = bizEl.value;
+    if(bizValue === '__new__'){
+      var newCatName = bizNewEl.value.trim();
+      if(!newCatName){ alert('新しいカテゴリ名を入力してください。'); return; }
+      var customCats = loadCustomShareCats();
+      if(customCats.indexOf(newCatName) === -1){
+        customCats.push(newCatName);
+        saveCustomShareCats(customCats);
+      }
+      bizValue = newCatName;
+    }
+
     var links = loadLinks();
-    links.push({ id:'l'+Date.now(), name:name, url:url, biz:bizEl.value });
+    links.push({ id:'l'+Date.now(), name:name, url:url, biz:bizValue });
     saveLinks(links);
-    nameEl.value=''; urlEl.value='';
+    nameEl.value=''; urlEl.value=''; bizNewEl.value='';
     addForm.classList.remove('show'); addCard.classList.remove('open');
     addToggle.textContent = '＋ QR・URLを追加';
+    renderShareFilterRow();
+    renderAddBizSelect();
     renderLinks();
   });
 
