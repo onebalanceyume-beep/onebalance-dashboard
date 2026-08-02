@@ -263,8 +263,11 @@
   .em-steps{ list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px; }
   .em-steps li{ background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 14px 12px;display:flex;gap:12px;align-items:flex-start; }
   .em-steps .num{ flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center; }
-  .em-steps .step-text{ font-size:13.5px;line-height:1.6; }
+  .em-steps .step-text{ font-size:13.5px;line-height:1.6;flex:1; }
   .em-steps .step-text b{ font-size:14px; }
+  .em-steps .sub-list{ list-style:none;margin:6px 0 0;padding:0; }
+  .em-steps .sub-list li{ font-size:12.5px;color:var(--text-light);padding:2px 0 2px 14px;position:relative;background:none;border:none;border-radius:0;display:block; }
+  .em-steps .sub-list li::before{ content:"・";position:absolute;left:0; }
   .em-note{ font-size:11.5px;color:var(--text-light);background:#F1EBE4;border-radius:12px;padding:12px 14px;line-height:1.6; }
 
   ::selection{ background:var(--teal);color:#fff; }
@@ -370,13 +373,51 @@
     </div>
 
     <ol class="em-steps">
-      <li><span class="num">1</span><span class="step-text"><b>意識・反応を確認する。</b><br>呼びかけて反応があるか、受け答えができるかを見る。</span></li>
-      <li><span class="num">2</span><span class="step-text"><b>涼しい場所へ移動させる。</b><br>日陰、またはエアコンの効いた室内へ。衣服（ベルト・胴着など）を緩める。</span></li>
-      <li><span class="num">3</span><span class="step-text"><b>体を冷やす。</b><br>首・脇の下・太ももの付け根を保冷剤や濡れタオルで冷却。うちわ・扇風機で送風する。</span></li>
-      <li><span class="num">4</span><span class="step-text"><b>水分・塩分を補給する。</b><br>本人の意識がはっきりしていて自分で飲める場合のみ、スポーツドリンクや経口補水液を少しずつ。</span></li>
-      <li><span class="num">5</span><span class="step-text"><b>症状を観察する。</b><br>めまい、頭痛、吐き気、けいれん、意識がもうろうとしていないかを確認する。</span></li>
-      <li><span class="num">6</span><span class="step-text"><b>危険サインがあれば、ただちに119番。</b><br>「呼びかけへの反応がない」「けいれんしている」「自分で水が飲めない」「症状が良くならない」場合は迷わず救急要請。</span></li>
-      <li><span class="num">7</span><span class="step-text"><b>到着まで冷却と観察を続ける。</b><br>一人にせず、状態の変化を見守る。</span></li>
+      <li><span class="num">1</span><span class="step-text"><b>意識・反応を確認する。</b>
+        <ul class="sub-list">
+          <li>呼びかけて反応があるか見る</li>
+          <li>受け答えができるか確認する</li>
+        </ul>
+      </span></li>
+      <li><span class="num">2</span><span class="step-text"><b>涼しい場所へ移動させる。</b>
+        <ul class="sub-list">
+          <li>日陰、またはエアコンの効いた室内へ</li>
+          <li>衣服（ベルト・胴着など）を緩める</li>
+          <li>靴・靴下を脱がせる</li>
+        </ul>
+      </span></li>
+      <li><span class="num">3</span><span class="step-text"><b>体を冷やす。</b>
+        <ul class="sub-list">
+          <li>首・脇の下・太ももの付け根を保冷剤や濡れタオルで冷却</li>
+          <li>うちわ・扇風機で送風する</li>
+        </ul>
+      </span></li>
+      <li><span class="num">4</span><span class="step-text"><b>水分・塩分を補給する。</b>
+        <ul class="sub-list">
+          <li>本人の意識がはっきりしていて自分で飲める場合のみ</li>
+          <li>スポーツドリンクや経口補水液を少しずつ</li>
+        </ul>
+      </span></li>
+      <li><span class="num">5</span><span class="step-text"><b>症状を観察する。</b>
+        <ul class="sub-list">
+          <li>めまい・頭痛・吐き気はないか</li>
+          <li>けいれんしていないか</li>
+          <li>意識がもうろうとしていないか</li>
+        </ul>
+      </span></li>
+      <li><span class="num">6</span><span class="step-text"><b>危険サインがあれば、ただちに119番。</b>
+        <ul class="sub-list">
+          <li>呼びかけへの反応がない</li>
+          <li>けいれんしている</li>
+          <li>自分で水が飲めない</li>
+          <li>症状が良くならない</li>
+        </ul>
+      </span></li>
+      <li><span class="num">7</span><span class="step-text"><b>到着まで冷却と観察を続ける。</b>
+        <ul class="sub-list">
+          <li>一人にせず、状態の変化を見守る</li>
+        </ul>
+      </span></li>
     </ol>
 
     <div class="em-note">
@@ -549,7 +590,7 @@
       defaultValue:[],
       defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' },
       defaultTodos:[],
-      cleaning:['玄関','更衣室','シャワー室','フロアの床','機材','エアコン','ウェイトエリア','鏡','身だしなみ']
+      cleaning:['玄関','更衣室','シャワー室','フロアの床','機材','エアコン','ウエイトエリア','鏡','身だしなみ']
     },
     {
       id:'happykids', name:'HAPPY KIDS PROJECT', hasOps:false,
@@ -642,13 +683,18 @@
     html += '<div class="d-item"><div class="d-num" id="diff-lastyear">-</div><div class="d-label">昨年比</div></div>';
     html += '</div>';
     html += '<div class="chart-wrap"><canvas id="goal-chart"></canvas></div>';
+    if(biz.id === 'boxing'){
+      html += '<p class="ed-sub" id="goal-sync-note" style="margin-top:8px;">会員マスタと同期中…</p>';
+    }
     html += '</div>';
 
     // TODOS
     html += '<div class="ed-card">';
     html += '<p class="ed-eyebrow">やるべきこと</p>';
+    html += '<p class="ed-sub" style="margin-bottom:10px;">カテゴリ名をタップすると名前を変更できます</p>';
     html += '<div class="todo-add">';
-    html += '<input class="ed-input" id="todo-cat-input" placeholder="カテゴリ（任意）" style="max-width:120px;">';
+    html += '<select class="ed-input" id="todo-cat-select" style="max-width:150px;"></select>';
+    html += '<input class="ed-input" id="todo-cat-new" placeholder="新しいカテゴリ名" style="display:none;max-width:130px;">';
     html += '<input class="ed-input" id="todo-text-input" placeholder="やること">';
     html += '<button id="todo-add-btn">追加</button>';
     html += '</div>';
@@ -769,14 +815,82 @@
     }
     updateGoalDerived();
 
+    /* ---- 会員マスタと自動同期（ボクシングジムのみ） ---- */
+    if(biz.id === 'boxing'){
+      var BOXING_GAS_URL = 'https://script.google.com/macros/s/AKfycbzGrHeV7BAiJSrz9XkpuFDZw_rRcPMZDEzynzMZEx5-K5YM4QXhEHg88bsguUpcyvPafQ/exec';
+      fetch(BOXING_GAS_URL + '?action=getStats')
+        .then(function(res){ return res.json(); })
+        .then(function(json){
+          var noteEl = document.getElementById('goal-sync-note');
+          if(!json || json.status !== 'ok' || !json.data){
+            if(noteEl) noteEl.textContent = '自動取得できませんでした。手動で入力してください。';
+            return;
+          }
+          var total = json.data.total;
+          var curInput = document.getElementById('goal-current');
+          if(curInput){ curInput.value = total; }
+          goal.current = String(total);
+          goalAll[biz.id][currentYear] = goal;
+          saveJSON(GOAL_KEY, goalAll);
+          updateGoalDerived();
+          if(noteEl){
+            var t = new Date();
+            noteEl.textContent = '会員マスタから自動取得：' + total + '名（' + (t.getMonth()+1) + '/' + t.getDate() + ' ' + String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0') + '時点）';
+          }
+        })
+        .catch(function(){
+          var noteEl = document.getElementById('goal-sync-note');
+          if(noteEl) noteEl.textContent = '自動取得できませんでした。手動で入力してください。';
+        });
+    }
+
     /* ---- TODOS ---- */
+    var DEFAULT_TODO_CATS = ['集客・営業','会員満足度・接客','教育・仕組み化','環境整備・設備','数字管理・分析','広報・SNS'];
+
     function saveTodos(){
       todoAll[biz.id][currentYear] = todos;
       saveJSON(TODO_KEY, todoAll);
     }
+    function getAllCats(){
+      var cats = [];
+      todos.forEach(function(t){
+        var c = t.cat || 'その他';
+        if(cats.indexOf(c) === -1) cats.push(c);
+      });
+      DEFAULT_TODO_CATS.forEach(function(c){
+        if(cats.indexOf(c) === -1) cats.push(c);
+      });
+      return cats;
+    }
+    function renderCatSelect(){
+      var sel = document.getElementById('todo-cat-select');
+      var prevVal = sel.value;
+      sel.innerHTML = '';
+      getAllCats().forEach(function(c){
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        sel.appendChild(opt);
+      });
+      var newOpt = document.createElement('option');
+      newOpt.value = '__new__';
+      newOpt.textContent = '＋ 新しいカテゴリを追加';
+      sel.appendChild(newOpt);
+      if(prevVal && Array.prototype.some.call(sel.options, function(o){return o.value===prevVal;})){
+        sel.value = prevVal;
+      }
+      var newInput = document.getElementById('todo-cat-new');
+      newInput.style.display = (sel.value === '__new__') ? '' : 'none';
+    }
+    document.getElementById('todo-cat-select').addEventListener('change', function(){
+      var newInput = document.getElementById('todo-cat-new');
+      newInput.style.display = (this.value === '__new__') ? '' : 'none';
+      if(this.value === '__new__') newInput.focus();
+    });
+
     function renderTodos(){
       var listEl = document.getElementById('todo-list');
       listEl.innerHTML = '';
+      renderCatSelect();
       if(todos.length === 0){
         var e = document.createElement('div');
         e.className = 'empty-hint';
@@ -793,6 +907,20 @@
         var catEl = document.createElement('div');
         catEl.className = 'todo-cat';
         catEl.textContent = cat;
+        catEl.style.cursor = 'pointer';
+        catEl.title = 'タップして名前を変更';
+        catEl.addEventListener('click', function(){
+          var name = prompt('カテゴリ名を変更', cat);
+          if(name === null) return;
+          name = name.trim();
+          if(!name || name === cat) return;
+          todos.forEach(function(t){
+            var c = t.cat || 'その他';
+            if(c === cat) t.cat = name;
+          });
+          saveTodos();
+          renderTodos();
+        });
         listEl.appendChild(catEl);
 
         todos.forEach(function(t, i){
@@ -822,13 +950,15 @@
     }
     renderTodos();
     document.getElementById('todo-add-btn').addEventListener('click', function(){
-      var catInput = document.getElementById('todo-cat-input');
+      var catSelect = document.getElementById('todo-cat-select');
+      var catNew = document.getElementById('todo-cat-new');
       var textInput = document.getElementById('todo-text-input');
       var text = textInput.value.trim();
       if(!text) return;
-      todos.push({ id:'t'+Date.now(), cat:catInput.value.trim(), text:text, done:false, detail:'' });
+      var cat = catSelect.value === '__new__' ? catNew.value.trim() : catSelect.value;
+      todos.push({ id:'t'+Date.now(), cat:cat, text:text, done:false, detail:'' });
       saveTodos();
-      catInput.value=''; textInput.value='';
+      textInput.value=''; catNew.value='';
       renderTodos();
     });
 
