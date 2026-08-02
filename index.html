@@ -7,16 +7,17 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>ワンバランス 経営ダッシュボード</title>
-<link rel="manifest" href="manifest.json?v=1">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=1">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=1">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=1">
+<link rel="manifest" href="manifest.json?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ワンバランス">
 <meta name="theme-color" content="#DB444C">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
   :root{
     --red:#DB444C;
@@ -29,6 +30,9 @@
     --text-light:#767676;
     --border:#EAE4DC;
     --radius:18px;
+    --ed-red:#AD002D;
+    --ed-border:#F0DCDF;
+    --ed-font:"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
     --safe-bottom:env(safe-area-inset-bottom,0px);
     --safe-top:env(safe-area-inset-top,0px);
   }
@@ -48,17 +52,16 @@
     min-height:100vh;
     padding-bottom:calc(78px + var(--safe-bottom));
   }
-  button, input, textarea{
+  button, input, textarea, select{
     font-family:inherit;
     touch-action:manipulation;
   }
   a{ color:inherit; }
 
-  /* ===== Header ===== */
   header.app-header{
     background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);
     color:#fff;
-    padding:calc(18px + var(--safe-top)) 20px 18px;
+    padding:calc(16px + var(--safe-top)) 20px 14px;
     text-align:center;
     position:sticky;
     top:0;
@@ -72,18 +75,28 @@
     width:34px;height:34px;border-radius:9px;
   }
   header.app-header h1{
-    font-size:18px;
+    font-size:17px;
     margin:0;
     font-weight:800;
     letter-spacing:.02em;
   }
-  header.app-header p{
-    margin:4px 0 0;
-    font-size:11.5px;
-    opacity:.85;
+  .ctrl-row{
+    display:flex;align-items:center;justify-content:center;gap:16px;
+    margin-top:10px;flex-wrap:wrap;
   }
+  .yr-bar{ display:flex;align-items:center;gap:10px; }
+  .yr-bar button{
+    background:rgba(255,255,255,.18);border:none;color:#fff;
+    width:26px;height:26px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;
+  }
+  .yr-bar .yr-val{ font-size:13.5px;font-weight:800;min-width:44px;text-align:center; }
+  .user-row{ font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px; }
+  .user-row select{
+    background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);
+    border-radius:8px;padding:4px 8px;font-size:12px;font-weight:800;
+  }
+  .user-row select option{ color:#111; }
 
-  /* ===== Tabs (mobile: bottom fixed / desktop: top) ===== */
   nav.tabs{
     display:flex;
     background:#fff;
@@ -106,209 +119,153 @@
   }
   nav.tabs button .ic{ font-size:19px; line-height:1; }
   nav.tabs button.active{ color:var(--red); }
-  nav.tabs button.active .ic{ transform:translateY(-1px); }
 
-  main{
-    max-width:920px;
-    margin:0 auto;
-    padding:18px 16px 24px;
-  }
+  main{ max-width:920px; margin:0 auto; padding:18px 16px 24px; }
   section.tab{ display:none; }
   section.tab.active{ display:block; animation:fadeIn .25s ease; }
   @keyframes fadeIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
 
   h2.section-title{
-    font-size:16px;
-    font-weight:800;
-    margin:4px 0 14px;
+    font-size:16px;font-weight:800;margin:4px 0 14px;
     display:flex;align-items:center;gap:8px;
   }
-  h2.section-title .dot{
-    width:8px;height:8px;border-radius:50%;background:var(--red);
+  h2.section-title .dot{ width:8px;height:8px;border-radius:50%;background:var(--red); }
+
+  /* ===== Editorial style (理念/事業) ===== */
+  .ed-card{
+    background:#fff;
+    border:1px solid var(--ed-border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:12px;
+    font-family:var(--ed-font);
+  }
+  .ed-eyebrow{ font-size:10.5px;font-weight:700;color:var(--ed-red);letter-spacing:.1em;margin:0 0 8px; }
+  .ed-h{ font-size:23px;font-weight:800;color:var(--ed-red);line-height:1.35;margin:0 0 8px; }
+  .ed-h.sm{ font-size:17px; }
+  .ed-sub{ font-size:11.5px;color:#9a9a9a;font-weight:700;margin:0 0 12px; }
+  .ed-body{ font-size:12.5px;color:#555;line-height:1.85;margin:0; }
+  .ed-input, .ed-textarea{
+    width:100%;border:1px solid var(--ed-border);border-radius:10px;
+    padding:10px 12px;font-size:13px;font-family:var(--ed-font);background:#FCFAFA;color:var(--text);
+  }
+  .ed-textarea{ min-height:80px;resize:vertical;line-height:1.6; }
+  .ed-label{ font-size:11px;font-weight:700;color:#9a9a9a;margin:0 0 4px;display:block; }
+  .ed-row{ margin-bottom:10px; }
+
+  /* year/user note */
+  .yr-note{ font-size:11px;color:var(--ed-red);font-weight:700;margin-bottom:10px; }
+
+  /* business switcher */
+  .biz-switch{ display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap; }
+  .biz-switch button{
+    flex:1;min-width:100px;
+    border:1.5px solid var(--ed-red);background:#fff;color:var(--ed-red);
+    font-weight:800;font-size:12px;border-radius:12px;padding:10px 6px;cursor:pointer;
+    font-family:var(--ed-font);
+  }
+  .biz-switch button.active{ background:var(--ed-red);color:#fff; }
+
+  /* value list */
+  .value-list{ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px; }
+  .value-list li{
+    font-size:13px;font-weight:800;color:var(--text);
+    padding:10px 12px;background:#FBF3F4;border-radius:10px;
+    border-left:4px solid var(--ed-red);
   }
 
-  /* ===== Philosophy ===== */
-  .phi-card{
-    background:var(--card);
-    border-radius:var(--radius);
-    padding:22px 20px;
-    margin-bottom:14px;
-    box-shadow:0 3px 14px rgba(0,0,0,0.05);
-    border:1px solid var(--border);
+  /* goal numbers */
+  .goal-nums-ed{ display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px; }
+  .goal-nums-ed .g-item{ text-align:center; }
+  .goal-diff{
+    display:flex;justify-content:center;gap:18px;margin:6px 0 16px;flex-wrap:wrap;
   }
-  .phi-label{
-    display:inline-block;
-    font-size:11px;
-    font-weight:800;
-    color:#fff;
-    background:var(--red);
-    padding:4px 12px;
-    border-radius:999px;
-    margin-bottom:10px;
-  }
-  .phi-card.teal .phi-label{ background:var(--teal); }
-  .phi-card.dark .phi-label{ background:var(--text); }
-  .phi-text{
-    font-size:17px;
-    font-weight:800;
-    line-height:1.6;
-    margin:0 0 6px;
-  }
-  .phi-sub{
-    font-size:13px;
-    color:var(--text-light);
-    line-height:1.7;
-    margin:0;
-  }
+  .goal-diff .d-item{ text-align:center; }
+  .goal-diff .d-num{ font-size:20px;font-weight:800;color:var(--ed-red); }
+  .goal-diff .d-label{ font-size:10.5px;color:#9a9a9a;font-weight:700; }
+  .chart-wrap{ position:relative;height:180px;margin-bottom:8px; }
 
-  /* ===== Share ===== */
+  /* todos */
+  .todo-add{ display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap; }
+  .todo-add input{ flex:1;min-width:110px; }
+  .todo-add button{
+    background:var(--ed-red);color:#fff;border:none;border-radius:10px;
+    padding:0 14px;font-size:12px;font-weight:800;cursor:pointer;
+  }
+  .todo-cat{ font-size:11px;font-weight:800;color:var(--ed-red);margin:14px 0 6px;letter-spacing:.05em; }
+  .todo-item{
+    display:flex;align-items:center;gap:10px;
+    background:#FAFAFA;border:1px solid var(--ed-border);border-radius:10px;
+    padding:10px 12px;margin-bottom:6px;
+  }
+  .todo-item input[type=checkbox]{ width:19px;height:19px;accent-color:var(--ed-red);flex:none; }
+  .todo-item .t-text{ flex:1;font-size:13px;font-weight:700; }
+  .todo-item.done .t-text{ text-decoration:line-through;color:#b7b7b7; }
+  .todo-item .t-del{ background:none;border:none;color:#c7c0c0;font-size:16px;cursor:pointer; }
+
+  /* checklist rows (cleaning / heat) */
+  .chk-row{
+    display:flex;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--ed-border);border-radius:12px;
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .chk-row img{ width:34px;height:34px;flex:none; }
+  .chk-row .chk-main{ flex:1; }
+  .chk-row .chk-label{ font-size:13px;font-weight:800; }
+  .chk-row .chk-meta{ font-size:10.5px;color:#9a9a9a;margin-top:2px; }
+  .chk-row input[type=checkbox]{ width:22px;height:22px;accent-color:var(--ed-red);flex:none; }
+  .chk-row.checked{ background:#FBF3F4; }
+
+  /* WBGT */
+  .wbgt-chips{ display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px; }
+  .wbgt-chip{
+    flex:none;border:none;border-radius:10px;padding:9px 10px;font-size:10.5px;font-weight:800;
+    color:#fff;cursor:pointer;min-width:74px;text-align:center;opacity:.55;
+  }
+  .wbgt-chip.active{ opacity:1;box-shadow:0 0 0 2px #1a1a1a inset; }
+  .wbgt-banner{
+    border-radius:12px;padding:14px 16px;color:#fff;margin-bottom:16px;
+  }
+  .wbgt-banner .wb-lv{ font-size:16px;font-weight:800;margin:0 0 4px; }
+  .wbgt-banner .wb-desc{ font-size:12px;opacity:.95;margin:0; }
+
+  /* ===== Share (unchanged) ===== */
   .share-list{ display:flex;flex-direction:column;gap:12px; margin-bottom:16px;}
   .share-item{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:16px;
-    display:flex;
-    gap:14px;
-    align-items:center;
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px;display:flex;gap:14px;align-items:center;
   }
-  .share-qr{
-    width:84px;height:84px;flex:none;
-    background:#fff;
-    border:1px solid var(--border);
-    border-radius:10px;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;
-  }
+  .share-qr{ width:84px;height:84px;flex:none;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden; }
   .share-qr img{ width:100%;height:100%; }
   .share-info{ flex:1;min-width:0; }
   .share-info .name{ font-weight:800;font-size:14px;margin:0 0 4px; }
-  .share-info .url{
-    font-size:12px;color:var(--text-light);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    margin:0 0 8px;
-  }
+  .share-info .url{ font-size:12px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 8px; }
   .share-actions{ display:flex;gap:8px; }
-  .btn{
-    border:none;
-    border-radius:10px;
-    padding:8px 12px;
-    font-size:12px;
-    font-weight:700;
-    cursor:pointer;
-  }
+  .btn{ border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer; }
   .btn-copy{ background:var(--teal); color:#fff; }
   .btn-copy.copied{ background:#3FA85A; }
   .btn-del{ background:#F1EBE4; color:var(--text-light); }
-  .btn-primary{
-    background:var(--red);color:#fff;
-    padding:12px 18px;border-radius:12px;font-size:14px;
-    width:100%;
-  }
-  .add-card{
-    background:var(--card);
-    border:1.5px dashed #D9CFC4;
-    border-radius:var(--radius);
-    padding:16px;
-  }
+  .btn-primary{ background:var(--red);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;width:100%; }
+  .add-card{ background:var(--card);border:1.5px dashed #D9CFC4;border-radius:var(--radius);padding:16px; }
   .add-card.open{ border-style:solid; }
-  .add-toggle{
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    color:var(--red);font-weight:800;font-size:14px;
-    background:none;border:none;width:100%;padding:6px;cursor:pointer;
-  }
+  .add-toggle{ display:flex;align-items:center;justify-content:center;gap:6px;color:var(--red);font-weight:800;font-size:14px;background:none;border:none;width:100%;padding:6px;cursor:pointer; }
   .add-form{ display:none;margin-top:12px;flex-direction:column;gap:10px; }
   .add-form.show{ display:flex; }
-  .add-form input{
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:11px 12px;
-    font-size:14px;
-    width:100%;
-  }
-  .empty-hint{
-    text-align:center;color:var(--text-light);font-size:12.5px;
-    padding:18px 0;
-  }
+  .add-form input{ border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-size:14px;width:100%; }
+  .empty-hint{ text-align:center;color:var(--text-light);font-size:12.5px;padding:18px 0; }
 
-  /* ===== Goals ===== */
-  .goal-grid{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:14px;
-  }
-  @media (min-width:760px){
-    .goal-grid{ grid-template-columns:1fr 1fr; }
-  }
-  .goal-card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:18px;
-  }
-  .goal-card h3{
-    font-size:15px;margin:0 0 12px;
-    display:flex;align-items:center;gap:8px;
-  }
-  .goal-card h3 .badge{
-    width:28px;height:28px;border-radius:9px;
-    background:var(--teal);color:#fff;
-    display:flex;align-items:center;justify-content:center;
-    font-size:14px;flex:none;
-  }
-  .goal-row{ margin-bottom:10px; }
-  .goal-row label{
-    display:block;font-size:11.5px;font-weight:700;
-    color:var(--text-light);margin-bottom:4px;
-  }
-  .goal-row input, .goal-row textarea{
-    width:100%;
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:9px 11px;
-    font-size:14px;
-    background:#FCFAF8;
-  }
-  .goal-row textarea{ min-height:64px;resize:vertical;line-height:1.5; }
-  .goal-nums{ display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
-  .save-hint{
-    font-size:11px;color:var(--teal-dark);
-    text-align:right;margin-top:2px;height:14px;
-  }
-
-  /* ===== Emergency ===== */
-  .em-hero{
-    background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);
-    color:#fff;border-radius:var(--radius);
-    padding:20px;text-align:center;margin-bottom:16px;
-  }
+  /* ===== Emergency (unchanged) ===== */
+  .em-hero{ background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);color:#fff;border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px; }
   .em-hero .em-icon{ font-size:32px; }
   .em-hero h2{ margin:6px 0 4px;font-size:19px;font-weight:900; }
   .em-hero p{ margin:0;font-size:12.5px;opacity:.9; }
-  .em-call{
-    display:inline-flex;align-items:center;gap:6px;
-    background:#fff;color:var(--red);
-    font-weight:800;font-size:14px;
-    padding:10px 20px;border-radius:999px;
-    margin-top:12px;text-decoration:none;
-  }
+  .em-call{ display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--red);font-weight:800;font-size:14px;padding:10px 20px;border-radius:999px;margin-top:12px;text-decoration:none; }
   .em-steps{ list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px; }
-  .em-steps li{
-    background:var(--card);border:1px solid var(--border);
-    border-radius:14px;padding:14px 14px 14px 12px;
-    display:flex;gap:12px;align-items:flex-start;
-  }
-  .em-steps .num{
-    flex:none;width:26px;height:26px;border-radius:50%;
-    background:var(--teal);color:#fff;font-weight:800;font-size:13px;
-    display:flex;align-items:center;justify-content:center;
-  }
+  .em-steps li{ background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 14px 12px;display:flex;gap:12px;align-items:flex-start; }
+  .em-steps .num{ flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center; }
   .em-steps .step-text{ font-size:13.5px;line-height:1.6; }
   .em-steps .step-text b{ font-size:14px; }
-  .em-note{
-    font-size:11.5px;color:var(--text-light);
-    background:#F1EBE4;border-radius:12px;padding:12px 14px;line-height:1.6;
-  }
+  .em-note{ font-size:11.5px;color:var(--text-light);background:#F1EBE4;border-radius:12px;padding:12px 14px;line-height:1.6; }
 
   ::selection{ background:var(--teal);color:#fff; }
 </style>
@@ -317,41 +274,71 @@
 
 <header class="app-header">
   <div class="logo-row">
-    <img src="apple-touch-icon.png?v=1" alt="logo">
+    <img src="apple-touch-icon.png?v=2" alt="logo">
     <h1>ワンバランス 経営ダッシュボード</h1>
   </div>
-  <p id="today-label"></p>
+  <div class="ctrl-row">
+    <div class="yr-bar">
+      <button id="yr-prev" aria-label="前年">‹</button>
+      <span class="yr-val" id="yr-val">2026</span>
+      <button id="yr-next" aria-label="翌年">›</button>
+    </div>
+    <div class="user-row">
+      担当
+      <select id="user-select">
+        <option value="長尾">長尾</option>
+        <option value="稲田">稲田</option>
+      </select>
+    </div>
+  </div>
 </header>
 
 <main>
 
   <!-- 会社理念 -->
   <section class="tab active" id="tab-philosophy">
-    <h2 class="section-title"><span class="dot"></span>会社理念</h2>
+    <h2 class="section-title"><span class="dot"></span>私たちの方向性</h2>
 
-    <div class="phi-card">
-      <span class="phi-label">フィロソフィー</span>
-      <p class="phi-text">心と体を元気に。カッコよく、素敵にする。</p>
+    <div class="ed-card">
+      <p class="ed-eyebrow">PHILOSOPHY</p>
+      <p class="ed-h">心と体を、元気に。<br>カッコよく、素敵に。</p>
+      <p class="ed-body">人との繋がりの中で心と体を元気に。目的や目標を実現することで、カッコよく、素敵になってもらう。</p>
     </div>
 
-    <div class="phi-card teal">
-      <span class="phi-label">ミッション</span>
-      <p class="phi-text">ボクシング革命を起こす。</p>
-      <p class="phi-sub">「小さい・怖い・キツい」というイメージを、「楽しい」に変える。</p>
+    <div class="ed-card">
+      <p class="ed-eyebrow">MISSION</p>
+      <p class="ed-h sm">ボクシング革命を起こす</p>
+      <p class="ed-body">「厳しい」「怖い」を「楽しい」に。常識を変える。そしてそれを、生活必需品にしてもらう。</p>
     </div>
 
-    <div class="phi-card dark">
-      <span class="phi-label">ビジョン</span>
-      <p class="phi-text">日本一、始めやすいボクシングジムにする。</p>
+    <div class="ed-card">
+      <p class="ed-eyebrow">VISION</p>
+      <p class="ed-h sm">日本一になる</p>
+    </div>
+
+    <div class="ed-card" id="theme-card">
+      <p class="ed-eyebrow" id="theme-year-label">2026｜年間テーマ</p>
+      <div class="ed-row">
+        <label class="ed-label">テーマ（例：革新）</label>
+        <input class="ed-input" id="theme-title" placeholder="今年のテーマ">
+      </div>
+      <div class="ed-row">
+        <label class="ed-label">意味・方針</label>
+        <textarea class="ed-textarea" id="theme-desc" placeholder="例：今あるものを壊し、新しい価値を創る。"></textarea>
+      </div>
+    </div>
+
+    <div class="ed-card" id="personal-card">
+      <p class="ed-eyebrow" id="personal-year-label">個人の今年のテーマ</p>
+      <p class="ed-sub" id="personal-user-label">長尾</p>
+      <textarea class="ed-textarea" id="personal-theme" placeholder="今年、自分が大事にすること・成し遂げたいことを書く"></textarea>
     </div>
   </section>
 
   <!-- シェア -->
   <section class="tab" id="tab-share">
     <h2 class="section-title"><span class="dot"></span>シェア（QRコード・URL）</h2>
-
     <div class="share-list" id="share-list"></div>
-
     <div class="add-card" id="add-card">
       <button class="add-toggle" id="add-toggle">＋ QR・URLを追加</button>
       <div class="add-form" id="add-form">
@@ -362,10 +349,13 @@
     </div>
   </section>
 
-  <!-- 事業目標 -->
-  <section class="tab" id="tab-goals">
-    <h2 class="section-title"><span class="dot"></span>各事業 今年の目標</h2>
-    <div class="goal-grid" id="goal-grid"></div>
+  <!-- 事業 -->
+  <section class="tab" id="tab-business">
+    <h2 class="section-title"><span class="dot"></span>事業別 今年の目標</h2>
+    <p class="yr-note" id="biz-year-note">2026年</p>
+
+    <div class="biz-switch" id="biz-switch"></div>
+    <div id="business-content"></div>
   </section>
 
   <!-- 緊急マニュアル -->
@@ -390,7 +380,7 @@
     </ol>
 
     <div class="em-note">
-      ※本マニュアルは一般的な熱中症対応の目安です。医学的な診断・処置に代わるものではありません。少しでも異常を感じたら、ためらわず119番へ連絡してください。
+      ※本マニュアルは一般的な熱中症対応の目安です。医学的な診断・処置に代わるものではありません。少しでも異常を感じたら、ためらわず119番へ連絡してください。日々の予防チェック（暑さ指数・準備物）は「事業」タブの各事業ページから行えます。
     </div>
   </section>
 
@@ -399,7 +389,7 @@
 <nav class="tabs">
   <button class="tab-btn active" data-tab="tab-philosophy"><span class="ic">🏆</span>理念</button>
   <button class="tab-btn" data-tab="tab-share"><span class="ic">🔗</span>シェア</button>
-  <button class="tab-btn" data-tab="tab-goals"><span class="ic">🎯</span>事業目標</button>
+  <button class="tab-btn" data-tab="tab-business"><span class="ic">🎯</span>事業</button>
   <button class="tab-btn" data-tab="tab-emergency"><span class="ic">⚠️</span>緊急</button>
 </nav>
 
@@ -407,12 +397,64 @@
 (function(){
   "use strict";
 
-  /* ---- 日付表示 ---- */
-  var d = new Date();
-  document.getElementById('today-label').textContent =
-    d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 更新';
+  function esc(str){
+    if(!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function nowStr(){
+    var d = new Date();
+    return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function loadJSON(key, fallback){
+    try{ var v = JSON.parse(localStorage.getItem(key)); return (v===null||v===undefined) ? fallback : v; }
+    catch(e){ return fallback; }
+  }
+  function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
 
-  /* ---- タブ切り替え ---- */
+  /* =========================================================
+     年度 / 担当者 状態
+     ========================================================= */
+  var YEARS = [2025,2026,2027,2028,2029,2030,2031];
+  var currentYear = Number(localStorage.getItem('wb_year')) || 2026;
+  if(YEARS.indexOf(currentYear) === -1) currentYear = 2026;
+  var activeUser = localStorage.getItem('wb_active_user') || '長尾';
+
+  var yrVal = document.getElementById('yr-val');
+  var yrPrev = document.getElementById('yr-prev');
+  var yrNext = document.getElementById('yr-next');
+  var userSelect = document.getElementById('user-select');
+
+  function setYear(y){
+    currentYear = y;
+    localStorage.setItem('wb_year', String(y));
+    yrVal.textContent = y + '年';
+    renderAll();
+  }
+  yrPrev.addEventListener('click', function(){
+    var idx = YEARS.indexOf(currentYear);
+    if(idx > 0) setYear(YEARS[idx-1]);
+  });
+  yrNext.addEventListener('click', function(){
+    var idx = YEARS.indexOf(currentYear);
+    if(idx < YEARS.length-1) setYear(YEARS[idx+1]);
+  });
+  userSelect.value = activeUser;
+  userSelect.addEventListener('change', function(){
+    activeUser = userSelect.value;
+    localStorage.setItem('wb_active_user', activeUser);
+    renderAll();
+  });
+
+  function renderAll(){
+    yrVal.textContent = currentYear + '年';
+    renderTheme();
+    renderPersonal();
+    renderBusinessTab();
+  }
+
+  /* =========================================================
+     タブ切り替え
+     ========================================================= */
   var tabBtns = document.querySelectorAll('.tab-btn');
   var tabSections = document.querySelectorAll('section.tab');
   tabBtns.forEach(function(btn){
@@ -426,86 +468,475 @@
   });
 
   /* =========================================================
-     事業目標（現在の会員数 / 単月目標 / 年間目標 / やること）
+     年間テーマ
      ========================================================= */
-  var BUSINESSES = [
-    { id:'boxing',  icon:'🥊', name:'ボクシングジム' },
-    { id:'onetre',  icon:'💪', name:'ONE-TRE パーソナル' },
-    { id:'bodycare',icon:'🧘', name:'ボディケア' },
-    { id:'youtube', icon:'▶️', name:'YouTube' }
-  ];
-  var GOALS_KEY = 'wb_goals_v1';
+  var THEME_KEY = 'wb_theme_v1';
+  var themeTitleEl = document.getElementById('theme-title');
+  var themeDescEl = document.getElementById('theme-desc');
+  var themeYearLabel = document.getElementById('theme-year-label');
 
-  function loadGoals(){
-    try{
-      return JSON.parse(localStorage.getItem(GOALS_KEY)) || {};
-    }catch(e){ return {}; }
+  function renderTheme(){
+    var all = loadJSON(THEME_KEY, {});
+    var t = all[currentYear] || { title:'', desc:'' };
+    themeTitleEl.value = t.title || '';
+    themeDescEl.value = t.desc || '';
+    themeYearLabel.textContent = currentYear + '｜年間テーマ';
   }
-  function saveGoals(data){
-    localStorage.setItem(GOALS_KEY, JSON.stringify(data));
+  function saveTheme(){
+    var all = loadJSON(THEME_KEY, {});
+    all[currentYear] = { title: themeTitleEl.value, desc: themeDescEl.value };
+    saveJSON(THEME_KEY, all);
   }
+  themeTitleEl.addEventListener('input', saveTheme);
+  themeDescEl.addEventListener('input', saveTheme);
 
-  var goalsData = loadGoals();
-  var grid = document.getElementById('goal-grid');
+  /* =========================================================
+     個人の今年のテーマ
+     ========================================================= */
+  var PERSONAL_KEY = 'wb_personal_v1';
+  var personalYearLabel = document.getElementById('personal-year-label');
+  var personalUserLabel = document.getElementById('personal-user-label');
+  var personalThemeEl = document.getElementById('personal-theme');
 
-  BUSINESSES.forEach(function(biz){
-    var g = goalsData[biz.id] || { members:'', monthly:'', yearly:'', actions:'' };
-
-    var card = document.createElement('div');
-    card.className = 'goal-card';
-    card.innerHTML =
-      '<h3><span class="badge">' + biz.icon + '</span>' + biz.name + '</h3>' +
-      '<div class="goal-nums">' +
-        '<div class="goal-row"><label>現在の会員数</label><input type="text" inputmode="numeric" data-field="members" value="' + esc(g.members) + '" placeholder="例：120"></div>' +
-        '<div class="goal-row"><label>単月目標</label><input type="text" inputmode="numeric" data-field="monthly" value="' + esc(g.monthly) + '" placeholder="例：10"></div>' +
-        '<div class="goal-row"><label>年間目標</label><input type="text" inputmode="numeric" data-field="yearly" value="' + esc(g.yearly) + '" placeholder="例：150"></div>' +
-      '</div>' +
-      '<div class="goal-row"><label>そのために何をするか</label><textarea data-field="actions" placeholder="具体的なアクションを記入">' + esc(g.actions) + '</textarea></div>' +
-      '<div class="save-hint" data-hint></div>';
-
-    grid.appendChild(card);
-
-    var hintEl = card.querySelector('[data-hint]');
-    var timer = null;
-    card.querySelectorAll('[data-field]').forEach(function(el){
-      el.addEventListener('input', function(){
-        var current = loadGoals();
-        var entry = current[biz.id] || {};
-        entry[el.dataset.field] = el.value;
-        current[biz.id] = entry;
-        saveGoals(current);
-        hintEl.textContent = '保存しました';
-        clearTimeout(timer);
-        timer = setTimeout(function(){ hintEl.textContent=''; }, 1200);
-      });
-    });
+  function renderPersonal(){
+    var all = loadJSON(PERSONAL_KEY, {});
+    var userData = all[activeUser] || {};
+    personalThemeEl.value = userData[currentYear] || '';
+    personalYearLabel.textContent = currentYear + '｜個人の今年のテーマ';
+    personalUserLabel.textContent = activeUser;
+  }
+  personalThemeEl.addEventListener('input', function(){
+    var all = loadJSON(PERSONAL_KEY, {});
+    if(!all[activeUser]) all[activeUser] = {};
+    all[activeUser][currentYear] = personalThemeEl.value;
+    saveJSON(PERSONAL_KEY, all);
   });
 
-  function esc(str){
-    if(!str) return '';
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  /* =========================================================
+     事業データ
+     ========================================================= */
+  var HEAT_ITEMS = [
+    { id:'drink', label:'経口補水液の準備', icon:'ic-drink.png' },
+    { id:'ice',   label:'保冷剤・アイス枕の準備', icon:'ic-ice.png' },
+    { id:'ac',    label:'涼しい部屋（エアコン）の確保', icon:'ic-ac.png' },
+    { id:'fan',   label:'扇風機の稼働', icon:'ic-fan.png' }
+  ];
+  var WBGT_LEVELS = [
+    { level:0, label:'ほぼ安全', range:'〜21', color:'#3E97AB', advice:'通常通り活動して問題ありません。' },
+    { level:1, label:'注意',     range:'21〜25', color:'#5BB9CD', advice:'こまめな水分補給を心がけましょう。' },
+    { level:2, label:'警戒',     range:'25〜28', color:'#E8A93A', advice:'積極的に休憩を取り、水分・塩分を補給してください。' },
+    { level:3, label:'厳重警戒', range:'28〜31', color:'#E8752E', advice:'激しい運動は中止。休憩を頻繁に取ってください。' },
+    { level:4, label:'危険（運動原則中止）', range:'31〜', color:'#AD002D', advice:'運動は原則中止です。安全を最優先してください。' }
+  ];
+
+  var BUSINESSES = [
+    {
+      id:'boxing', name:'ワンバランスボクシングジム', hasOps:true,
+      defaultValue:['圧倒的スピードこそが誠意','答えは逆にある','成長の先に成功はある','モテるは正しい','神は細部に宿る','数字は真実である','価格以上の価値を常に高めよ'],
+      defaultGoal:{ current:'138', target:'180', monthly:'3.5', lastYear:'' },
+      defaultTodos:[
+        {cat:'フリートレーニング教育', text:'みんなが自分で動ける'},
+        {cat:'フリートレーニング教育', text:'会員同士が高め合う'},
+        {cat:'フリートレーニング教育', text:'ジムの文化として定着させる'},
+        {cat:'満足度と仕組み', text:'基本カリキュラムを軸にする'},
+        {cat:'満足度と仕組み', text:'Lステップで連絡を仕組み化'},
+        {cat:'満足度と仕組み', text:'継続しやすい環境をつくる'}
+      ],
+      cleaning:['玄関','更衣室','シャワー室','鏡','テーブル','トイレ','リングの上','サンドバッグ','床','機械まわり','整理整頓','身だしなみ']
+    },
+    {
+      id:'onetre', name:'ONE-TRE', hasOps:true,
+      defaultValue:[],
+      defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' },
+      defaultTodos:[],
+      cleaning:['玄関','更衣室','シャワー室','フロアの床','機材','エアコン','ウェイトエリア','鏡','身だしなみ']
+    },
+    {
+      id:'happykids', name:'HAPPY KIDS PROJECT', hasOps:false,
+      defaultValue:[],
+      defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' },
+      defaultTodos:[],
+      cleaning:[]
+    }
+  ];
+
+  var currentBiz = localStorage.getItem('wb_current_biz') || 'boxing';
+
+  var VALUE_KEY   = 'wb_value_v1';
+  var GOAL_KEY    = 'wb_goal_v1';
+  var TODO_KEY    = 'wb_todo_v1';
+  var CLEAN_KEY   = 'wb_clean_v1';
+  var HEAT_KEY    = 'wb_heat_v1';
+
+  function getBiz(id){
+    for(var i=0;i<BUSINESSES.length;i++){ if(BUSINESSES[i].id===id) return BUSINESSES[i]; }
+    return BUSINESSES[0];
+  }
+
+  var bizSwitchEl = document.getElementById('biz-switch');
+  BUSINESSES.forEach(function(b){
+    var btn = document.createElement('button');
+    btn.textContent = b.name;
+    btn.dataset.biz = b.id;
+    if(b.id === currentBiz) btn.classList.add('active');
+    btn.addEventListener('click', function(){
+      currentBiz = b.id;
+      localStorage.setItem('wb_current_biz', currentBiz);
+      bizSwitchEl.querySelectorAll('button').forEach(function(bt){ bt.classList.remove('active'); });
+      btn.classList.add('active');
+      renderBusinessContent();
+    });
+    bizSwitchEl.appendChild(btn);
+  });
+
+  var bizYearNote = document.getElementById('biz-year-note');
+  var chartInstance = null;
+
+  function renderBusinessTab(){
+    bizYearNote.textContent = currentYear + '年';
+    renderBusinessContent();
+  }
+
+  function renderBusinessContent(){
+    var biz = getBiz(currentBiz);
+    var container = document.getElementById('business-content');
+
+    var valueAll = loadJSON(VALUE_KEY, {});
+    var valueList = valueAll[biz.id] || biz.defaultValue.slice();
+
+    var goalAll = loadJSON(GOAL_KEY, {});
+    if(!goalAll[biz.id]) goalAll[biz.id] = {};
+    var goal = goalAll[biz.id][currentYear] || Object.assign({}, biz.defaultGoal);
+
+    var todoAll = loadJSON(TODO_KEY, {});
+    if(!todoAll[biz.id]) todoAll[biz.id] = {};
+    var todos = todoAll[biz.id][currentYear];
+    if(!todos){
+      todos = biz.defaultTodos.map(function(t,i){
+        return { id:'seed'+i, cat:t.cat, text:t.text, done:false, detail:'' };
+      });
+    }
+
+    var html = '';
+
+    // VALUE
+    html += '<div class="ed-card">';
+    html += '<p class="ed-eyebrow">VALUE｜我々の考え方</p>';
+    html += '<ul class="value-list" id="value-list"></ul>';
+    html += '<div class="todo-add" style="margin-top:10px;">';
+    html += '<input class="ed-input" id="value-add-input" placeholder="価値観を追加">';
+    html += '<button id="value-add-btn">追加</button>';
+    html += '</div></div>';
+
+    // GOAL
+    html += '<div class="ed-card">';
+    html += '<p class="ed-eyebrow">GOAL｜' + currentYear + '年の目標</p>';
+    html += '<div class="goal-nums-ed">';
+    html += '<div class="g-item"><label class="ed-label">昨年実績</label><input class="ed-input" id="goal-lastyear" inputmode="numeric" value="'+esc(goal.lastYear)+'"></div>';
+    html += '<div class="g-item"><label class="ed-label">現在</label><input class="ed-input" id="goal-current" inputmode="numeric" value="'+esc(goal.current)+'"></div>';
+    html += '<div class="g-item"><label class="ed-label">年間目標</label><input class="ed-input" id="goal-target" inputmode="numeric" value="'+esc(goal.target)+'"></div>';
+    html += '</div>';
+    html += '<div class="ed-row"><label class="ed-label">単月目標</label><input class="ed-input" id="goal-monthly" inputmode="numeric" value="'+esc(goal.monthly)+'"></div>';
+    html += '<div class="goal-diff">';
+    html += '<div class="d-item"><div class="d-num" id="diff-target">-</div><div class="d-label">目標まで</div></div>';
+    html += '<div class="d-item"><div class="d-num" id="diff-lastyear">-</div><div class="d-label">昨年比</div></div>';
+    html += '</div>';
+    html += '<div class="chart-wrap"><canvas id="goal-chart"></canvas></div>';
+    html += '</div>';
+
+    // TODOS
+    html += '<div class="ed-card">';
+    html += '<p class="ed-eyebrow">やるべきこと</p>';
+    html += '<div class="todo-add">';
+    html += '<input class="ed-input" id="todo-cat-input" placeholder="カテゴリ（任意）" style="max-width:120px;">';
+    html += '<input class="ed-input" id="todo-text-input" placeholder="やること">';
+    html += '<button id="todo-add-btn">追加</button>';
+    html += '</div>';
+    html += '<div id="todo-list"></div>';
+    html += '</div>';
+
+    // OPS (cleaning + heat) only for boxing/onetre
+    if(biz.hasOps){
+      html += '<div class="ed-card">';
+      html += '<p class="ed-eyebrow">清掃・身だしなみチェック</p>';
+      html += '<div id="clean-list"></div>';
+      html += '</div>';
+
+      html += '<div class="ed-card">';
+      html += '<p class="ed-eyebrow">熱中症対策（暑さ指数 WBGT）</p>';
+      html += '<div class="wbgt-chips" id="wbgt-chips"></div>';
+      html += '<div class="wbgt-banner" id="wbgt-banner"></div>';
+      html += '<div id="heat-list"></div>';
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+
+    /* ---- VALUE ---- */
+    function renderValueList(){
+      var ul = document.getElementById('value-list');
+      ul.innerHTML = '';
+      if(valueList.length === 0){
+        var li = document.createElement('li');
+        li.style.background = 'transparent';
+        li.style.borderLeft = 'none';
+        li.style.color = '#9a9a9a';
+        li.style.fontWeight = '600';
+        li.textContent = 'まだありません。下から追加してください。';
+        ul.appendChild(li);
+        return;
+      }
+      valueList.forEach(function(v, i){
+        var li = document.createElement('li');
+        li.textContent = v;
+        li.style.cursor = 'pointer';
+        li.title = 'タップで削除';
+        li.addEventListener('click', function(){
+          if(confirm('「' + v + '」を削除しますか？')){
+            valueList.splice(i,1);
+            valueAll[biz.id] = valueList;
+            saveJSON(VALUE_KEY, valueAll);
+            renderValueList();
+          }
+        });
+        ul.appendChild(li);
+      });
+    }
+    renderValueList();
+    document.getElementById('value-add-btn').addEventListener('click', function(){
+      var input = document.getElementById('value-add-input');
+      var v = input.value.trim();
+      if(!v) return;
+      valueList.push(v);
+      valueAll[biz.id] = valueList;
+      saveJSON(VALUE_KEY, valueAll);
+      input.value = '';
+      renderValueList();
+    });
+
+    /* ---- GOAL ---- */
+    function saveGoal(){
+      goal.lastYear = document.getElementById('goal-lastyear').value;
+      goal.current  = document.getElementById('goal-current').value;
+      goal.target   = document.getElementById('goal-target').value;
+      goal.monthly  = document.getElementById('goal-monthly').value;
+      goalAll[biz.id][currentYear] = goal;
+      saveJSON(GOAL_KEY, goalAll);
+      updateGoalDerived();
+    }
+    ['goal-lastyear','goal-current','goal-target','goal-monthly'].forEach(function(id){
+      document.getElementById(id).addEventListener('input', saveGoal);
+    });
+
+    function updateGoalDerived(){
+      var cur = parseFloat(goal.current) || 0;
+      var tgt = parseFloat(goal.target) || 0;
+      var last = goal.lastYear === '' ? null : (parseFloat(goal.lastYear) || 0);
+
+      var diffTargetEl = document.getElementById('diff-target');
+      var diffLastEl = document.getElementById('diff-lastyear');
+      var diffTarget = tgt - cur;
+      diffTargetEl.textContent = (goal.current==='' && goal.target==='') ? '-' : (diffTarget>=0? '+'+diffTarget : diffTarget);
+      if(last === null || goal.current===''){
+        diffLastEl.textContent = '-';
+      }else{
+        var d = cur - last;
+        diffLastEl.textContent = (d>=0?'+':'') + d;
+      }
+
+      var ctx = document.getElementById('goal-chart');
+      if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
+      if(ctx && window.Chart){
+        chartInstance = new Chart(ctx, {
+          type:'bar',
+          data:{
+            labels:['昨年実績','現在','年間目標'],
+            datasets:[{
+              data:[last===null?0:last, cur, tgt],
+              backgroundColor:['#D9CFC4','#5BB9CD','#AD002D'],
+              borderRadius:6,
+              maxBarThickness:56
+            }]
+          },
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{ legend:{ display:false } },
+            scales:{ y:{ beginAtZero:true, ticks:{ font:{ size:10 } } }, x:{ ticks:{ font:{ size:11, weight:'bold' } } } }
+          }
+        });
+      }
+    }
+    updateGoalDerived();
+
+    /* ---- TODOS ---- */
+    function saveTodos(){
+      todoAll[biz.id][currentYear] = todos;
+      saveJSON(TODO_KEY, todoAll);
+    }
+    function renderTodos(){
+      var listEl = document.getElementById('todo-list');
+      listEl.innerHTML = '';
+      if(todos.length === 0){
+        var e = document.createElement('div');
+        e.className = 'empty-hint';
+        e.textContent = 'まだありません。上から追加してください。';
+        listEl.appendChild(e);
+        return;
+      }
+      var cats = [];
+      todos.forEach(function(t){
+        var c = t.cat || 'その他';
+        if(cats.indexOf(c) === -1) cats.push(c);
+      });
+      cats.forEach(function(cat){
+        var catEl = document.createElement('div');
+        catEl.className = 'todo-cat';
+        catEl.textContent = cat;
+        listEl.appendChild(catEl);
+
+        todos.forEach(function(t, i){
+          var c = t.cat || 'その他';
+          if(c !== cat) return;
+          var row = document.createElement('div');
+          row.className = 'todo-item' + (t.done ? ' done' : '');
+          row.innerHTML =
+            '<input type="checkbox" ' + (t.done?'checked':'') + '>' +
+            '<span class="t-text">' + esc(t.text) + '</span>' +
+            '<button class="t-del">×</button>';
+          row.querySelector('input').addEventListener('change', function(e){
+            todos[i].done = e.target.checked;
+            saveTodos();
+            renderTodos();
+          });
+          row.querySelector('.t-del').addEventListener('click', function(){
+            if(confirm('削除しますか？')){
+              todos.splice(i,1);
+              saveTodos();
+              renderTodos();
+            }
+          });
+          listEl.appendChild(row);
+        });
+      });
+    }
+    renderTodos();
+    document.getElementById('todo-add-btn').addEventListener('click', function(){
+      var catInput = document.getElementById('todo-cat-input');
+      var textInput = document.getElementById('todo-text-input');
+      var text = textInput.value.trim();
+      if(!text) return;
+      todos.push({ id:'t'+Date.now(), cat:catInput.value.trim(), text:text, done:false, detail:'' });
+      saveTodos();
+      catInput.value=''; textInput.value='';
+      renderTodos();
+    });
+
+    /* ---- CLEANING ---- */
+    if(biz.hasOps){
+      var cleanAll = loadJSON(CLEAN_KEY, {});
+      if(!cleanAll[biz.id]) cleanAll[biz.id] = {};
+      var cleanData = cleanAll[biz.id];
+
+      function renderClean(){
+        var listEl = document.getElementById('clean-list');
+        listEl.innerHTML = '';
+        biz.cleaning.forEach(function(label){
+          var rec = cleanData[label];
+          var row = document.createElement('div');
+          row.className = 'chk-row' + (rec && rec.checked ? ' checked' : '');
+          var meta = (rec && rec.checked) ? ('最終確認: ' + rec.at + ' ' + rec.by) : '未チェック';
+          row.innerHTML =
+            '<div class="chk-main"><div class="chk-label">' + esc(label) + '</div><div class="chk-meta">' + esc(meta) + '</div></div>' +
+            '<input type="checkbox" ' + (rec && rec.checked ? 'checked' : '') + '>';
+          row.querySelector('input').addEventListener('change', function(e){
+            if(e.target.checked){
+              cleanData[label] = { checked:true, by:activeUser, at:nowStr() };
+            }else{
+              cleanData[label] = { checked:false, by:'', at:'' };
+            }
+            cleanAll[biz.id] = cleanData;
+            saveJSON(CLEAN_KEY, cleanAll);
+            renderClean();
+          });
+          listEl.appendChild(row);
+        });
+      }
+      renderClean();
+
+      /* ---- HEAT ---- */
+      var heatAll = loadJSON(HEAT_KEY, {});
+      if(!heatAll[biz.id]) heatAll[biz.id] = { wbgt:null, items:{} };
+      var heatData = heatAll[biz.id];
+
+      function renderWbgt(){
+        var chipsEl = document.getElementById('wbgt-chips');
+        chipsEl.innerHTML = '';
+        WBGT_LEVELS.forEach(function(lv){
+          var chip = document.createElement('button');
+          chip.className = 'wbgt-chip' + (heatData.wbgt === lv.level ? ' active' : '');
+          chip.style.background = lv.color;
+          chip.textContent = lv.label + ' ' + lv.range;
+          chip.addEventListener('click', function(){
+            heatData.wbgt = lv.level;
+            heatAll[biz.id] = heatData;
+            saveJSON(HEAT_KEY, heatAll);
+            renderWbgt();
+          });
+          chipsEl.appendChild(chip);
+        });
+        var bannerEl = document.getElementById('wbgt-banner');
+        if(heatData.wbgt === null || heatData.wbgt === undefined){
+          bannerEl.style.background = '#B4B2A9';
+          bannerEl.innerHTML = '<p class="wb-lv">本日の暑さ指数を選択してください</p><p class="wb-desc">日本スポーツ協会の運動指針を基準にしています。</p>';
+        }else{
+          var lv = WBGT_LEVELS[heatData.wbgt];
+          bannerEl.style.background = lv.color;
+          bannerEl.innerHTML = '<p class="wb-lv">' + esc(lv.label) + '（WBGT ' + esc(lv.range) + '）</p><p class="wb-desc">' + esc(lv.advice) + '</p>';
+        }
+      }
+      renderWbgt();
+
+      function renderHeatList(){
+        var listEl = document.getElementById('heat-list');
+        listEl.innerHTML = '';
+        HEAT_ITEMS.forEach(function(item){
+          var rec = heatData.items[item.id];
+          var row = document.createElement('div');
+          row.className = 'chk-row' + (rec && rec.checked ? ' checked' : '');
+          var meta = (rec && rec.checked) ? ('最終確認: ' + rec.at + ' ' + rec.by) : '未チェック';
+          row.innerHTML =
+            '<img src="' + item.icon + '?v=1" alt="">' +
+            '<div class="chk-main"><div class="chk-label">' + esc(item.label) + '</div><div class="chk-meta">' + esc(meta) + '</div></div>' +
+            '<input type="checkbox" ' + (rec && rec.checked ? 'checked' : '') + '>';
+          row.querySelector('input').addEventListener('change', function(e){
+            if(e.target.checked){
+              heatData.items[item.id] = { checked:true, by:activeUser, at:nowStr() };
+            }else{
+              heatData.items[item.id] = { checked:false, by:'', at:'' };
+            }
+            heatAll[biz.id] = heatData;
+            saveJSON(HEAT_KEY, heatAll);
+            renderHeatList();
+          });
+          listEl.appendChild(row);
+        });
+      }
+      renderHeatList();
+    }
   }
 
   /* =========================================================
-     シェア（QRコード & URL / 自由に追加）
+     シェア（QRコード & URL）
      ========================================================= */
   var LINKS_KEY = 'wb_share_links_v1';
-
-  function loadLinks(){
-    try{
-      return JSON.parse(localStorage.getItem(LINKS_KEY)) || [];
-    }catch(e){ return []; }
-  }
-  function saveLinks(list){
-    localStorage.setItem(LINKS_KEY, JSON.stringify(list));
-  }
-
+  function loadLinks(){ return loadJSON(LINKS_KEY, []); }
+  function saveLinks(list){ saveJSON(LINKS_KEY, list); }
   var shareListEl = document.getElementById('share-list');
 
   function renderLinks(){
     var links = loadLinks();
     shareListEl.innerHTML = '';
-
     if(links.length === 0){
       var empty = document.createElement('div');
       empty.className = 'empty-hint';
@@ -513,15 +944,12 @@
       shareListEl.appendChild(empty);
       return;
     }
-
     links.forEach(function(link, idx){
       var item = document.createElement('div');
       item.className = 'share-item';
-
       var qrBox = document.createElement('div');
       qrBox.className = 'share-qr';
       item.appendChild(qrBox);
-
       var info = document.createElement('div');
       info.className = 'share-info';
       info.innerHTML =
@@ -532,21 +960,11 @@
           '<button class="btn btn-del" data-del="' + idx + '">削除</button>' +
         '</div>';
       item.appendChild(info);
-
       shareListEl.appendChild(item);
-
-      // QRコード生成
       try{
-        new QRCode(qrBox, {
-          text: link.url,
-          width: 84,
-          height: 84,
-          correctLevel: QRCode.CorrectLevel.M
-        });
+        new QRCode(qrBox, { text: link.url, width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
       }catch(e){ qrBox.textContent = 'QR'; }
     });
-
-    // コピー処理
     shareListEl.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var idx = Number(btn.dataset.copy);
@@ -555,8 +973,6 @@
         copyText(url, btn);
       });
     });
-
-    // 削除処理
     shareListEl.querySelectorAll('[data-del]').forEach(function(btn){
       btn.addEventListener('click', function(){
         var idx = Number(btn.dataset.del);
@@ -569,40 +985,28 @@
       });
     });
   }
-
   function copyText(text, btn){
     function done(){
       if(btn){
         var orig = btn.textContent;
         btn.textContent = 'コピーしました';
         btn.classList.add('copied');
-        setTimeout(function(){
-          btn.textContent = orig;
-          btn.classList.remove('copied');
-        }, 1400);
+        setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1400);
       }
     }
     if(navigator.clipboard && navigator.clipboard.writeText){
       navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
-    }else{
-      fallbackCopy(text);
-      done();
-    }
+    }else{ fallbackCopy(text); done(); }
   }
   function fallbackCopy(text){
     var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus(); ta.select();
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
     try{ document.execCommand('copy'); }catch(e){}
     document.body.removeChild(ta);
   }
-
   renderLinks();
 
-  /* 追加フォームの開閉 */
   var addToggle = document.getElementById('add-toggle');
   var addForm = document.getElementById('add-form');
   var addCard = document.getElementById('add-card');
@@ -611,34 +1015,26 @@
     addCard.classList.toggle('open');
     addToggle.textContent = addForm.classList.contains('show') ? '－ 閉じる' : '＋ QR・URLを追加';
   });
-
   document.getElementById('add-submit').addEventListener('click', function(){
     var nameEl = document.getElementById('add-name');
     var urlEl = document.getElementById('add-url');
     var name = nameEl.value.trim();
     var url = urlEl.value.trim();
-
-    if(!name || !url){
-      alert('名称とURLの両方を入力してください。');
-      return;
-    }
-    if(!/^https?:\/\//i.test(url)){
-      alert('URLは http:// または https:// から入力してください。');
-      return;
-    }
-
+    if(!name || !url){ alert('名称とURLの両方を入力してください。'); return; }
+    if(!/^https?:\/\//i.test(url)){ alert('URLは http:// または https:// から入力してください。'); return; }
     var links = loadLinks();
     links.push({ name:name, url:url });
     saveLinks(links);
-
-    nameEl.value = '';
-    urlEl.value = '';
-    addForm.classList.remove('show');
-    addCard.classList.remove('open');
+    nameEl.value=''; urlEl.value='';
+    addForm.classList.remove('show'); addCard.classList.remove('open');
     addToggle.textContent = '＋ QR・URLを追加';
-
     renderLinks();
   });
+
+  /* =========================================================
+     初期描画
+     ========================================================= */
+  renderAll();
 
 })();
 </script>
