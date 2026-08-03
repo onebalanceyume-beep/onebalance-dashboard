@@ -1104,7 +1104,7 @@
     var changed = false;
     links.forEach(function(l, i){
       if(!l.id){ l.id = 'l' + Date.now() + '_' + i; changed = true; }
-      if(l.biz === undefined || l.biz === null){ l.biz = 'common'; changed = true; }
+      if(l.biz === undefined || l.biz === null || l.biz === 'common'){ l.biz = ''; changed = true; }
     });
     if(changed) saveJSON(LINKS_KEY, links);
     return links;
@@ -1117,7 +1117,7 @@
   function saveCustomShareCats(list){ saveJSON(SHARE_CUSTOM_KEY, list); }
 
   function getShareCats(){
-    var base = [{ id:'common', name:'共通' }].concat(BUSINESSES.map(function(b){ return { id:b.id, name:b.name }; }));
+    var base = BUSINESSES.map(function(b){ return { id:b.id, name:b.name }; });
     loadCustomShareCats().forEach(function(name){
       if(!base.some(function(b){ return b.id === name; })){
         base.push({ id:name, name:name });
@@ -1174,7 +1174,7 @@
 
   function renderLinks(){
     var links = loadLinks();
-    var filtered = (currentShareFilter === 'all') ? links : links.filter(function(l){ return (l.biz || 'common') === currentShareFilter; });
+    var filtered = (currentShareFilter === 'all') ? links : links.filter(function(l){ return l.biz === currentShareFilter; });
     shareListEl.innerHTML = '';
     if(filtered.length === 0){
       var empty = document.createElement('div');
@@ -1189,12 +1189,12 @@
       var qrBox = document.createElement('div');
       qrBox.className = 'share-qr';
       item.appendChild(qrBox);
-      var bizLabel = (getShareCats().filter(function(f){ return f.id === (link.biz||'common'); })[0] || {name:(link.biz||'共通')}).name;
       var info = document.createElement('div');
       info.className = 'share-info';
       info.innerHTML =
-        '<p class="name">' + esc(link.name) + '　<span style="color:#B4B2A9;font-weight:600;">[' + esc(bizLabel) + ']</span></p>' +
+        '<p class="name">' + esc(link.name) + '</p>' +
         '<p class="url">' + esc(link.url) + '</p>' +
+        '<select class="ed-input share-biz-edit" data-editbiz="' + esc(link.id) + '" style="margin-bottom:8px;max-width:180px;"></select>' +
         '<div class="share-actions">' +
           '<button class="btn btn-copy" data-copy="' + esc(link.id) + '">URLをコピー</button>' +
           '<button class="btn btn-del" data-del="' + esc(link.id) + '">削除</button>' +
@@ -1204,6 +1204,27 @@
       try{
         new QRCode(qrBox, { text: link.url, width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
       }catch(e){ qrBox.textContent = 'QR'; }
+
+      var selectEl = info.querySelector('[data-editbiz]');
+      var placeholderOpt = document.createElement('option');
+      placeholderOpt.value = '';
+      placeholderOpt.textContent = '未分類（タップして選択）';
+      selectEl.appendChild(placeholderOpt);
+      getShareCats().forEach(function(f){
+        var opt = document.createElement('option');
+        opt.value = f.id; opt.textContent = f.name;
+        selectEl.appendChild(opt);
+      });
+      selectEl.value = link.biz || '';
+      selectEl.addEventListener('change', function(){
+        var allLinks = loadLinks();
+        var target = allLinks.filter(function(l){ return String(l.id) === selectEl.dataset.editbiz; })[0];
+        if(target){
+          target.biz = selectEl.value;
+          saveLinks(allLinks);
+          renderLinks();
+        }
+      });
     });
     shareListEl.querySelectorAll('[data-copy]').forEach(function(btn){
       btn.addEventListener('click', function(){
@@ -1254,6 +1275,10 @@
     addForm.classList.toggle('show');
     addCard.classList.toggle('open');
     addToggle.textContent = addForm.classList.contains('show') ? '－ 閉じる' : '＋ QR・URLを追加';
+    if(addForm.classList.contains('show') && currentShareFilter !== 'all'){
+      var hasOpt = Array.prototype.some.call(addBizSelect.options, function(o){ return o.value === currentShareFilter; });
+      if(hasOpt) addBizSelect.value = currentShareFilter;
+    }
   });
   document.getElementById('add-submit').addEventListener('click', function(){
     var nameEl = document.getElementById('add-name');
