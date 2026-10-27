@@ -70,6 +70,7 @@ function compute_(sales, exp, kpi, avg, players, contracts) {
     if (proj === HK && startsWith_(desc, 'パートナーシップ年間') && !refunded) {
       partners.count++; partners.gross += toNum_(r[4]); partners.net += toNum_(r[7]); hkNet += toNum_(r[7]);
     }
+    if (proj === HK && startsWith_(desc, 'パートナーシップ年間') && refunded) { hkNet += toNum_(r[7]); } // 返金済みでも戻らないカード手数料(マイナス)を台帳の利益と合わせる
     if (proj === HK && startsWith_(desc, '大会スポンサー余剰金')) { surplus += toNum_(r[4]); hkNet += toNum_(r[7]) || toNum_(r[4]); }
   }
   var taikaiCost = 0, hkCost = 0;
