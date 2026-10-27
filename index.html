@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>ワンバランス 経営ダッシュボード</title>
+<title>ONE-BALANCE 経営ダッシュボード</title>
 <link rel="manifest" href="manifest.json?v=2">
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ワンバランス">
+<meta name="apple-mobile-web-app-title" content="ONE-BALANCE">
 <meta name="theme-color" content="#DB444C">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
@@ -165,6 +165,22 @@
     font-family:var(--ed-font);
   }
   .biz-switch button.active{ background:var(--ed-red);color:#fff; }
+  #biz-switch{ flex-wrap:nowrap; }
+  #biz-switch button.logo-btn{
+    min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 4px 8px;border:2px solid #E5DED5;background:#fff;color:#444;
+  }
+  #biz-switch button.logo-btn img{ width:60px;height:60px;border-radius:14px;object-fit:cover;display:block;opacity:.55;transition:opacity .15s; }
+  #biz-switch button.logo-btn span{ font-size:11px;line-height:1.25;font-weight:800;text-align:center; }
+  #biz-switch button.logo-btn.active{ border-color:var(--ed-red);background:#FFF1F2;color:var(--ed-red); }
+  #biz-switch button.logo-btn.active img{ opacity:1; }
+  .month-goal{ text-align:center;background:linear-gradient(135deg,#DB444C,#B8323A);color:#fff;border-radius:18px;padding:18px 12px;margin-bottom:14px; }
+  .month-goal .mg-label{ font-size:13px;font-weight:800;opacity:.9; }
+  .month-goal .mg-num{ font-size:56px;font-weight:900;line-height:1.1;margin:4px 0; }
+  .month-goal .mg-num small{ font-size:20px;font-weight:800;margin-left:4px; }
+  .month-goal .mg-sub{ font-size:12px;opacity:.92; }
+  .exp-row{ display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #EEE;font-size:13px; }
+  .exp-row button{ border:none;background:none;color:#B33;font-size:16px;cursor:pointer; }
 
   /* value list */
   .value-list{ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px; }
@@ -278,7 +294,7 @@
 <header class="app-header">
   <div class="logo-row">
     <img src="apple-touch-icon.png?v=2" alt="logo">
-    <h1>ワンバランス 経営ダッシュボード</h1>
+    <h1>ONE-BALANCE 経営ダッシュボード</h1>
   </div>
   <div class="ctrl-row">
     <div class="yr-bar">
@@ -640,15 +656,19 @@
 
   function bizButtonHtml(name){
     if(name.indexOf('ワンバランス') === 0){
-      return 'ワンバランス<br>' + esc(name.slice('ワンバランス'.length));
+      return 'ONE-BALANCE<br>' + esc(name.slice('ワンバランス'.length));
     }
     return esc(name);
   }
 
+  var BIZ_LOGO = { boxing:'logo-boxing.jpg?v=3', onetre:'logo-onetre.jpg?v=3', happykids:'logo-happykids.jpg?v=3' };
+  var BIZ_SHORT = { boxing:'ONE-BALANCE<br>ボクシングジム', onetre:'ONE-TRE', happykids:'HAPPY KIDS<br>PROJECT' };
+
   var bizSwitchEl = document.getElementById('biz-switch');
   BUSINESSES.forEach(function(b){
     var btn = document.createElement('button');
-    btn.innerHTML = bizButtonHtml(b.name);
+    btn.className = 'logo-btn';
+    btn.innerHTML = '<img src="' + BIZ_LOGO[b.id] + '" alt=""><span>' + BIZ_SHORT[b.id] + '</span>';
     btn.dataset.biz = b.id;
     if(b.id === currentBiz) btn.classList.add('active');
     btn.addEventListener('click', function(){
@@ -690,6 +710,19 @@
     }
 
     var html = '';
+
+    // 今月の目標（長尾・稲田どちらにも表示）
+    html += '<div class="month-goal"><div class="mg-label" id="mg-label"></div><div class="mg-num" id="mg-num">-</div><div class="mg-sub" id="mg-sub"></div></div>';
+
+    // 経費（長尾のみ）
+    if(activeUser === '長尾'){
+      html += '<div class="ed-card" id="exp-card">';
+      html += '<p class="ed-eyebrow">経費｜長尾のみ表示</p>';
+      html += '<div class="todo-add"><input class="ed-input" id="exp-text" placeholder="内容"><input class="ed-input" id="exp-amt" inputmode="numeric" placeholder="金額" style="max-width:110px;"><button id="exp-add">追加</button></div>';
+      html += '<div id="exp-list"></div><p class="ed-sub" id="exp-total" style="margin-top:8px;font-weight:800;"></p>';
+      html += '<p class="ed-sub">この端末だけに保存されます（別の端末には出ません）</p>';
+      html += '</div>';
+    }
 
     // VALUE
     html += '<div class="ed-card">';
@@ -752,6 +785,34 @@
 
     container.innerHTML = html;
 
+    /* ---- 経費（長尾のみ・この端末に保存） ---- */
+    (function(){
+      var card=document.getElementById('exp-card'); if(!card) return;
+      var EXP_KEY='wb_expense_v1';
+      function load(){ var all=loadJSON(EXP_KEY,{}); return all[biz.id]||[]; }
+      function save(list){ var all=loadJSON(EXP_KEY,{}); all[biz.id]=list; saveJSON(EXP_KEY,all); }
+      function draw(){
+        var list=load(), el=document.getElementById('exp-list'), now=new Date(), ym=now.getFullYear()+'-'+(now.getMonth()+1), sum=0, h='';
+        list.slice().reverse().forEach(function(e){
+          if(e.ym===ym) sum+=e.amt;
+          h+='<div class="exp-row"><span>'+esc(e.date)+'　'+esc(e.text)+'</span><span>¥'+e.amt.toLocaleString()+' <button data-del="'+e.id+'">✕</button></span></div>';
+        });
+        el.innerHTML = h || '<p class="ed-sub">まだありません</p>';
+        document.getElementById('exp-total').textContent = (now.getMonth()+1)+'月の経費合計：¥'+sum.toLocaleString();
+        el.querySelectorAll('button[data-del]').forEach(function(bt){
+          bt.addEventListener('click',function(){ save(load().filter(function(x){return x.id!==bt.dataset.del;})); draw(); });
+        });
+      }
+      document.getElementById('exp-add').addEventListener('click',function(){
+        var t=document.getElementById('exp-text').value.trim(), a=parseInt(document.getElementById('exp-amt').value.replace(/[^0-9]/g,''),10);
+        if(!t||isNaN(a)) return;
+        var n=new Date(), l=load();
+        l.push({id:'e'+Date.now(),date:(n.getMonth()+1)+'/'+n.getDate(),ym:n.getFullYear()+'-'+(n.getMonth()+1),text:t,amt:a});
+        save(l); document.getElementById('exp-text').value=''; document.getElementById('exp-amt').value=''; draw();
+      });
+      draw();
+    })();
+
     /* ---- VALUE ---- */
     function renderValueList(){
       var ul = document.getElementById('value-list');
@@ -809,6 +870,16 @@
     });
 
     function updateGoalDerived(){
+      (function(){
+        var mgL=document.getElementById('mg-label'), mgN=document.getElementById('mg-num'), mgS=document.getElementById('mg-sub');
+        if(!mgL) return;
+        var m=(new Date().getMonth()+1);
+        var mv=parseFloat(goal.monthly);
+        var unit = biz.id==='happykids' ? '' : '人';
+        mgL.textContent = m + '月の目標' + (biz.id==='happykids' ? '' : '（入会してほしい人数）');
+        if(isNaN(mv) || goal.monthly===''){ mgN.innerHTML = '-'; mgS.textContent = '下の「単月目標」に数字を入れてください'; }
+        else{ mgN.innerHTML = mv + '<small>' + unit + '</small>'; mgS.textContent = 'この数字を達成しにいく月です'; }
+      })();
       var cur = parseFloat(goal.current) || 0;
       var tgt = parseFloat(goal.target) || 0;
       var last = goal.lastYear === '' ? null : (parseFloat(goal.lastYear) || 0);
