@@ -299,7 +299,13 @@
 <main>
 
   <!-- 会社理念 -->
-  <section class="tab active" id="tab-philosophy">
+  <!-- 提案ボード（最初に開く画面） -->
+  <section class="tab active" id="tab-proposal" style="margin:-18px -16px -24px;">
+    <iframe id="proposal-frame" title="提案ボード" style="display:block;width:100%;border:0;height:70vh;background:#fff;"></iframe>
+  </section>
+
+  <!-- 会社理念 -->
+  <section class="tab" id="tab-philosophy">
     <h2 class="section-title"><span class="dot"></span>私たちの方向性</h2>
 
     <div class="ed-card">
@@ -431,7 +437,8 @@
 </main>
 
 <nav class="tabs">
-  <button class="tab-btn active" data-tab="tab-philosophy"><span class="ic">🏆</span>理念</button>
+  <button class="tab-btn active" data-tab="tab-proposal"><span class="ic">💡</span>提案</button>
+  <button class="tab-btn" data-tab="tab-philosophy"><span class="ic">🏆</span>理念</button>
   <button class="tab-btn" data-tab="tab-share"><span class="ic">🔗</span>シェア</button>
   <button class="tab-btn" data-tab="tab-business"><span class="ic">🎯</span>事業</button>
   <button class="tab-btn" data-tab="tab-emergency"><span class="ic">⚠️</span>緊急</button>
@@ -499,6 +506,19 @@
   /* =========================================================
      タブ切り替え
      ========================================================= */
+  /* 提案ボード：毎回キャッシュを避けて読み込み、画面サイズに合わせる */
+  var proposalFrame = document.getElementById('proposal-frame');
+  function sizeProposal(){
+    var nav = document.querySelector('nav.tabs');
+    var top = proposalFrame.getBoundingClientRect().top + window.scrollY;
+    var h = window.innerHeight - top - (nav ? nav.offsetHeight : 0);
+    proposalFrame.style.height = Math.max(h, 400) + 'px';
+  }
+  proposalFrame.src = 'proposal.html?t=' + Date.now();
+  window.addEventListener('resize', sizeProposal);
+  window.addEventListener('orientationchange', function(){ setTimeout(sizeProposal, 200); });
+  setTimeout(sizeProposal, 0);
+
   var tabBtns = document.querySelectorAll('.tab-btn');
   var tabSections = document.querySelectorAll('section.tab');
   tabBtns.forEach(function(btn){
@@ -508,6 +528,7 @@
       btn.classList.add('active');
       document.getElementById(btn.dataset.tab).classList.add('active');
       window.scrollTo({top:0, behavior:'instant'});
+      if(btn.dataset.tab==='tab-proposal'){ sizeProposal(); }
     });
   });
 
