@@ -654,6 +654,65 @@
     return BUSINESSES[0];
   }
 
+  /* ---- 台帳の数字を読むAPI（GAS）。URLは gas/dashboard-api.gs を公開して貼る ---- */
+  var DASH_API_URL = '';
+  var dashCache = null;
+  function loadDash(cb){
+    if(!DASH_API_URL){ cb(null, 'nourl'); return; }
+    if(dashCache){ cb(dashCache); return; }
+    fetch(DASH_API_URL + '?action=getDashboard&t=' + Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.status === 'ok'){ dashCache = j; cb(j); } else { cb(null, 'error'); }
+      })
+      .catch(function(){ cb(null, 'error'); });
+  }
+  function yen(n){ return (n === null || n === undefined || isNaN(n)) ? '-' : '¥' + Math.round(n).toLocaleString(); }
+  function pct(v){ return (v === null || v === undefined || v === '' || isNaN(v)) ? '-' : Math.round(Number(v) * 100) + '%'; }
+  function numOrDash(v){ return (v === null || v === undefined) ? '-' : v; }
+
+  function renderDataCard(biz){
+    var title = document.getElementById('data-title');
+    var body = document.getElementById('data-body');
+    if(!title || !body) return;
+    title.textContent = biz.id === 'happykids' ? 'NUMBERS｜HAPPY KIDS PROJECT の数字' : 'NUMBERS｜体験→成約・入会・退会';
+    loadDash(function(j, err){
+      if(!document.getElementById('data-body')) return;
+      if(err === 'nourl'){ body.textContent = '準備中です（数字を読み込む設定がまだありません）'; return; }
+      if(err){ body.textContent = '数字を読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
+      var d = j.data, h = '';
+      if(biz.id === 'happykids'){
+        var t = d.happykids.taikai, pt = d.happykids.partners, c = pt.contracts;
+        h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">大会の余り（HAPPY KIDSに入る額）</div><div class="mg-num">' + yen(t.surplus) + '</div><div class="mg-sub">スポンサー手取り ' + yen(t.sponsorNet) + ' − 大会運営費 ' + yen(t.cost) + '</div></div>';
+        h += '<div class="exp-row"><span>スポンサー</span><b>' + t.sponsorCount + '件（額面 ' + yen(t.sponsorGross) + '）</b></div>';
+        h += '<div class="exp-row"><span>カード手数料</span><b>' + yen(t.cardFee) + '</b></div>';
+        h += '<div class="exp-row"><span>選手の申込</span><b>' + (t.players === null ? '不明' : t.players + '人') + '</b></div>';
+        h += '<div class="exp-row"><span>パートナー（年契約・Stripe）</span><b>' + pt.stripeCount + '件 ' + yen(pt.stripeGross) + '</b></div>';
+        if(c){ h += '<div class="exp-row"><span>契約一覧</span><b>' + c.total + '件（契約中 ' + c.active + '・契約日待ち ' + c.waiting + '）</b></div>'; }
+        h += '<div class="exp-row"><span>HAPPY KIDS 売上（手取り）</span><b>' + yen(d.happykids.hkSalesNet) + '</b></div>';
+        if(activeUser === '長尾'){
+          h += '<div class="exp-row"><span>HAPPY KIDS 経費</span><b>' + yen(d.happykids.hkCost) + '</b></div>';
+          h += '<div class="exp-row"><span>残金（売上 − 経費）</span><b>' + yen(d.happykids.hkBalance) + '</b></div>';
+        }
+        h += '<p class="ed-sub" style="margin-top:8px;">台帳から自動で出しています。スポンサーの7件は、HAPPY KIDSの売上には二重に入れていません。</p>';
+      } else {
+        var rows = (d.kpi[biz.id] || []).slice().sort(function(a,b){ return (a.year*100+a.month) - (b.year*100+b.month); });
+        var av = d.avg || {};
+        function A(k){ return av[k] ? av[k][biz.id] : null; }
+        h += '<div class="exp-row"><span>成約率（通算）</span><b>' + (typeof A('通算成約率') === 'number' ? pct(A('通算成約率')) : '不明') + '</b></div>';
+        h += '<div class="exp-row"><span>成約率（月平均）</span><b>' + (typeof A('月平均 成約率') === 'number' ? pct(A('月平均 成約率')) : '不明') + '</b></div>';
+        h += '<div class="exp-row"><span>体験（月平均）</span><b>' + (typeof A('月平均 体験数') === 'number' ? A('月平均 体験数').toFixed(1) + '人' : '不明') + '</b></div>';
+        h += '<div class="exp-row"><span>新規入会（月平均）</span><b>' + (typeof A('月平均 新規入会') === 'number' ? A('月平均 新規入会').toFixed(1) + '人' : '不明') + '</b></div>';
+        h += '<div style="overflow-x:auto;margin-top:10px;"><table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;"><tr style="background:#FFF1F2;"><th>月</th><th>体験</th><th>成約</th><th>成約率</th><th>新規</th><th>更新</th><th>退会</th></tr>';
+        rows.slice(-7).forEach(function(r){
+          h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:7px 2px;font-weight:700;">' + r.month + '月</td><td>' + numOrDash(r.trial) + '</td><td>' + numOrDash(r.closed) + '</td><td>' + pct(r.rate) + '</td><td>' + numOrDash(r.newJoin) + '</td><td>' + numOrDash(r.renew) + '</td><td>' + numOrDash(r.quit) + '</td></tr>';
+        });
+        h += '</table></div><p class="ed-sub" style="margin-top:8px;">体験した月で数えています（5月に体験して6月に入会した人は5月の成約）。「-」は記録なしです。当月は途中経過です。</p>';
+      }
+      body.innerHTML = h;
+    });
+  }
+
   function bizButtonHtml(name){
     if(name.indexOf('ワンバランス') === 0){
       return 'ONE-BALANCE<br>' + esc(name.slice('ワンバランス'.length));
@@ -713,6 +772,9 @@
 
     // 今月の目標（長尾・稲田どちらにも表示）
     html += '<div class="month-goal"><div class="mg-label" id="mg-label"></div><div class="mg-num" id="mg-num">-</div><div class="mg-sub" id="mg-sub"></div></div>';
+
+    // 数字（台帳から自動）
+    html += '<div class="ed-card" id="data-card"><p class="ed-eyebrow" id="data-title"></p><div id="data-body" class="ed-sub">読み込み中…</div></div>';
 
     // 経費（長尾のみ）
     if(activeUser === '長尾'){
@@ -784,6 +846,7 @@
     }
 
     container.innerHTML = html;
+    renderDataCard(biz);
 
     /* ---- 経費（長尾のみ・この端末に保存） ---- */
     (function(){
