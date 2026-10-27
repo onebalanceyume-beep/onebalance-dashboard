@@ -59,7 +59,41 @@ function buildDashboard_() {
 
   var out = compute_(sales, exp, kpi, avg, players, contracts);
   try { out.members = buildMembers_(); } catch (e3) { out.members = null; }
+  try { out.finance = buildFinance_(sales, exp); } catch (e4) { out.finance = null; }
   return out;
+}
+
+function ymOf_(v) {
+  if (v instanceof Date) return Utilities.formatDate(v, 'Asia/Tokyo', 'yyyy/MM');
+  var m = String(v || '').match(/(\d{4})[\/\-](\d{1,2})/);
+  return m ? m[1] + '/' + ('0' + m[2]).slice(-2) : '';
+}
+
+// 事業別の売上・経費・利益（台帳「サマリー」と同じ計算：利益＝入金額の合計−経費合計）
+function buildFinance_(sales, exp) {
+  var keys = { 'ワンバランスボクシングジム': 'boxing', 'ONE-TRE': 'onetre', 'HAPPY KIDS PROJECT': 'happykids' };
+  var nowYm = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM');
+  function blank() { return { sales: 0, fee: 0, refund: 0, net: 0, expense: 0, monthSales: 0, monthNet: 0, monthExpense: 0 }; }
+  var f = { boxing: blank(), onetre: blank(), happykids: blank(), total: blank(), month: nowYm };
+  for (var i = 1; i < sales.length; i++) {
+    var r = sales[i], k = keys[r[1]];
+    if (!k || String(r[3] || '') === '') continue;
+    var cur = (ymOf_(r[0]) === nowYm);
+    [f[k], f.total].forEach(function (o) {
+      o.sales += toNum_(r[4]); o.fee += toNum_(r[5]); o.refund += toNum_(r[6]); o.net += toNum_(r[7]);
+      if (cur) { o.monthSales += toNum_(r[4]); o.monthNet += toNum_(r[7]); }
+    });
+  }
+  for (var j = 1; j < exp.length; j++) {
+    var e = exp[j], k2 = keys[e[1]];
+    if (!k2) continue;
+    var cur2 = (ymOf_(e[0]) === nowYm);
+    [f[k2], f.total].forEach(function (o) {
+      o.expense += toNum_(e[5]);
+      if (cur2) o.monthExpense += toNum_(e[5]);
+    });
+  }
+  return f;
 }
 
 function normName_(s) { return String(s || '').replace(/[\s\u3000]/g, ''); }

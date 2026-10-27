@@ -681,6 +681,22 @@
       if(err === 'nourl'){ body.textContent = '準備中です（数字を読み込む設定がまだありません）'; return; }
       if(err){ body.textContent = '数字を読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
       var d = j.data, h = '';
+      var fin = d.finance;
+      if(fin && fin[biz.id]){
+        var fb = fin[biz.id], ft = fin.total, owner = (activeUser === '長尾');
+        h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">売上（累計・手数料引き前）</div><div class="mg-num">' + yen(fb.sales) + '</div><div class="mg-sub">今月 ' + yen(fb.monthSales) + '　／　入金額 ' + yen(fb.net) + '</div></div>';
+        if(owner){
+          h += '<div class="exp-row"><span>経費（累計）</span><b>' + yen(fb.expense) + '</b></div>';
+          h += '<div class="exp-row"><span>利益（入金額 − 経費）</span><b>' + yen(fb.net - fb.expense) + '</b></div>';
+          h += '<div class="exp-row"><span>今月の経費</span><b>' + yen(fb.monthExpense) + '</b></div>';
+        }
+        h += '<div class="exp-row" style="margin-top:6px;"><span>全事業の売上合計</span><b>' + yen(ft.sales) + '</b></div>';
+        if(owner){
+          h += '<div class="exp-row"><span>全事業の経費合計</span><b>' + yen(ft.expense) + '</b></div>';
+          h += '<div class="exp-row"><span>全事業の利益合計</span><b>' + yen(ft.net - ft.expense) + '</b></div>';
+        }
+        h += '<p class="ed-sub" style="margin:6px 0 12px;">台帳の「売上」「経費」から自動で出しています（返金は入金額から引いています）。</p>';
+      }
       if(biz.id === 'happykids'){
         var t = d.happykids.taikai, pt = d.happykids.partners, c = pt.contracts;
         h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">大会の余り（HAPPY KIDSに入る額）</div><div class="mg-num">' + yen(t.surplus) + '</div><div class="mg-sub">スポンサー手取り ' + yen(t.sponsorNet) + ' − 大会運営費 ' + yen(t.cost) + '</div></div>';
