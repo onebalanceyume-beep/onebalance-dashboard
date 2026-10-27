@@ -690,6 +690,9 @@
           h += '<div class="exp-row"><span>利益（入金額 − 経費）</span><b>' + yen(fb.net - fb.expense) + '</b></div>';
           h += '<div class="exp-row"><span>今月の経費</span><b>' + yen(fb.monthExpense) + '</b></div>';
         }
+        if(owner && biz.id === 'onetre'){
+          h += '<div id="payroll-box"><div class="exp-row"><span>人件費（稲田さん・時間外）今月</span><b id="pr-month">読み込み中…</b></div><div class="exp-row"><span>人件費 2026年 累計</span><b id="pr-year">読み込み中…</b></div><div class="exp-row"><span>利益（入金額 − 経費 − 人件費）</span><b id="pr-profit">-</b></div></div>';
+        }
         h += '<div class="exp-row" style="margin-top:6px;"><span>全事業の売上合計</span><b>' + yen(ft.sales) + '</b></div>';
         if(owner){
           h += '<div class="exp-row"><span>全事業の経費合計</span><b>' + yen(ft.expense) + '</b></div>';
@@ -736,6 +739,24 @@
         h += '</table></div><p class="ed-sub" style="margin-top:8px;">体験した月で数えています（5月に体験して6月に入会した人は5月の成約）。「-」は記録なしです。当月は途中経過です。</p>';
       }
       body.innerHTML = h;
+      if(document.getElementById('payroll-box')){ loadPayroll(d.finance && d.finance.onetre); }
+    });
+  }
+
+  /* ONE-TREの人件費：トレーナー管理アプリ（private-gym-trainer）のAPIを読む。時間外のみ・台帳には入っていない */
+  var TRAINER_API_URL = 'https://script.google.com/macros/s/AKfycbzlR1zmKyyLcvWANYpKiO7oPqaaGlx-BOPKhi7redVr1G2MQ0Gj0WRBLLL46jeUxKI/exec';
+  function loadPayroll(fo){
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+    function g(q){ return fetch(TRAINER_API_URL + '?' + q + '&t=' + Date.now()).then(function(r){ return r.json(); }); }
+    Promise.all([g('action=getPayroll&year=' + y + '&month=' + m), g('action=getYearlyPayroll&year=' + y)]).then(function(res){
+      var a = res[0], b = res[1];
+      var pm = document.getElementById('pr-month'), py = document.getElementById('pr-year'), pp = document.getElementById('pr-profit');
+      if(!pm) return;
+      pm.textContent = (a && a.ok) ? yen(a.totalAmount || 0) + '（' + (a.totalCount || 0) + '件）' : '不明';
+      py.textContent = (b && b.ok) ? yen(b.totalAmount || 0) + '（' + (b.totalCount || 0) + '件）' : '不明';
+      if(b && b.ok && fo){ pp.textContent = yen(fo.net - fo.expense - (b.totalAmount || 0)); } else { pp.textContent = '不明'; }
+    }).catch(function(){
+      ['pr-month','pr-year','pr-profit'].forEach(function(id){ var e = document.getElementById(id); if(e) e.textContent = '不明'; });
     });
   }
 
