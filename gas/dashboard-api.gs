@@ -6,6 +6,13 @@
 var LEDGER_ID  = '1UB2GAO_-aX7SE7t9l4tNAsJJr7NhpzTCMcgYO_AZ9TM'; // 事務部隊_経理台帳
 var TAIKAI_ID  = '18TPuqVVVbO7Fbc1pL6XheeXuFtLVdXe0agpQRNXeFr0'; // 2026大会&スポンサー
 var PARTNER_ID = '13BOp0lg7tFE4ZpkeJspsa9fc9YkdYZeHGxLf1ZhrQc4'; // HAPPY KIDS PROJECT パートナー契約・更新管理
+var BOXING_MASTER_ID = '1J-bu8590Snq--Xtf76wsYemK_SYCO_5KlObjM03r2BM'; // ワンバランス会員マスタ（会員マスタ／体験者フォーム）
+var ONETRE_ID = '1LYNNK1_gY3UvrAGgErfOmR00lXsigZYry8RWeBIUWKk';         // パーソナルONE-TRE申込み（回答）（会員／体験）
+
+// ===== 設定エリア（検索ワード：DASH_CONFIG）=====
+var STAFF_NAMES = ['長尾儀弘', '松本実紗'];   // 会員から除外するスタッフ
+var ONETRE_QUIT = ['河合正子'];              // ONE-TREで退会が確定している人（ヨシさん確認済みのみ）
+// ===== 設定エリアここまで =====
 
 function doGet(e) {
   var out;
@@ -50,7 +57,63 @@ function buildDashboard_() {
     }
   } catch (e2) { contracts = null; }
 
-  return compute_(sales, exp, kpi, avg, players, contracts);
+  var out = compute_(sales, exp, kpi, avg, players, contracts);
+  try { out.members = buildMembers_(); } catch (e3) { out.members = null; }
+  return out;
+}
+
+function normName_(s) { return String(s || '').replace(/[\s\u3000]/g, ''); }
+function genderKey_(g) { g = String(g || ''); return (g === '男性' || g === 'm' || g === 'M') ? 'm' : ((g === '女性' || g === 'f' || g === 'F') ? 'f' : 'x'); }
+
+// 現在の会員数と、体験→成約の男女別（名前一致＝成約。スペース除く）
+function buildMembers_() {
+  var staff = {}; STAFF_NAMES.forEach(function (n) { staff[normName_(n)] = true; });
+
+  // --- ボクシング ---
+  var bx = SpreadsheetApp.openById(BOXING_MASTER_ID);
+  var mm = bx.getSheetByName('会員マスタ').getDataRange().getValues();
+  var h = mm[0], iN = h.indexOf('お名前'), iG = h.indexOf('性別'), iC = h.indexOf('コース'), iS = h.indexOf('状態');
+  var bxNames = {}, bxActive = { total: 0, m: 0, f: 0, paused: 0 };
+  for (var i = 1; i < mm.length; i++) {
+    var r = mm[i]; if (!r[0] || !r[iN]) continue;
+    var nm = normName_(r[iN]); if (staff[nm]) continue;
+    bxNames[nm] = true;
+    var st = String(r[iS]);
+    if (st === '在籍' || st === '休会') {
+      bxActive.total++;
+      var gk = genderKey_(r[iG]); if (gk === 'm') bxActive.m++; else if (gk === 'f') bxActive.f++;
+      if (st === '休会' || String(r[iC]).indexOf('休会') === 0) bxActive.paused++;
+    }
+  }
+  var tf = bx.getSheetByName('体験者フォーム').getDataRange().getValues();
+  var bxTrial = { m: { trial: 0, closed: 0 }, f: { trial: 0, closed: 0 } };
+  for (var j = 1; j < tf.length; j++) {
+    var t = tf[j]; if (!t[2]) continue;
+    var k = genderKey_(t[3]); if (k === 'x') continue;
+    bxTrial[k].trial++;
+    if (bxNames[normName_(t[2])]) bxTrial[k].closed++;
+  }
+
+  // --- ONE-TRE ---
+  var ot = SpreadsheetApp.openById(ONETRE_ID);
+  var mem = ot.getSheetByName('会員').getDataRange().getValues();
+  var quit = {}; ONETRE_QUIT.forEach(function (n) { quit[normName_(n)] = true; });
+  var otNames = {}, otActive = { total: 0, m: 0, f: 0 };
+  for (var a = 1; a < mem.length; a++) {
+    var q = mem[a]; if (!q[1]) continue;
+    var key = normName_(q[1]); if (staff[key] || otNames[key]) continue;
+    otNames[key] = true;
+    if (!quit[key]) { otActive.total++; var g2 = genderKey_(q[5]); if (g2 === 'm') otActive.m++; else if (g2 === 'f') otActive.f++; }
+  }
+  var tr = ot.getSheetByName('体験').getDataRange().getValues();
+  var otTrial = { m: { trial: 0, closed: 0 }, f: { trial: 0, closed: 0 } };
+  for (var b = 1; b < tr.length; b++) {
+    var u = tr[b]; if (!u[1] || String(u[1]).trim() === 'テスト' || String(u[11]) !== '予約済み') continue;
+    var k2 = genderKey_(u[2]); if (k2 === 'x') continue;
+    otTrial[k2].trial++;
+    if (otNames[normName_(u[1])]) otTrial[k2].closed++;
+  }
+  return { boxing: { active: bxActive, trial: bxTrial }, onetre: { active: otActive, trial: otTrial } };
 }
 
 // 計算部分（シートに依存しない）

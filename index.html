@@ -697,6 +697,16 @@
         h += '<p class="ed-sub" style="margin-top:8px;">台帳から自動で出しています。スポンサーの7件は、HAPPY KIDSの売上には二重に入れていません。</p>';
       } else {
         var rows = (d.kpi[biz.id] || []).slice().sort(function(a,b){ return (a.year*100+a.month) - (b.year*100+b.month); });
+        var mb = d.members && d.members[biz.id];
+        if(mb){
+          var ac = mb.active, tr = mb.trial;
+          function gr(o){ return o.trial ? Math.round(o.closed / o.trial * 100) + '%' : '-'; }
+          h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">現在の会員数</div><div class="mg-num">' + ac.total + '人</div><div class="mg-sub">男性 ' + ac.m + '人 ／ 女性 ' + ac.f + '人' + (typeof ac.paused === 'number' && ac.paused > 0 ? '（うち休会中 ' + ac.paused + '人）' : '') + '</div></div>';
+          h += '<div style="overflow-x:auto;margin-bottom:10px;"><table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center;"><tr style="background:#FFF1F2;"><th></th><th>体験</th><th>成約</th><th>成約率</th></tr>';
+          h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">男性</td><td>' + tr.m.trial + '人</td><td>' + tr.m.closed + '人</td><td style="font-weight:700;">' + gr(tr.m) + '</td></tr>';
+          h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">女性</td><td>' + tr.f.trial + '人</td><td>' + tr.f.closed + '人</td><td style="font-weight:700;">' + gr(tr.f) + '</td></tr>';
+          h += '</table><p class="ed-sub" style="margin-top:6px;">体験→成約の男女別（記録がある期間の通算）。スタッフは除いています。</p></div>';
+        }
         var av = d.avg || {};
         function A(k){ return av[k] ? av[k][biz.id] : null; }
         h += '<div class="exp-row"><span>成約率（通算）</span><b>' + (typeof A('通算成約率') === 'number' ? pct(A('通算成約率')) : '不明') + '</b></div>';
