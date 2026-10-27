@@ -703,17 +703,17 @@
       if(biz.id === 'happykids'){
         var t = d.happykids.taikai, pt = d.happykids.partners, c = pt.contracts;
         h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">大会の余り（HAPPY KIDSに入る額）</div><div class="mg-num">' + yen(t.surplus) + '</div><div class="mg-sub">スポンサー手取り ' + yen(t.sponsorNet) + ' − 大会運営費 ' + yen(t.cost) + '</div></div>';
-        h += '<div class="exp-row"><span>スポンサー</span><b>' + t.sponsorCount + '件（額面 ' + yen(t.sponsorGross) + '）</b></div>';
+        h += '<div class="exp-row"><span>大会スポンサー</span><b>' + t.sponsorCount + '社（額面 ' + yen(t.sponsorGross) + '）</b></div>';
         h += '<div class="exp-row"><span>カード手数料</span><b>' + yen(t.cardFee) + '</b></div>';
         h += '<div class="exp-row"><span>選手の申込</span><b>' + (t.players === null ? '不明' : t.players + '人') + '</b></div>';
         h += '<div class="exp-row"><span>パートナー（年契約・Stripe）</span><b>' + pt.stripeCount + '件 ' + yen(pt.stripeGross) + '</b></div>';
-        if(c){ h += '<div class="exp-row"><span>契約一覧</span><b>' + c.total + '件（契約中 ' + c.active + '・契約日待ち ' + c.waiting + '）</b></div>'; }
+        if(c){ h += '<div class="exp-row"><span>パートナー契約（年契約・更新管理）</span><b>' + c.total + '件（契約中 ' + c.active + '・契約日待ち ' + c.waiting + '）</b></div>'; }
         h += '<div class="exp-row"><span>HAPPY KIDS 売上（手取り）</span><b>' + yen(d.happykids.hkSalesNet) + '</b></div>';
         if(activeUser === '長尾'){
           h += '<div class="exp-row"><span>HAPPY KIDS 経費</span><b>' + yen(d.happykids.hkCost) + '</b></div>';
           h += '<div class="exp-row"><span>残金（売上 − 経費）</span><b>' + yen(d.happykids.hkBalance) + '</b></div>';
         }
-        h += '<p class="ed-sub" style="margin-top:8px;">台帳から自動で出しています。スポンサーの7件は、HAPPY KIDSの売上には二重に入れていません。</p>';
+        h += '<p class="ed-sub" style="margin-top:8px;">台帳から自動で出しています。大会スポンサーとパートナー契約は別の数え方です（浜田興業・MODESTOなどは両方に入ります）。売上は台帳が正で、契約一覧の金額は足していません。</p>';
       } else {
         var rows = (d.kpi[biz.id] || []).slice().sort(function(a,b){ return (a.year*100+a.month) - (b.year*100+b.month); });
         var mb = d.members && d.members[biz.id];
