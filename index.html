@@ -890,8 +890,13 @@
     'ボクシングジムの雰囲気がわかる動画',
     '米子に密着したInstagramを強化する'
   ];
-  function priorityHtml(){
-    var h = '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p>';
+  var CATCH = {   // 事業ごとのキャッチコピー（直すときの検索ワード：CATCH）。レンタルジムは専用の表示があるため入れない
+    boxing: 'ボクシング革命を起こす',
+    onetre: 'どこも痛くないカラダ。快適なカラダ。'
+  };
+  function priorityHtml(bizId){
+    var h = CATCH[bizId] ? '<p class="ed-h" style="text-align:center;margin:4px 0 14px;font-size:20px;text-wrap:balance;">' + esc(CATCH[bizId]).replace(/。(?!$)/g, '。<br>') + '</p>' : '';
+    h += '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p>';
     PRIORITIES.forEach(function(t, i){ h += '<div class="exp-row"><span><b style="color:var(--accent);margin-right:8px;">' + (i + 1) + '</b>' + esc(t) + '</span></div>'; });
     return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3名を集めるのが先です。</p></div>';
   }
@@ -1177,7 +1182,7 @@
 
     var html = '';
 
-    html += priorityHtml();
+    html += priorityHtml(biz.id);
     // 今月の目標（長尾・稲田どちらにも表示）
     html += '<div class="month-goal"><div class="mg-label" id="mg-label"></div><div class="mg-num" id="mg-num">-</div><div class="mg-sub" id="mg-sub"></div></div>';
 
