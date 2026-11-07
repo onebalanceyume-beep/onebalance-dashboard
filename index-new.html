@@ -330,6 +330,11 @@
   /* ログイン */
   .login-overlay{ position:fixed; inset:0; background:rgba(17,17,17,.82); display:flex; align-items:center; justify-content:center; padding:24px; z-index:200; }
   .login-overlay[hidden]{ display:none; }
+  .names-box{ margin-top:8px; border:1px solid #EEE; border-radius:10px; padding:2px 12px; background:#fff; color:#111; }
+  .names-box summary{ cursor:pointer; padding:10px 0; font-weight:700; font-size:14px; list-style:none; }
+  .names-box summary::-webkit-details-marker{ display:none; }
+  .names-box summary::after{ content:'＋'; float:right; color:#DD0B1B; }
+  .names-box[open] summary::after{ content:'－'; }
   .login-box{ width:100%; max-width:340px; background:#fff; border-radius:2px; padding:24px 20px; display:flex; flex-direction:column; gap:12px; }
   .login-eyebrow{ font-size:11px; letter-spacing:.18em; font-weight:700; color:#DD0B1B; }
   .login-title{ font-size:22px; font-weight:700; }
@@ -514,13 +519,13 @@
     </div>
   </section>
 
-  <div class="app-foot"><span>ONE-BALANCE 経営ダッシュボード v2.0</span><button type="button" id="force-update">最新版に更新</button></div>
+  <div class="app-foot"><span>ONE-BALANCE 経営ダッシュボード v2.1</span><button type="button" id="force-update">最新版に更新</button></div>
 </main>
 
 <div class="login-overlay" id="login-overlay" hidden>
   <div class="login-box">
     <div class="login-eyebrow">ONE-BALANCE</div>
-    <div class="login-title">長尾のログイン</div>
+    <div class="login-title" id="login-title">長尾のログイン</div>
     <p class="login-msg" id="login-msg">パスワードを入れてください</p>
     <input type="password" id="login-pw" autocomplete="current-password" placeholder="パスワード" aria-label="パスワード">
     <button type="button" class="login-go" id="login-go">ログイン</button>
@@ -562,6 +567,9 @@
   if(YEARS.indexOf(currentYear) === -1) currentYear = 2026;
   var OWNER_TOKEN_KEY = 'wb_owner_token';
   function ownerToken(){ try{ return localStorage.getItem(OWNER_TOKEN_KEY) || ''; }catch(e){ return ''; } }
+  var STAFF_TOKEN_KEY = 'wb_staff_token';   // 稲田が会員の名前を見るためのログイン（お金は見えない）
+  function staffToken(){ try{ return localStorage.getItem(STAFF_TOKEN_KEY) || ''; }catch(e){ return ''; } }
+  var loginAs = 'owner';
   // ログインしていない端末は、いつも稲田の画面から始まる（長尾はパスワードが必要）
   var activeUser = (localStorage.getItem('wb_active_user') === '長尾' && ownerToken()) ? '長尾' : '稲田';
   try{ localStorage.setItem('wb_active_user', activeUser); }catch(e){}
@@ -599,7 +607,7 @@
   userChips.forEach(function(c){
     c.addEventListener('click', function(){
       if(c.dataset.user === '稲田'){ setUser('稲田'); return; }
-      if(ownerToken()){ setUser('長尾'); } else { openLogin(); }
+      if(ownerToken()){ setUser('長尾'); } else { loginAs = 'owner'; openLogin(); }
     });
   });
 
@@ -607,6 +615,7 @@
   var loginPw = document.getElementById('login-pw');
   var loginMsg = document.getElementById('login-msg');
   function openLogin(msg){
+    document.getElementById('login-title').textContent = loginAs === 'staff' ? '稲田のログイン（会員の名前を見る）' : '長尾のログイン';
     loginMsg.textContent = msg || 'パスワードを入れてください';
     loginPw.value = '';
     loginOv.hidden = false;
@@ -621,7 +630,10 @@
     fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'login', pw: pw }) })
       .then(function(r){ return r.json(); })
       .then(function(j){
-        if(j && j.status === 'ok' && j.token){
+        if(j && j.status === 'ok' && j.token && j.role === 'staff'){
+          try{ localStorage.setItem(STAFF_TOKEN_KEY, j.token); }catch(e){}
+          closeLogin(); setUser('稲田');
+        } else if(j && j.status === 'ok' && j.token){
           try{ localStorage.setItem(OWNER_TOKEN_KEY, j.token); }catch(e){}
           closeLogin(); setUser('長尾');
         } else if(j && j.status === 'locked'){
@@ -782,7 +794,7 @@
     defaultValue:[], defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' }, defaultTodos:[], cleaning:[]
   });
   function visibleBizList(){
-    return BUSINESSES.filter(function(b){ return isOwner() || (b.id !== 'happykids' && b.id !== 'rental'); });
+    return BUSINESSES.filter(function(b){ return isOwner() || b.id !== 'happykids'; });
   }
 
   var currentBiz = localStorage.getItem('wb_current_biz') || 'boxing';
@@ -804,7 +816,7 @@
   function loadDash(cb){
     if(!DASH_API_URL){ cb(null, 'nourl'); return; }
     if(dashCache){ cb(dashCache); return; }
-    var owner = isOwner();
+    var owner = isOwner(), st = staffToken();
     var url = DASH_API_URL + (owner ? '?action=getPrivate&token=' + encodeURIComponent(ownerToken()) : '?action=getDashboard') + '&t=' + Date.now();
     fetch(url)
       .then(function(r){ return r.json(); })
@@ -814,7 +826,17 @@
           setUser('稲田'); openLogin('ログインの期限が切れました。もう一度ログインしてください');
           cb(null, 'denied'); return;
         }
-        if(j && j.status === 'ok'){ dashCache = j; cb(j); } else { cb(null, 'error'); }
+        if(!(j && j.status === 'ok')){ cb(null, 'error'); return; }
+        if(owner || !st){ dashCache = j; cb(j); return; }
+        // 稲田：名前入りの一覧をログイン済みなら足す
+        return fetch(DASH_API_URL + '?action=getStaff&token=' + encodeURIComponent(st) + '&t=' + Date.now())
+          .then(function(r){ return r.json(); })
+          .then(function(k){
+            if(k && k.status === 'ok' && k.data && k.data.people){ j.data.people = k.data.people; }
+            else if(k && k.status === 'denied'){ try{ localStorage.removeItem(STAFF_TOKEN_KEY); }catch(e){} }
+            dashCache = j; cb(j);
+          })
+          .catch(function(){ dashCache = j; cb(j); });
       })
       .catch(function(){ cb(null, 'error'); });
   }
@@ -839,8 +861,66 @@
     return h;
   }
 
+
+  /* ---- 人の数字（名前は稲田もログインすれば見える。金額は出さない）---- */
+  function weekLabel(){
+    var d = new Date(), dow = (d.getDay() + 6) % 7;            // 月曜=0
+    d.setDate(d.getDate() - dow);
+    return (d.getMonth() + 1) + '/' + d.getDate() + '（月）';
+  }
+  function remainHtml(plan, label){
+    if(!plan) return '';
+    var done = plan.remaining === 0;
+    return '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">' + esc(label) + '｜' + weekLabel() + ' 週のあと何人</div>'
+      + '<div class="mg-num">' + (done ? '達成' : 'あと ' + plan.remaining + '人') + '</div>'
+      + '<div class="mg-sub">現在 ' + plan.current + '人 ／ 目標 ' + plan.goal + '人（' + esc(plan.by) + 'まで）</div></div>';
+  }
+  function planRows(plan){
+    if(!plan) return '<p class="ed-sub">目標がまだ設定されていません（Apps Scriptの GOALS）。</p>';
+    return '<div class="exp-row"><span>現在の人数</span><b>' + plan.current + '人</b></div>'
+      + '<div class="exp-row"><span>目標までの人数</span><b>あと ' + plan.remaining + '人</b></div>'
+      + '<div class="exp-row"><span>年間（' + esc(plan.by) + 'まで）の目標</span><b>' + plan.goal + '人</b></div>'
+      + '<div class="exp-row"><span>毎月の目標（月に増やす人数）</span><b>' + plan.monthGoal + '人</b></div>';
+  }
+  function loginLinkHtml(){
+    return '<p class="ed-sub" style="margin-top:8px;"><button type="button" class="login-cancel" data-staff-login style="width:auto;padding:8px 14px;">会員の名前を見る（ログイン）</button></p>';
+  }
+  function bindStaffLogin(root){
+    (root || document).querySelectorAll('[data-staff-login]').forEach(function(b){
+      b.addEventListener('click', function(){ loginAs = 'staff'; openLogin(); });
+    });
+  }
+  function namesBox(title, rows, fmt){
+    var h = '<details class="names-box"><summary>' + esc(title) + '（' + rows.length + '人）</summary>';
+    rows.forEach(function(r){ h += '<div class="exp-row"><span>' + esc(r.name) + '</span><b>' + fmt(r) + '</b></div>'; });
+    return h + '</details>';
+  }
+  function peopleHtml(bizId, d){
+    var pp = d.people; if(!pp) return '';
+    var h = '';
+    if(bizId === 'boxing' && pp.boxing){
+      var b = pp.boxing;
+      h += '<p class="ed-eyebrow" style="margin-top:14px;">継続月数｜入会日から数える（退会した人は除く）</p>';
+      h += '<div class="exp-row"><span>平均の継続月数</span><b>' + (b.avgMonths === null ? '不明' : b.avgMonths + 'ヶ月') + '</b></div>';
+      h += '<div class="exp-row"><span>数えた人数</span><b>' + b.counted + '人</b></div>';
+      if(b.members){ h += namesBox('会員ごとの継続月数', b.members, function(r){ return r.months + 'ヶ月'; }); }
+      else if(!isOwner()){ h += loginLinkHtml(); }
+      h += '<p class="ed-sub" style="margin-top:6px;">入会日が不明・一括登録の人は数えていません。</p>';
+    }
+    if(bizId === 'onetre' && pp.onetre){
+      var o = pp.onetre;
+      h += '<p class="ed-eyebrow" style="margin-top:14px;">継続回数｜契約したコースの回数を足し続ける</p>';
+      h += '<div class="exp-row"><span>会員数</span><b>' + o.count + '人</b></div>';
+      h += '<div class="exp-row"><span>みんなの継続回数（合計）</span><b>' + o.totalSessions + '回</b></div>';
+      h += '<div class="exp-row"><span>1人あたりの平均</span><b>' + (o.avgSessions === null ? '不明' : o.avgSessions + '回') + '</b></div>';
+      if(o.members){ h += namesBox('会員ごとの継続回数', o.members, function(r){ return r.sessions + '回（' + r.contracts + '契約）'; }); }
+      else if(!isOwner()){ h += loginLinkHtml(); }
+    }
+    return h;
+  }
+
   function rentalHtml(){
-    return '<div class="ed-card" id="rental-card"><p class="ed-eyebrow">RENTAL GYM｜長尾のみ表示</p><div id="rental-body" class="ed-sub">読み込み中…</div></div>';
+    return '<div class="ed-card" id="rental-card"><p class="ed-eyebrow">RENTAL GYM｜' + (isOwner() ? '数字と進み具合' : '計画と今の人数') + '</p><div id="rental-body" class="ed-sub">読み込み中…</div></div>';
   }
   function fillRental(){
     var body = document.getElementById('rental-body');
@@ -849,19 +929,30 @@
       body = document.getElementById('rental-body');
       if(!body) return;
       if(err === 'denied'){ body.textContent = ''; return; }
-      if(err || !j || !j.data || !j.data.rental){ body.textContent = '読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
-      var r = j.data.rental, h = '';
-      h += '<div class="rental-hero"><div class="rh-name">' + esc(r.name) + '</div><div class="rh-catch">' + esc(r.catch1) + '　／　' + esc(r.catch2) + '</div></div>';
-      h += '<p class="ed-eyebrow" style="margin-top:14px;">数字｜予約システムの集計と連動</p><div class="rental-kpi">';
-      r.kpi.forEach(function(k){ h += '<div class="rk"><div class="rk-l">' + esc(k.label) + '</div><div class="rk-v">' + esc(k.value) + '</div></div>'; });
-      h += '</div>';
-      h += '<div class="rental-be"><b>損益分岐</b>　' + esc(r.breakeven) + '</div>';
-      h += '<p class="ed-eyebrow" style="margin-top:14px;">料金とルール</p>';
-      r.terms.forEach(function(t){ h += '<div class="exp-row"><span class="rt-k">' + esc(t[0]) + '</span><b class="rt-v">' + esc(t[1]) + '</b></div>'; });
-      h += '<p class="ed-eyebrow" style="margin-top:14px;">進み具合</p>';
-      r.progress.forEach(function(p){ h += '<div class="exp-row rp"><span class="chip ' + (p[0] === '済' ? 'done' : 'todo') + '">' + esc(p[0]) + '</span><span class="rp-t">' + esc(p[1]) + '</span></div>'; });
-      h += '<p class="ed-sub" style="margin-top:8px;">' + esc(r.asOf) + 'までの話し合いの内容です。</p>';
-      body.innerHTML = h;
+      if(err || !j || !j.data){ body.textContent = '読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
+      var owner = isOwner(), r = j.data.rental || null, rp = j.data.people && j.data.people.rental, h = '';
+      var nm = (r && r.name) || 'レンタルジムONE-TRE';
+      h += '<div class="rental-hero"><div class="rh-name">' + esc(nm) + '</div><div class="rh-catch">' + esc((r && r.catch1) || 'じぶんだけの時間') + '　／　' + esc((r && r.catch2) || '自分に酔える場所') + '</div></div>';
+      if(rp){
+        h += '<div style="margin-top:14px;">' + remainHtml(rp.plan, 'レンタルジム') + '</div>';
+        h += '<p class="ed-eyebrow">計画と実績（人数）</p>' + planRows(rp.plan);
+        if(rp.leaving){ h += '<div class="exp-row"><span>うち退会予定</span><b>' + rp.leaving + '人</b></div>'; }
+        if(rp.waiting){ h += '<div class="exp-row"><span>入会手続き中（決済待ち）</span><b>' + rp.waiting + '人</b></div>'; }
+        if(rp.members){ h += rp.members.length ? namesBox('いま誰がいるか', rp.members, function(m){ return m.status.indexOf('退会予定') >= 0 ? '退会予定' : '利用中'; }) : '<p class="ed-sub">まだ会員さんはいません。</p>'; }
+        else if(!owner){ h += loginLinkHtml(); }
+      } else { h += '<p class="ed-sub" style="margin-top:12px;">人数を読み込めませんでした。</p>'; }
+      if(owner && r){
+        h += '<p class="ed-eyebrow" style="margin-top:14px;">数字｜予約システムの集計と連動' + (r.linked ? '' : '（まだつながっていません）') + '</p><div class="rental-kpi">';
+        r.kpi.forEach(function(k){ h += '<div class="rk"><div class="rk-l">' + esc(k.label) + '</div><div class="rk-v">' + esc(k.value) + '</div></div>'; });
+        h += '</div>';
+        h += '<div class="rental-be"><b>損益分岐</b>　' + esc(r.breakeven) + '</div>';
+        h += '<p class="ed-eyebrow" style="margin-top:14px;">料金とルール</p>';
+        r.terms.forEach(function(t){ h += '<div class="exp-row"><span class="rt-k">' + esc(t[0]) + '</span><b class="rt-v">' + esc(t[1]) + '</b></div>'; });
+        h += '<p class="ed-eyebrow" style="margin-top:14px;">進み具合</p>';
+        r.progress.forEach(function(p){ h += '<div class="exp-row rp"><span class="chip ' + (p[0] === '済' ? 'done' : 'todo') + '">' + esc(p[0]) + '</span><span class="rp-t">' + esc(p[1]) + '</span></div>'; });
+        h += '<p class="ed-sub" style="margin-top:8px;">' + esc(r.asOf) + 'までの話し合いの内容です。</p>';
+      }
+      body.innerHTML = h; bindStaffLogin(body);
     });
   }
 
@@ -921,7 +1012,12 @@
           h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">男性</td><td>' + tr.m.trial + '人</td><td>' + tr.m.closed + '人</td><td style="font-weight:700;">' + gr(tr.m) + '</td></tr>';
           h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">女性</td><td>' + tr.f.trial + '人</td><td>' + tr.f.closed + '人</td><td style="font-weight:700;">' + gr(tr.f) + '</td></tr>';
           h += '</table><p class="ed-sub" style="margin-top:6px;">体験→成約の男女別（記録がある期間の通算）。スタッフは除いています。</p></div>';
+          var tt = tr.m.trial + tr.f.trial, tc = tr.m.closed + tr.f.closed, gt = ac.m + ac.f;
+          h += '<div class="exp-row"><span>体験 → 入会</span><b>' + tt + '人 → ' + tc + '人</b></div>';
+          h += '<div class="exp-row"><span>成約率</span><b>' + (tt ? Math.round(tc / tt * 100) + '%' : '-') + '</b></div>';
+          h += '<div class="exp-row"><span>男女比率（いまの会員）</span><b>男性 ' + (gt ? Math.round(ac.m / gt * 100) : 0) + '% ／ 女性 ' + (gt ? Math.round(ac.f / gt * 100) : 0) + '%</b></div>';
         }
+        h += peopleHtml(biz.id, d);
         var av = d.avg || {};
         function A(k){ return av[k] ? av[k][biz.id] : null; }
         h += '<div class="exp-row"><span>成約率（通算）</span><b>' + (typeof A('通算成約率') === 'number' ? pct(A('通算成約率')) : '不明') + '</b></div>';
@@ -934,7 +1030,7 @@
         });
         h += '</table></div><p class="ed-sub" style="margin-top:8px;">体験した月で数えています（5月に体験して6月に入会した人は5月の成約）。「-」は記録なしです。当月は途中経過です。</p>';
       }
-      body.innerHTML = h;
+      body.innerHTML = h; bindStaffLogin(body);
       if(document.getElementById('payroll-box')){ loadPayroll(d.finance && d.finance.onetre); }
     });
   }
@@ -1000,8 +1096,7 @@
     var biz = getBiz(currentBiz);
     var container = document.getElementById('business-content');
     if(biz.id === 'rental'){
-      if(!isOwner()){ currentBiz = 'boxing'; biz = getBiz(currentBiz); }
-      else { container.innerHTML = rentalHtml(); fillRental(); return; }
+      container.innerHTML = rentalHtml(); fillRental(); return;
     }
 
     var valueAll = loadJSON(VALUE_KEY, {});

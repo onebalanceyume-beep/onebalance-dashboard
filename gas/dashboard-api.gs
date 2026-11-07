@@ -15,13 +15,22 @@ var LEDGER_ID  = '1UB2GAO_-aX7SE7t9l4tNAsJJr7NhpzTCMcgYO_AZ9TM'; // 事務部隊
 var TAIKAI_ID  = '18TPuqVVVbO7Fbc1pL6XheeXuFtLVdXe0agpQRNXeFr0'; // 2026大会&スポンサー
 var PARTNER_ID = '13BOp0lg7tFE4ZpkeJspsa9fc9YkdYZeHGxLf1ZhrQc4'; // HAPPY KIDS PROJECT パートナー契約・更新管理
 var BOXING_MASTER_ID = '1J-bu8590Snq--Xtf76wsYemK_SYCO_5KlObjM03r2BM'; // ワンバランス会員マスタ（会員マスタ／体験者フォーム）
+var RENTAL_ID = '1Q5vwP3u89I4MF0zgmtAQsGcW-kKSFCEjsKu1q4262lw';        // レンタルジムONE-TRE｜会員・予約記録（レンタル会員／集計ダッシュボード）
 var ONETRE_ID = '1LYNNK1_gY3UvrAGgErfOmR00lXsigZYry8RWeBIUWKk';         // パーソナルONE-TRE申込み（回答）（会員／体験）
 
 // ===== 設定エリア（検索ワード：DASH_CONFIG）=====
 var STAFF_NAMES = ['長尾儀弘', '松本実紗'];   // 会員から除外するスタッフ
 var ONETRE_QUIT = ['河合正子'];              // ONE-TREで退会が確定している人（ヨシさん確認済みのみ）
 
-// レンタルジムONE-TRE（長尾だけに見せる）。内容を直したいときはここを書き換える（検索ワード：RENTAL_INFO）
+// 目標（検索ワード：GOALS）。人数は「会員数」。不明は null にしておく（画面には出ない）
+var GOALS = {
+  rental: { members: 16, by: '2027/10' },   // 16名＝月6,600円で月10万円を超えるライン。期限までに到達する想定
+  boxing: null,                             // 例：{ members: 120, by: '2027/03' }
+  onetre: null
+};
+var BOXING_UNKNOWN_DATES = ['2026/04/10'];  // 入会日が一括登録日で正しくない日付。継続月数・平均から除外する
+
+// レンタルジムONE-TRE（売上の数字は長尾だけに見せる）。内容を直したいときはここを書き換える（検索ワード：RENTAL_INFO）
 // 数字（会員数・今月の利用・月の売上）は、予約システムの集計とつなぐまで「-」のまま
 var RENTAL_INFO = {
   name: 'レンタルジムONE-TRE',
@@ -64,6 +73,10 @@ function doGet(e) {
       if (!tokenOk_(e.parameter.token)) return json_({ status: 'denied' });
       return json_({ status: 'ok', updated: new Date().toISOString(), data: buildPrivate_() });
     }
+    if (action === 'getStaff') {   // 会員の名前など（長尾か稲田のログインが必要）
+      if (!staffOk_(e.parameter.token)) return json_({ status: 'denied' });
+      return json_({ status: 'ok', updated: new Date().toISOString(), data: { people: buildPeople_() } });
+    }
     // 誰でも見てよい数字（経費・利益・HAPPY KIDSは含めない）
     return json_({ status: 'ok', updated: new Date().toISOString(), data: publicOnly_(buildDashboard_()) });
   } catch (err) {
@@ -82,35 +95,43 @@ function doPost(e) {
 }
 
 // ===== ログイン（長尾だけ）=====
-var TOKEN_DAYS = 90;      // 一度ログインしたら、この端末では何日ログインのままにするか
+var TOKEN_DAYS = 120;     // 一度ログインしたら、この端末では何日ログインのままにするか
 var MAX_FAILS  = 5;       // 10分間にこの回数まちがえたら、いったんロック
 
 function login_(pw) {
   var cache = CacheService.getScriptCache();
   var fails = Number(cache.get('login_fails') || 0);
   if (fails >= MAX_FAILS) return { status: 'locked' };
-  var real = PropertiesService.getScriptProperties().getProperty('OWNER_PASSWORD');
+  var props = PropertiesService.getScriptProperties();
+  var real = props.getProperty('OWNER_PASSWORD');
+  var staffPw = props.getProperty('STAFF_PASSWORD');      // 稲田用（会員の名前を見るための合言葉）。未設定なら稲田は名前を見られない
   if (!real) return { status: 'error', message: 'OWNER_PASSWORD が未設定です' };
-  if (pw !== real) {
+  var role = '';
+  if (pw === real) role = 'owner';
+  else if (staffPw && pw === staffPw) role = 'staff';
+  if (!role) {
     cache.put('login_fails', String(fails + 1), 600);
     return { status: 'denied' };
   }
   cache.remove('login_fails');
   var token = Utilities.getUuid() + Utilities.getUuid();
-  var props = PropertiesService.getScriptProperties();
   var all = JSON.parse(props.getProperty('TOKENS') || '{}');
   var now = Date.now();
-  Object.keys(all).forEach(function (k) { if (all[k] < now) delete all[k]; });   // 期限切れを掃除
-  all[token] = now + TOKEN_DAYS * 86400000;
+  Object.keys(all).forEach(function (k) { var e = (typeof all[k] === 'number') ? all[k] : all[k].e; if (e < now) delete all[k]; });   // 期限切れを掃除
+  all[token] = { e: now + TOKEN_DAYS * 86400000, r: role };
   props.setProperty('TOKENS', JSON.stringify(all));
-  return { status: 'ok', token: token };
+  return { status: 'ok', token: token, role: role };
 }
 
-function tokenOk_(token) {
-  if (!token) return false;
+function tokenRole_(token) {
+  if (!token) return '';
   var all = JSON.parse(PropertiesService.getScriptProperties().getProperty('TOKENS') || '{}');
-  return !!(all[token] && all[token] > Date.now());
+  var t = all[token]; if (!t) return '';
+  if (typeof t === 'number') t = { e: t, r: 'owner' };
+  return t.e > Date.now() ? t.r : '';
 }
+function tokenOk_(token) { return tokenRole_(token) === 'owner'; }          // 長尾だけ
+function staffOk_(token) { var r = tokenRole_(token); return r === 'owner' || r === 'staff'; }   // 長尾か稲田
 
 // 全端末をログアウトさせたいときは、Apps Scriptでこの関数を1回実行する
 function logoutAll() {
@@ -121,6 +142,7 @@ function logoutAll() {
 function publicOnly_(d) {
   var out = JSON.parse(JSON.stringify(d));
   delete out.happykids;
+  if (out.people) out.people = peopleAgg_(out.people);
   if (out.finance) {
     ['boxing', 'onetre', 'happykids', 'total'].forEach(function (k) {
       if (!out.finance[k]) return;
@@ -138,7 +160,7 @@ function buildPrivate_() {
   var exp = ss.getSheetByName('経費').getDataRange().getValues();
   var d = buildDashboard_();
   d.fixed = buildFixed_(ss, exp);
-  d.rental = RENTAL_INFO;
+  d.rental = rentalOwner_();
   return d;
 }
 
@@ -185,7 +207,7 @@ function buildFixed_(ss, exp) {
     var recorded = false;                           // 台帳にすでに記帳済みか
     for (var j = 1; j < exp.length; j++) {
       var e = exp[j];
-      if (keys[e[1]] === key && ymOf_(e[0]) === nowYm && String(e[3] || '').indexOf(name) >= 0) { recorded = true; break; }
+      if (keys[e[1]] === key && ymOf_(e[0]) === nowYm && (String(e[3] || '').indexOf(name) >= 0 || toNum_(e[5]) === amount)) { recorded = true; break; }
     }
     var lastYm = (end && end < nowYm) ? end : nowYm;
     var months = Math.max(0, monthDiff_(start, lastYm) + 1);
@@ -235,6 +257,7 @@ function buildDashboard_() {
   var out = compute_(sales, exp, kpi, avg, players, contracts);
   try { out.members = buildMembers_(); } catch (e3) { out.members = null; }
   try { out.finance = buildFinance_(sales, exp); } catch (e4) { out.finance = null; }
+  try { out.people = buildPeople_(); } catch (e5) { out.people = null; }
   return out;
 }
 
@@ -323,6 +346,119 @@ function buildMembers_() {
     if (otNames[normName_(u[1])]) otTrial[k2].closed++;
   }
   return { boxing: { active: bxActive, trial: bxTrial }, onetre: { active: otActive, trial: otTrial } };
+}
+
+// ===== 人の数字（継続月数・継続回数・レンタル会員）=====
+function parseYmd_(v) {
+  if (v instanceof Date) return v;
+  var m = String(v || '').match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 3)) : null;   // 日本時間の正午ごろ
+}
+function monthsBetween_(a, b) {   // 満月数（a→b）
+  var m = (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth());
+  if (b.getUTCDate() < a.getUTCDate()) m -= 1;
+  return Math.max(0, m);
+}
+function goalInfo_(goal, current) {
+  if (!goal || !goal.members) return null;
+  var nowYm = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM');
+  var left = Math.max(1, monthDiff_(nowYm, goal.by));
+  var remaining = Math.max(0, goal.members - current);
+  return { goal: goal.members, by: goal.by, current: current, remaining: remaining, monthsLeft: left, monthGoal: Math.ceil(remaining / left) };
+}
+// 名前入りの全部（長尾・稲田ログイン後だけ）
+function buildPeople_() {
+  var now = new Date();
+  var staff = {}; STAFF_NAMES.forEach(function (n) { staff[normName_(n)] = true; });
+  var unk = {}; BOXING_UNKNOWN_DATES.forEach(function (d) { unk[d] = true; });
+  var out = {};
+
+  // ボクシング：継続月数（入会日→今。退会した人は退会日まで）
+  var mm = SpreadsheetApp.openById(BOXING_MASTER_ID).getSheetByName('会員マスタ').getDataRange().getValues();
+  var h = mm[0], iN = h.indexOf('お名前'), iS = h.indexOf('状態'), iJ = h.indexOf('入会日'), iQ = h.indexOf('退会日');
+  var bm = [], sum = 0;
+  for (var i = 1; i < mm.length; i++) {
+    var r = mm[i]; if (!r[0] || !r[iN]) continue;
+    if (staff[normName_(r[iN])]) continue;
+    var st = String(r[iS]);
+    if (st === '退会') continue;                       // 続けている人だけ数える
+    var j = parseYmd_(r[iJ]); if (!j) continue;
+    var jy = Utilities.formatDate(j, 'Asia/Tokyo', 'yyyy/MM/dd');
+    if (unk[jy]) continue;                              // 一括登録日などは除く
+    var mo = monthsBetween_(j, now);
+    bm.push({ name: String(r[iN]).trim(), months: mo }); sum += mo;
+  }
+  bm.sort(function (a, b) { return b.months - a.months; });
+  out.boxing = { counted: bm.length, avgMonths: bm.length ? Math.round(sum / bm.length * 10) / 10 : null, members: bm };
+
+  // ONE-TRE：継続回数＝契約したコースの回数を会員ごとに足し続ける
+  var mem = SpreadsheetApp.openById(ONETRE_ID).getSheetByName('会員').getDataRange().getValues();
+  var hd = mem[0], iName = 1, iMail = hd.indexOf('メールアドレス'), iId = hd.indexOf('会員ID'), iC = hd.indexOf('契約コース'), iD = hd.indexOf('契約日');
+  var nameById = {}, nameByMail = {};
+  for (var a = 1; a < mem.length; a++) {
+    var q = mem[a]; var nm = String(q[iName] || '').trim();
+    if (nm && q[iId]) nameById[q[iId]] = nm;
+    if (nm && q[iMail]) nameByMail[q[iMail]] = nm;
+  }
+  var quit = {}; ONETRE_QUIT.forEach(function (n) { quit[normName_(n)] = true; });
+  var per = {};
+  for (var b = 1; b < mem.length; b++) {
+    var u = mem[b]; var id = u[iId]; if (!id) continue;
+    var n = toNum_(u[iC]);                              // 「24回」→24
+    if (!n) continue;
+    var name = nameById[id] || nameByMail[u[iMail]] || '';
+    if (!per[id]) per[id] = { name: name, sessions: 0, contracts: 0, since: '' };
+    per[id].sessions += n; per[id].contracts++;
+    var d0 = parseYmd_(u[iD]); if (d0) { var ds = Utilities.formatDate(d0, 'Asia/Tokyo', 'yyyy/MM/dd'); if (!per[id].since || ds < per[id].since) per[id].since = ds; }
+  }
+  var om = [], tot = 0;
+  Object.keys(per).forEach(function (id) {
+    var p = per[id], key = normName_(p.name);
+    if (!p.name || staff[key] || quit[key]) return;
+    om.push({ name: p.name, sessions: p.sessions, contracts: p.contracts, since: p.since }); tot += p.sessions;
+  });
+  om.sort(function (x, y) { return y.sessions - x.sessions; });
+  out.onetre = { count: om.length, totalSessions: tot, avgSessions: om.length ? Math.round(tot / om.length * 10) / 10 : null, members: om };
+
+  // レンタルジム：人数と名前（無断キャンセルは出さない）
+  var rs = SpreadsheetApp.openById(RENTAL_ID).getSheetByName('レンタル会員').getDataRange().getValues();
+  var rh = rs[0], rN = rh.indexOf('名前'), rS = rh.indexOf('ステータス');
+  var rm = [], waiting = 0, leaving = 0;
+  for (var c = 1; c < rs.length; c++) {
+    var w = rs[c]; if (!w[rN]) continue;
+    var rst = String(w[rS] || '');
+    if (rst.indexOf('退会済') >= 0) continue;
+    if (rst.indexOf('決済待ち') >= 0) { waiting++; continue; }
+    if (rst.indexOf('退会予定') >= 0) leaving++;
+    rm.push({ name: String(w[rN]).trim(), status: rst });
+  }
+  out.rental = { active: rm.length, waiting: waiting, leaving: leaving, members: rm, plan: goalInfo_(GOALS.rental, rm.length) };
+  out.goals = { boxing: GOALS.boxing ? goalInfo_(GOALS.boxing, null) : null };
+  return out;
+}
+// 名前を除いた人数だけ（誰でも見てよい形）
+function peopleAgg_(p) {
+  var o = JSON.parse(JSON.stringify(p));
+  if (o.boxing) delete o.boxing.members;
+  if (o.onetre) delete o.onetre.members;
+  if (o.rental) delete o.rental.members;
+  return o;
+}
+// レンタルジムの売上まわり（長尾だけ）。集計ダッシュボードの表から読む
+function rentalOwner_() {
+  var r = JSON.parse(JSON.stringify(RENTAL_INFO));
+  try {
+    var v = SpreadsheetApp.openById(RENTAL_ID).getSheetByName('集計ダッシュボード').getDataRange().getValues();
+    var m = {}; v.forEach(function (row) { if (row[0] !== '' && row[1] !== '') m[String(row[0])] = row[1]; });
+    var yen = function (x) { return '¥' + String(Math.round(toNum_(x))).replace(/\B(?=(\d{3})+(?!\d))/g, ','); };
+    r.kpi = [
+      { label: '有効な会員', value: String(toNum_(m['有効な会員'])) + '名' },
+      { label: '今月の来店', value: String(toNum_(m['来店'])) + '回' },
+      { label: '月の売上見込み', value: yen(m['月額の売上見込み（有効会員）']) }
+    ];
+    r.linked = true;
+  } catch (e) { r.linked = false; }
+  return r;
 }
 
 // 計算部分（シートに依存しない）
