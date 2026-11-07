@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -179,65 +179,6 @@ button{cursor:pointer;border:none;background:none;touch-action:manipulation}
 .step-del:active{background:var(--surface);color:var(--crimson)}
 .ins{width:100%;border:0;background:transparent;color:var(--crimson);font-size:11.5px;font-weight:800;letter-spacing:.02em;text-align:left;padding:4px 0 4px 33px;cursor:pointer;opacity:.75}
 .ins:active{opacity:1}
-
-/* ===== v2.0 新デザイン：しっかりした赤×白、ヘルベチカ、角は小さく、絵文字なし ===== */
-:root{--crimson:#DD0B1B;--crimson-deep:#A80815;--crimson-soft:#FDE7E9;--ink:#111111;--ink2:#333333;--muted:#555555;--line:#D9D9D9;--surface:#F5F5F5;--radius:2px;--shadow:none}
-html,body{touch-action:manipulation;overflow-x:hidden}
-body{font-family:Helvetica,"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif}
-.topbar{padding:calc(env(safe-area-inset-top) + 16px) 20px 14px}
-.topbar h1{font-size:24px;letter-spacing:.01em}
-.topbar .sub{color:var(--muted)}
-.add-biz{border-radius:2px;background:#fff;color:var(--ink);border:1px solid var(--ink);min-height:44px}
-.add-biz:active{background:var(--surface)}
-.tabs .tab{border-radius:2px;background:#fff;border:1px solid var(--ink);color:var(--ink);min-height:44px}
-.tabs .tab.active{background:var(--crimson);border-color:var(--crimson);color:#fff}
-.btn,.filebtn,.sheet,.sheet-actions .save,.sheet-actions .cancel,.confirm-actions button,.qr-close,.field input[type=text],.field textarea,.add-item,.item,.goal,.biz,.tag{border-radius:2px}
-.sheet{border-radius:2px 2px 0 0}
-.fixed-note{font-size:11px;color:var(--muted);padding:0 4px 12px}
-
-/* 事業の切り替えタブ */
-.biztabs{display:flex;border:1px solid var(--ink);border-radius:2px;margin:0 0 16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.biztab{flex:1 0 auto;min-height:44px;padding:0 14px;font-size:13px;font-weight:700;white-space:nowrap;background:#fff;color:var(--ink);border-left:1px solid var(--ink)}
-.biztab:first-child{border-left:0}
-.biztab.on.th-boxing{background:#DD0B1B;color:#fff}
-.biztab.on.th-onetre{background:#111;color:#D4AF37}
-.biztab.on.th-kids{background:#2F7D4A;color:#fff}
-.biztab.on.th-other{background:var(--crimson);color:#fff}
-
-/* 事業ヘッダー */
-.bizhero{padding:18px 16px;display:flex;align-items:center;gap:14px;border-radius:2px;margin-bottom:12px}
-.bizhero .logo{width:52px;height:52px;border-radius:2px;border:1px solid rgba(255,255,255,.4)}
-.bizhero .eyebrow{margin:0 0 4px}
-.bizhero .biz-name{font-size:21px}
-.bizhero.th-boxing{background:#DD0B1B;color:#fff}.bizhero.th-boxing .eyebrow,.bizhero.th-boxing .biz-name{color:#fff}
-.bizhero.th-onetre{background:#111;color:#fff;border-bottom:4px solid #B8923A}.bizhero.th-onetre .eyebrow{color:#D4AF37}.bizhero.th-onetre .biz-name{color:#fff}
-.bizhero.th-kids{background:#FFF1A8;color:#4A3220;border-bottom:4px solid #2F7D4A}.bizhero.th-kids .eyebrow{color:#2F7D4A}.bizhero.th-kids .biz-name{color:#4A3220}
-.bizhero.th-other{background:var(--surface);color:var(--ink)}
-.bizhero .head-actions .icobtn{color:inherit}
-
-/* 提案カード */
-.pcard{border:1px solid var(--line);border-radius:2px;padding:14px;margin-bottom:12px;background:#fff;display:flex;flex-direction:column;gap:10px}
-.pc-top{display:flex;gap:14px;align-items:flex-start;justify-content:space-between}
-.pc-meta{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
-.pc-kind{font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--muted)}
-.pc-title{font-size:18px;font-weight:700;line-height:1.3;word-break:break-word}
-.pc-memo{font-size:14px;color:var(--ink2);white-space:pre-wrap;word-break:break-word;line-height:1.6}
-.pc-qr{flex:none;width:68px;height:68px;padding:4px;border:1px solid var(--ink);background:#fff;border-radius:2px;display:grid;place-items:center}
-.pc-qr img{width:58px;height:58px;image-rendering:pixelated;display:block}
-.pc-copy{min-height:48px;width:100%;padding:0 14px;display:flex;align-items:center;gap:10px;border-radius:2px;border:1px solid var(--ink);background:#fff;color:var(--ink);text-align:left}
-.pc-copy .u{flex:1;min-width:0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pc-copy .l{flex:none;font-size:13px;font-weight:700}
-.th-boxing .pc-copy{border-color:#DD0B1B}.th-boxing .pc-copy:active{background:#DD0B1B;color:#fff}
-.th-onetre .pc-copy:active{background:#111;color:#D4AF37}
-.th-kids .pc-copy{border-color:#2F7D4A;background:#FFFBE0;color:#4A3220}.th-kids .pc-copy:active{background:#2F7D4A;color:#fff}
-.pc-empty{min-height:48px;display:flex;align-items:center;padding:0 14px;border:1px dashed var(--line);font-size:12px;color:var(--muted);border-radius:2px}
-.pc-hint{font-size:11px;color:var(--muted)}
-.pc-edit{display:flex;gap:18px}
-.pc-img{max-width:170px;border:1px solid var(--line);display:block}
-
-/* QR拡大 */
-.qr-canvas{padding:18px;border-radius:2px;border:1px solid var(--ink)}
-.qr-canvas img{width:min(300px,72vw)!important;height:min(300px,72vw)!important;image-rendering:pixelated}
 </style>
 </head>
 <body>
@@ -260,7 +201,7 @@ body{font-family:Helvetica,"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku
 <div class="wrap" id="view-goal" style="display:none"></div>
 
 <div class="foot">
-  <span>ワンバランス 提案ボード v2.0</span>
+  <span>ワンバランス 提案ボード v1.7</span>
   <button onclick="forceUpdate()">最新版に更新</button>
 </div>
 
@@ -2739,142 +2680,82 @@ function defaultState(){
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
-/* ---------- 固定の事業（提案ボードに最初から入っている） ---------- */
-var FIXED = [
-  { key:"boxing", name:"ワンバランスボクシングジム", logo:LOGO_WB, items:[
-    { fid:"b-google",  kind:"GOOGLE 口コミ", title:"Google口コミのお願い", url:"https://maps.app.goo.gl/Wcp2dAwDsb2m3RP39" },
-    { fid:"b-youtube", kind:"YOUTUBE",       title:"YouTubeチャンネル",     url:"" },
-    { fid:"b-hp",      kind:"HOMEPAGE",      title:"ホームページ",           url:"https://one-balance.jp" }
-  ]},
-  { key:"onetre", name:"ONE-TRE", logo:LOGO_OT, items:[
-    { fid:"o-google", kind:"GOOGLE 口コミ", title:"Google口コミのお願い", url:"https://maps.app.goo.gl/g3ec7wtdrPRzcHWJ6" },
-    { fid:"o-line",   kind:"LINE",          title:"ONE-TRE 公式LINE",      url:"https://lin.ee/of2JZE5" },
-    { fid:"o-hp",     kind:"HOMEPAGE",      title:"ホームページ",           url:"https://one-tre.com" }
-  ]},
-  { key:"kids", name:"HAPPY KIDS PROJECT 米子", logo:"logo-happykids.jpg", items:[
-    { fid:"k-line", kind:"LINE",        title:"HAPPY KIDS 公式LINE",  url:"https://lin.ee/9v4jPNb" },
-    { fid:"k-app",  kind:"APPLICATION", title:"HAPPY KIDS 申し込み",  url:"https://onebalanceyume-beep.github.io/onebalance-sponsor-partnership/happykids_partner_application.html" }
-  ]}
-];
-var currentBiz = "boxing";
-
-function seedFixed(){
-  var changed = false;
-  FIXED.forEach(function(f){
-    var b = state.businesses.find(function(x){ return x.fixedKey===f.key; }) ||
-            state.businesses.find(function(x){ return x.name===f.name; });
-    if(!b){ b = { id:uid(), name:f.name, logo:f.logo, items:[] }; state.businesses.push(b); changed = true; }
-    if(b.fixedKey!==f.key){ b.fixedKey = f.key; changed = true; }
-    if(!b.logo && f.logo){ b.logo = f.logo; changed = true; }
-    f.items.forEach(function(fi){
-      var it = b.items.find(function(x){ return x.fid===fi.fid; });
-      if(!it){
-        b.items.push({ id:uid(), fid:fi.fid, kind:fi.kind, title:fi.title, url:fi.url, memo:"", img:null });
-        changed = true;
-      } else if(!it.url && fi.url){ it.url = fi.url; changed = true; }
-    });
-  });
-  var order = {}; FIXED.forEach(function(f,i){ order[f.key] = i; });
-  state.businesses.sort(function(a,b){
-    var ia = (a.fixedKey in order) ? order[a.fixedKey] : 99;
-    var ib = (b.fixedKey in order) ? order[b.fixedKey] : 99;
-    return ia-ib;
-  });
-  if(changed) save();
-}
-
-/* 稲田の画面ではHAPPY KIDSを出さない（経営ダッシュボードの担当切り替えと連動） */
-function currentUser(){
-  try{ return localStorage.getItem("wb_active_user") || "長尾"; }catch(e){ return "長尾"; }
-}
-function visibleBiz(){
-  var u = currentUser();
-  return state.businesses.filter(function(b){ return !(u==="稲田" && b.fixedKey==="kids"); });
-}
-function themeOf(b){ return b.fixedKey ? "th-"+b.fixedKey : "th-other"; }
-function pickBiz(id){ currentBiz = id; renderBiz(); }
-
 /* ---------- render ---------- */
 function renderBiz(){
   var wrap = document.getElementById("view-biz");
-  var list = visibleBiz();
-  if(list.length===0){
+  if(state.businesses.length===0){
     wrap.innerHTML = '<div class="empty" style="padding:50px 20px">右上の「＋ 事業を追加」から始めましょう</div>';
     return;
   }
-  var cur = list.find(function(b){ return b.id===currentBiz; });
-  if(!cur){ cur = list[0]; currentBiz = cur.id; }
-  var th = themeOf(cur);
-
-  var tabs = '<div class="biztabs">';
-  list.forEach(function(b){
-    var short = b.fixedKey==="boxing" ? "ボクシングジム" : (b.fixedKey==="kids" ? "HAPPY KIDS" : b.name);
-    tabs += '<button class="biztab '+themeOf(b)+(b.id===cur.id?' on':'')+'" onclick="pickBiz(\''+b.id+'\')">'+esc(short)+'</button>';
+  var html = "";
+  state.businesses.forEach(function(b){
+    var logo = b.logo
+      ? '<img class="logo" src="'+b.logo+'" alt="">'
+      : '<div class="logo"><div class="ph">'+initials(b.name)+'</div></div>';
+    var items = "";
+    if(b.items.length===0){
+      items = '<div class="empty">提案がまだありません。下のボタンから追加</div>';
+    } else {
+      b.items.forEach(function(it){
+        items += itemHtml(b.id, it);
+      });
+    }
+    html +=
+      '<div class="biz">'+
+        '<div class="biz-head">'+
+          logo+
+          '<div class="biz-meta">'+
+            '<div class="eyebrow">提案 '+b.items.length+'件</div>'+
+            '<div class="biz-name">'+esc(b.name)+'</div>'+
+          '</div>'+
+          '<div class="head-actions">'+
+            '<button class="icobtn" title="編集" onclick="openBizModal(\''+b.id+'\')">'+ICON.edit+'</button>'+
+            '<button class="icobtn" title="削除" onclick="askDeleteBiz(\''+b.id+'\')">'+ICON.trash+'</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="items">'+items+
+          '<button class="add-item" onclick="openItemModal(\''+b.id+'\',null)">＋ 提案を追加</button>'+
+        '</div>'+
+      '</div>';
   });
-  tabs += '</div>';
-
-  var logo = cur.logo
-    ? '<img class="logo" src="'+cur.logo+'" alt="">'
-    : '<div class="logo"><div class="ph">'+initials(cur.name)+'</div></div>';
-  var hero =
-    '<div class="bizhero '+th+'">'+
-      logo+
-      '<div class="biz-meta">'+
-        '<div class="eyebrow">PROPOSAL BOARD</div>'+
-        '<div class="biz-name">'+esc(cur.name)+'</div>'+
-      '</div>'+
-      '<div class="head-actions">'+
-        '<button class="icobtn" title="編集" aria-label="事業を編集" onclick="openBizModal(\''+cur.id+'\')">'+ICON.edit+'</button>'+
-        (cur.fixedKey ? '' : '<button class="icobtn" title="削除" aria-label="事業を削除" onclick="askDeleteBiz(\''+cur.id+'\')">'+ICON.trash+'</button>')+
-      '</div>'+
-    '</div>';
-
-  var items = "";
-  cur.items.forEach(function(it){ items += itemHtml(cur.id, it); });
-  if(cur.items.length===0) items = '<div class="empty">提案がまだありません。下のボタンから追加</div>';
-
-  wrap.innerHTML =
-    tabs +
-    '<div class="'+th+'">'+ hero + items +
-      '<button class="add-item" onclick="openItemModal(\''+cur.id+'\',null)">＋ 提案を追加</button>'+
-    '</div>';
-}
-
-function qrThumb(url){
-  try{
-    var qr = qrcode(0,"M"); qr.addData(url); qr.make();
-    return qr.createImgTag(2,0);
-  }catch(e){ return ""; }
+  wrap.innerHTML = html;
 }
 
 function itemHtml(bizId, it){
-  var kind = it.kind || "MEMO";
-  var top =
-    '<div class="pc-top">'+
-      '<div class="pc-meta">'+
-        '<div class="pc-kind">'+esc(kind)+'</div>'+
-        '<div class="pc-title">'+esc(it.title)+'</div>'+
-      '</div>'+
-      (it.url ? '<button class="pc-qr" aria-label="QRコードを拡大" onclick="showQR(\''+jsq(it.url)+'\')">'+qrThumb(it.url)+'</button>' : '')+
-    '</div>';
+  var tags = "";
+  if(it.url) tags += '<span class="tag url">URL</span>';
+  if(it.img) tags += '<span class="tag img">画像</span>';
   var body = "";
-  if(it.memo) body += '<div class="pc-memo">'+esc(it.memo)+'</div>';
+  if(it.memo) body += '<div class="memo">'+esc(it.memo)+'</div>';
   if(it.url){
     body +=
-      '<button class="pc-copy" onclick="copyUrl(\''+jsq(it.url)+'\')">'+
-        '<span class="u">'+esc(it.url)+'</span><span class="l">URLをコピー</span>'+
-      '</button>'+
-      '<div class="pc-hint">QRコードをタップで拡大</div>';
-  } else {
-    body += '<div class="pc-empty">URLがまだ入っていません。下の「編集」から入れると、コピーとQRが使えます</div>';
+      '<div class="attach-row">'+
+        '<button class="btn copy" onclick="copyUrl(\''+jsq(it.url)+'\')">'+ICON.copy+'コピー</button>'+
+        '<button class="btn qr" onclick="showQR(\''+jsq(it.url)+'\')">'+ICON.qr+'QRコード</button>'+
+      '</div>'+
+      '<div class="urltext">'+esc(it.url)+'</div>';
   }
-  if(it.img) body += '<img class="pc-img" src="'+it.img+'" alt="" onclick="viewImg(\''+jsq(it.img)+'\')">';
+  if(it.img){
+    body += '<img class="item-img" src="'+it.img+'" alt="" onclick="viewImg(\''+jsq(it.img)+'\')">';
+  }
+  if(!it.memo && !it.url && !it.img){
+    body += '<div class="memo" style="color:#8a94a0">（内容なし）</div>';
+  }
   body +=
-    '<div class="pc-edit">'+
+    '<div class="item-edit">'+
       '<button class="linkbtn" onclick="openItemModal(\''+bizId+'\',\''+it.id+'\')">編集</button>'+
-      (it.fid ? '' : '<button class="linkbtn del" onclick="askDeleteItem(\''+bizId+'\',\''+it.id+'\')">削除</button>')+
+      '<button class="linkbtn del" onclick="askDeleteItem(\''+bizId+'\',\''+it.id+'\')">削除</button>'+
     '</div>';
-  return '<div class="pcard" id="item-'+it.id+'">'+top+body+'</div>';
+  return ''+
+    '<div class="item" id="item-'+it.id+'">'+
+      '<button class="item-head" onclick="toggleItem(\''+it.id+'\')">'+
+        '<span class="dot"></span>'+
+        '<span class="item-title">'+esc(it.title)+'</span>'+
+        '<span class="item-tags">'+tags+'</span>'+
+        ICON.chev+
+      '</button>'+
+      '<div class="item-body">'+body+'</div>'+
+    '</div>';
 }
 
 function toggleItem(id){
@@ -3019,9 +2900,9 @@ function showQR(url){
   try{
     var qr = qrcode(0,"M");
     qr.addData(url); qr.make();
-    box.innerHTML = qr.createImgTag(8,8);
+    box.innerHTML = qr.createImgTag(6,8);
     var img = box.querySelector("img");
-    if(img){ img.removeAttribute("width"); img.removeAttribute("height"); }
+    if(img){ img.style.width="220px"; img.style.height="220px"; img.style.imageRendering="pixelated"; }
   }catch(e){ box.innerHTML='<div style="padding:30px;color:#8a94a0">QRを作れませんでした</div>'; }
   document.getElementById("qrUrl").textContent = url;
   openOverlay("qrOverlay");
@@ -3292,9 +3173,7 @@ function toggleStep(goalId, planId, stepId){
 
 /* ---------- init ---------- */
 load();
-seedFixed();
 render();
-window.addEventListener("storage", function(e){ if(e.key==="wb_active_user"){ render(); } });
 </script>
 </body>
 </html>

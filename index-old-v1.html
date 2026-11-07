@@ -15,7 +15,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ONE-BALANCE">
-<meta name="theme-color" content="#DD0B1B">
+<meta name="theme-color" content="#DB444C">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -286,79 +286,6 @@
   .em-steps .sub-list li::before{ content:"・";position:absolute;left:0; }
   .em-note{ font-size:11.5px;color:var(--text-light);background:#F1EBE4;border-radius:12px;padding:12px 14px;line-height:1.6; }
 
-
-  /* ===== v2.0 新デザイン：しっかりした赤(#DD0B1B)×白、ヘルベチカ、角は小さく、絵文字なし ===== */
-  :root{ --red:#DD0B1B; --red-dark:#A80815; --ed-red:#DD0B1B; --ed-border:#D9D9D9; --border:#D9D9D9; --bg:#FFFFFF; --text:#111111; --text-light:#555555; --radius:2px;
-    --ed-font:Helvetica,"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
-  html,body{ overflow-x:hidden; }
-  body{ font-family:var(--ed-font); background:#fff; }
-  header.app-header{ background:#fff; color:#111; text-align:left; box-shadow:none; border-bottom:1px solid #111; padding:calc(18px + var(--safe-top)) 20px 14px; }
-  header.app-header .logo-row{ justify-content:flex-start; gap:12px; }
-  header.app-header img{ width:38px;height:38px;border-radius:2px; }
-  header.app-header h1{ font-size:clamp(20px,6.4vw,26px); font-weight:700; letter-spacing:.01em; white-space:nowrap; line-height:1.15; }
-  header.app-header h1 small{ display:block; font-size:11px; letter-spacing:.18em; color:#DD0B1B; font-weight:700; margin-bottom:2px; }
-  #data-body,#rental-body{ color:#111; font-size:13px; font-weight:400; }
-  #data-body .ed-sub,#rental-body .ed-sub{ color:#555; font-size:11.5px; font-weight:400; }
-  #biz-switch button.logo-btn span{ font-size:10px; letter-spacing:0; }
-  .ctrl-row{ justify-content:space-between; gap:12px; margin-top:12px; flex-wrap:nowrap; }
-  .yr-bar button{ background:#fff; color:#111; border:1px solid #111; border-radius:2px; width:32px; height:32px; }
-  .yr-bar .yr-val{ color:#111; font-size:14px; font-weight:700; }
-  .user-row{ gap:0; border:1px solid #111; border-radius:2px; overflow:hidden; }
-  .user-chip{ min-height:40px; min-width:64px; padding:0 14px; border:0; background:#fff; color:#111; font-size:14px; font-weight:700; cursor:pointer; }
-  .user-chip + .user-chip{ border-left:1px solid #111; }
-  .user-chip.on{ background:#D4AF37; color:#111; }
-  nav.tabs{ border-top:1px solid #111; box-shadow:none; }
-  nav.tabs button{ min-height:56px; font-size:13px; font-weight:700; color:#555; justify-content:center; border-top:3px solid transparent; }
-  nav.tabs button.active{ color:#DD0B1B; border-top-color:#DD0B1B; }
-  h2.section-title .dot{ border-radius:0; }
-  .ed-card{ border-radius:2px; }
-  .ed-input,.ed-textarea{ border-radius:2px; background:#fff; font-size:16px; }
-  .month-goal{ background:#DD0B1B; border-radius:2px; }
-  .biz-switch button,.todo-add button,.todo-item,.chk-row,.value-list li,.btn,.btn-primary,.add-card,.add-form input,.share-item,.share-qr,.em-hero,.em-steps li,.em-note,.wbgt-banner,.wbgt-chip{ border-radius:2px; }
-  .value-list li{ background:#F5F5F5; border-left-color:#DD0B1B; }
-  #biz-switch button.logo-btn{ border-radius:2px; border:1px solid #D9D9D9; }
-  #biz-switch button.logo-btn img{ border-radius:2px; }
-  #biz-switch button.logo-btn.active{ border:2px solid #DD0B1B; background:#fff; }
-  .em-hero{ background:#DD0B1B; }
-  .em-call{ border-radius:2px; }
-  .em-steps .num{ background:#111; border-radius:2px; }
-  ::selection{ background:#DD0B1B; }
-  .app-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:20px; font-size:11px; color:#555; }
-  .app-foot button{ min-height:40px; padding:0 12px; border:1px solid #111; background:#fff; color:#111; font-size:12px; font-weight:700; border-radius:2px; cursor:pointer; }
-  .exp-row small{ color:#555; }
-
-  /* ログイン */
-  .login-overlay{ position:fixed; inset:0; background:rgba(17,17,17,.82); display:flex; align-items:center; justify-content:center; padding:24px; z-index:200; }
-  .login-overlay[hidden]{ display:none; }
-  .names-box{ margin-top:8px; border:1px solid #EEE; border-radius:10px; padding:2px 12px; background:#fff; color:#111; }
-  .names-box summary{ cursor:pointer; padding:10px 0; font-weight:700; font-size:14px; list-style:none; }
-  .names-box summary::-webkit-details-marker{ display:none; }
-  .names-box summary::after{ content:'＋'; float:right; color:#DD0B1B; }
-  .names-box[open] summary::after{ content:'－'; }
-  .login-box{ width:100%; max-width:340px; background:#fff; border-radius:2px; padding:24px 20px; display:flex; flex-direction:column; gap:12px; }
-  .login-eyebrow{ font-size:11px; letter-spacing:.18em; font-weight:700; color:#DD0B1B; }
-  .login-title{ font-size:22px; font-weight:700; }
-  .login-msg{ margin:0; font-size:13px; color:#555; min-height:1.4em; }
-  #login-pw{ min-height:52px; padding:0 14px; font-size:16px; border:1px solid #111; border-radius:2px; width:100%; }
-  .login-go{ min-height:52px; border:0; border-radius:2px; background:#DD0B1B; color:#fff; font-size:16px; font-weight:700; cursor:pointer; }
-  .login-cancel{ min-height:44px; border:1px solid #111; border-radius:2px; background:#fff; color:#111; font-size:14px; font-weight:700; cursor:pointer; }
-
-  /* レンタルジム */
-  .rental-hero{ background:#111; color:#fff; border-bottom:4px solid #B8923A; border-radius:2px; padding:16px; }
-  .rental-hero .rh-name{ font-size:20px; font-weight:700; }
-  .rental-hero .rh-catch{ font-size:13px; color:#D4AF37; margin-top:4px; }
-  .rental-kpi{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
-  .rental-kpi .rk{ border:1px solid #D9D9D9; border-radius:2px; padding:10px; }
-  .rental-kpi .rk-l{ font-size:11px; color:#555; font-weight:700; }
-  .rental-kpi .rk-v{ font-size:22px; font-weight:700; margin-top:6px; }
-  .rental-be{ border:1px solid #111; border-radius:2px; padding:12px 14px; font-size:13px; line-height:1.6; }
-  .rt-k{ width:96px; flex:none; font-size:12px; color:#555; font-weight:700; }
-  .rt-v{ flex:1; text-align:right; font-weight:700; line-height:1.5; }
-  .exp-row.rp{ justify-content:flex-start; align-items:flex-start; }
-  .rp .chip{ flex:none; width:32px; text-align:center; font-size:11px; font-weight:700; padding:3px 0; border-radius:2px; color:#fff; }
-  .rp .chip.done{ background:#111; }
-  .rp .chip.todo{ background:#DD0B1B; }
-  .rp-t{ font-size:13px; font-weight:700; line-height:1.5; }
   ::selection{ background:var(--teal);color:#fff; }
 </style>
 </head>
@@ -367,7 +294,7 @@
 <header class="app-header">
   <div class="logo-row">
     <img src="apple-touch-icon.png?v=2" alt="logo">
-    <h1><small>ONE-BALANCE</small>経営ダッシュボード</h1>
+    <h1>ONE-BALANCE 経営ダッシュボード</h1>
   </div>
   <div class="ctrl-row">
     <div class="yr-bar">
@@ -375,9 +302,12 @@
       <span class="yr-val" id="yr-val">2026</span>
       <button id="yr-next" aria-label="翌年">›</button>
     </div>
-    <div class="user-row" id="user-row">
-      <button type="button" class="user-chip" data-user="長尾">長尾</button>
-      <button type="button" class="user-chip" data-user="稲田">稲田</button>
+    <div class="user-row">
+      担当
+      <select id="user-select">
+        <option value="長尾">長尾</option>
+        <option value="稲田">稲田</option>
+      </select>
     </div>
   </div>
 </header>
@@ -461,9 +391,10 @@
     <h2 class="section-title"><span class="dot"></span>緊急マニュアル</h2>
 
     <div class="em-hero">
+      <div class="em-icon">⚠️</div>
       <h2>熱中症になったら</h2>
       <p>気づいた人がすぐ動く。落ち着いて順番に対応してください。</p>
-      <a class="em-call" href="tel:119">119番へ電話する</a>
+      <a class="em-call" href="tel:119">📞 119番へ電話する</a>
     </div>
 
     <ol class="em-steps">
@@ -519,26 +450,14 @@
     </div>
   </section>
 
-  <div class="app-foot"><span>ONE-BALANCE 経営ダッシュボード v2.1</span><button type="button" id="force-update">最新版に更新</button></div>
 </main>
 
-<div class="login-overlay" id="login-overlay" hidden>
-  <div class="login-box">
-    <div class="login-eyebrow">ONE-BALANCE</div>
-    <div class="login-title" id="login-title">長尾のログイン</div>
-    <p class="login-msg" id="login-msg">パスワードを入れてください</p>
-    <input type="password" id="login-pw" inputmode="numeric" autocomplete="current-password" placeholder="パスワード" aria-label="パスワード">
-    <button type="button" class="login-go" id="login-go">ログイン</button>
-    <button type="button" class="login-cancel" id="login-cancel">やめる</button>
-  </div>
-</div>
-
 <nav class="tabs">
-  <button class="tab-btn active" data-tab="tab-proposal">提案</button>
-  <button class="tab-btn" data-tab="tab-philosophy">理念</button>
-  <button class="tab-btn" data-tab="tab-share">シェア</button>
-  <button class="tab-btn" data-tab="tab-business">事業</button>
-  <button class="tab-btn" data-tab="tab-emergency">緊急</button>
+  <button class="tab-btn active" data-tab="tab-proposal"><span class="ic">💡</span>提案</button>
+  <button class="tab-btn" data-tab="tab-philosophy"><span class="ic">🏆</span>理念</button>
+  <button class="tab-btn" data-tab="tab-share"><span class="ic">🔗</span>シェア</button>
+  <button class="tab-btn" data-tab="tab-business"><span class="ic">🎯</span>事業</button>
+  <button class="tab-btn" data-tab="tab-emergency"><span class="ic">⚠️</span>緊急</button>
 </nav>
 
 <script>
@@ -565,19 +484,12 @@
   var YEARS = [2025,2026,2027,2028,2029,2030,2031];
   var currentYear = Number(localStorage.getItem('wb_year')) || 2026;
   if(YEARS.indexOf(currentYear) === -1) currentYear = 2026;
-  var OWNER_TOKEN_KEY = 'wb_owner_token';
-  function ownerToken(){ try{ return localStorage.getItem(OWNER_TOKEN_KEY) || ''; }catch(e){ return ''; } }
-  var STAFF_TOKEN_KEY = 'wb_staff_token';   // 稲田が会員の名前を見るためのログイン（お金は見えない）
-  function staffToken(){ try{ return localStorage.getItem(STAFF_TOKEN_KEY) || ''; }catch(e){ return ''; } }
-  var loginAs = 'owner';
-  // ログインしていない端末は、いつも稲田の画面から始まる（長尾はパスワードが必要）
-  var activeUser = (localStorage.getItem('wb_active_user') === '長尾' && ownerToken()) ? '長尾' : '稲田';
-  try{ localStorage.setItem('wb_active_user', activeUser); }catch(e){}
-  function isOwner(){ return activeUser === '長尾' && !!ownerToken(); }
+  var activeUser = localStorage.getItem('wb_active_user') || '長尾';
 
   var yrVal = document.getElementById('yr-val');
   var yrPrev = document.getElementById('yr-prev');
   var yrNext = document.getElementById('yr-next');
+  var userSelect = document.getElementById('user-select');
 
   function setYear(y){
     currentYear = y;
@@ -593,74 +505,14 @@
     var idx = YEARS.indexOf(currentYear);
     if(idx < YEARS.length-1) setYear(YEARS[idx+1]);
   });
-  var userChips = document.querySelectorAll('.user-chip');
-  function paintChips(){
-    userChips.forEach(function(c){ c.classList.toggle('on', c.dataset.user === activeUser); });
-  }
-  function setUser(u){
-    activeUser = u;
-    try{ localStorage.setItem('wb_active_user', u); }catch(e){}
-    dashCache = null;
-    paintChips();
+  userSelect.value = activeUser;
+  userSelect.addEventListener('change', function(){
+    activeUser = userSelect.value;
+    localStorage.setItem('wb_active_user', activeUser);
     renderAll();
-  }
-  userChips.forEach(function(c){
-    c.addEventListener('click', function(){
-      if(c.dataset.user === '稲田'){ setUser('稲田'); return; }
-      if(ownerToken()){ setUser('長尾'); } else { loginAs = 'owner'; openLogin(); }
-    });
   });
 
-  var loginOv = document.getElementById('login-overlay');
-  var loginPw = document.getElementById('login-pw');
-  var loginMsg = document.getElementById('login-msg');
-  function openLogin(msg){
-    document.getElementById('login-title').textContent = loginAs === 'staff' ? '稲田のログイン（会員の名前を見る）' : '長尾のログイン';
-    loginMsg.textContent = msg || 'パスワードを入れてください';
-    loginPw.value = '';
-    loginOv.hidden = false;
-    setTimeout(function(){ loginPw.focus(); }, 50);
-  }
-  function closeLogin(){ loginOv.hidden = true; loginPw.blur(); }
-  document.getElementById('login-cancel').addEventListener('click', closeLogin);
-  function doLogin(){
-    var pw = loginPw.value;
-    if(!pw){ loginMsg.textContent = 'パスワードを入れてください'; return; }
-    loginMsg.textContent = '確認しています…';
-    fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'login', pw: pw }) })
-      .then(function(r){ return r.json(); })
-      .then(function(j){
-        if(j && j.status === 'ok' && j.token && j.role === 'staff'){
-          try{ localStorage.setItem(STAFF_TOKEN_KEY, j.token); }catch(e){}
-          closeLogin(); setUser('稲田');
-        } else if(j && j.status === 'ok' && j.token){
-          try{ localStorage.setItem(OWNER_TOKEN_KEY, j.token); }catch(e){}
-          closeLogin(); setUser('長尾');
-        } else if(j && j.status === 'locked'){
-          loginMsg.textContent = 'まちがいが続いたので、10分たってからもう一度入れてください';
-        } else if(j && j.status === 'denied'){
-          loginMsg.textContent = 'パスワードが違います'; loginPw.value = '';
-        } else {
-          loginMsg.textContent = 'ログインできませんでした（' + ((j && j.message) || '設定を確認してください') + '）';
-        }
-      })
-      .catch(function(){ loginMsg.textContent = '通信できませんでした。電波のよいところでもう一度どうぞ'; });
-  }
-  document.getElementById('login-go').addEventListener('click', doLogin);
-  loginPw.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ doLogin(); } });
-  paintChips();
-
-  /* 最新版に更新：キャッシュを全部消して読み込み直す（ホーム画面に入れたときの更新漏れ対策） */
-  function forceUpdate(){
-    try{ if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }); } }catch(e){}
-    if(window.caches && caches.keys){
-      caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).finally(function(){ location.href = location.pathname + '?v=' + Date.now(); });
-    } else { location.href = location.pathname + '?v=' + Date.now(); }
-  }
-  document.getElementById('force-update').addEventListener('click', forceUpdate);
-
   function renderAll(){
-    buildBizSwitch();
     yrVal.textContent = currentYear + '年';
     renderTheme();
     renderPersonal();
@@ -678,7 +530,7 @@
     var h = window.innerHeight - top - (nav ? nav.offsetHeight : 0);
     proposalFrame.style.height = Math.max(h, 400) + 'px';
   }
-  proposalFrame.src = 'proposal-new.html?t=' + Date.now();
+  proposalFrame.src = 'proposal.html?t=' + Date.now();
   window.addEventListener('resize', sizeProposal);
   window.addEventListener('orientationchange', function(){ setTimeout(sizeProposal, 200); });
   setTimeout(sizeProposal, 0);
@@ -789,14 +641,6 @@
     }
   ];
 
-  BUSINESSES.push({
-    id:'rental', name:'レンタルジムONE-TRE', hasOps:false,
-    defaultValue:[], defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' }, defaultTodos:[], cleaning:[]
-  });
-  function visibleBizList(){
-    return BUSINESSES.filter(function(b){ return isOwner() || b.id !== 'happykids'; });
-  }
-
   var currentBiz = localStorage.getItem('wb_current_biz') || 'boxing';
 
   var VALUE_KEY   = 'wb_value_v1';
@@ -816,177 +660,16 @@
   function loadDash(cb){
     if(!DASH_API_URL){ cb(null, 'nourl'); return; }
     if(dashCache){ cb(dashCache); return; }
-    var owner = isOwner(), st = staffToken();
-    var url = DASH_API_URL + (owner ? '?action=getPrivate&token=' + encodeURIComponent(ownerToken()) : '?action=getDashboard') + '&t=' + Date.now();
-    fetch(url)
+    fetch(DASH_API_URL + '?action=getDashboard&t=' + Date.now())
       .then(function(r){ return r.json(); })
       .then(function(j){
-        if(j && j.status === 'denied' && owner){
-          try{ localStorage.removeItem(OWNER_TOKEN_KEY); }catch(e){}
-          setUser('稲田'); openLogin('ログインの期限が切れました。もう一度ログインしてください');
-          cb(null, 'denied'); return;
-        }
-        if(!(j && j.status === 'ok')){ cb(null, 'error'); return; }
-        if(owner || !st){ dashCache = j; cb(j); return; }
-        // 稲田：名前入りの一覧をログイン済みなら足す
-        return fetch(DASH_API_URL + '?action=getStaff&token=' + encodeURIComponent(st) + '&t=' + Date.now())
-          .then(function(r){ return r.json(); })
-          .then(function(k){
-            if(k && k.status === 'ok' && k.data && k.data.people){ j.data.people = k.data.people; }
-            else if(k && k.status === 'denied'){ try{ localStorage.removeItem(STAFF_TOKEN_KEY); }catch(e){} }
-            dashCache = j; cb(j);
-          })
-          .catch(function(){ dashCache = j; cb(j); });
+        if(j && j.status === 'ok'){ dashCache = j; cb(j); } else { cb(null, 'error'); }
       })
       .catch(function(){ cb(null, 'error'); });
   }
   function yen(n){ return (n === null || n === undefined || isNaN(n)) ? '-' : '¥' + Math.round(n).toLocaleString(); }
   function pct(v){ return (v === null || v === undefined || v === '' || isNaN(v)) ? '-' : Math.round(Number(v) * 100) + '%'; }
   function numOrDash(v){ return (v === null || v === undefined) ? '-' : v; }
-
-  function fixedHtml(fx, bizId, fb){
-    if(!fx.setup){
-      return '<p class="ed-sub" style="margin-top:12px;">固定経費のシートがまだありません。Apps Scriptで setupFixedCosts を1回実行すると、家賃・駐車場が入ります。</p>';
-    }
-    var h = '<p class="ed-eyebrow" style="margin-top:16px;">固定経費｜毎月自動で入る</p>';
-    var items = fx.items.filter(function(i){ return i.biz === bizId; });
-    if(!items.length){ h += '<p class="ed-sub">この事業の固定経費は登録されていません</p>'; }
-    items.forEach(function(i){
-      h += '<div class="exp-row"><span>' + esc(i.name) + '（毎月' + i.day + '日）' + (i.recorded ? '<small>　今月は台帳に記帳済み</small>' : '') + '</span><b>' + yen(i.amount) + '</b></div>';
-    });
-    var add = (fx.byBiz && fx.byBiz[bizId]) || 0;
-    h += '<div class="exp-row"><span>今月の固定経費（台帳にない分を自動で足す）</span><b>' + yen(add) + '</b></div>';
-    if(fb){ h += '<div class="exp-row"><span>今月の利益（入金額 − 経費 − 固定経費）</span><b>' + yen(fb.monthNet - fb.monthExpense - add) + '</b></div>'; }
-    h += '<p class="ed-sub" style="margin-top:6px;">追加・変更は、台帳スプレッドシートの「固定経費」シートで行います。</p>';
-    return h;
-  }
-
-
-  /* ---- 人の数字（名前は稲田もログインすれば見える。金額は出さない）---- */
-  function weekLabel(){
-    var d = new Date(), dow = (d.getDay() + 6) % 7;            // 月曜=0
-    d.setDate(d.getDate() - dow);
-    return (d.getMonth() + 1) + '/' + d.getDate() + '（月）';
-  }
-  function remainHtml(plan, label){
-    if(!plan) return '';
-    var f = plan.first, out = '';
-    if(f && f.remaining > 0){
-      out += '<div class="month-goal" style="margin-bottom:10px;"><div class="mg-label">いま最優先｜' + esc(label) + ' ' + esc(f.label) + '</div>'
-        + '<div class="mg-num">まず ' + f.goal + '名　あと ' + f.remaining + '人</div>'
-        + '<div class="mg-sub">この ' + f.goal + '名が集まるまで、ほかより先にやる</div></div>';
-    }
-    var done = plan.remaining === 0;
-    out += '<div class="' + (f && f.remaining > 0 ? 'ed-card' : 'month-goal') + '" style="margin-bottom:12px;' + (f && f.remaining > 0 ? 'padding:12px 14px;' : '') + '"><div class="mg-label">' + esc(label) + '｜' + weekLabel() + ' 週のあと何人</div>'
-      + '<div class="' + (f && f.remaining > 0 ? 'ed-sub' : 'mg-num') + '" style="' + (f && f.remaining > 0 ? 'font-size:20px;font-weight:700;color:#111;' : '') + '">' + (done ? '達成' : 'あと ' + plan.remaining + '人') + '</div>'
-      + '<div class="mg-sub">現在 ' + plan.current + '人 ／ 目標 ' + plan.goal + '人（' + esc(plan.by) + 'まで）</div></div>';
-    return out;
-  }
-  var PRIORITIES = [   // いま優先すること（直すときの検索ワード：PRIORITIES）
-    'トレーナーの人柄がわかる動画の撮影',
-    '口コミの数を増やす',
-    'ボクシングジムの雰囲気がわかる動画',
-    '米子に密着したInstagramを強化する'
-  ];
-  function priorityHtml(){
-    var h = '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p>';
-    PRIORITIES.forEach(function(t, i){ h += '<div class="exp-row"><span><b style="color:#DD0B1B;margin-right:8px;">' + (i + 1) + '</b>' + esc(t) + '</span></div>'; });
-    return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3名を集めるのが先です。</p></div>';
-  }
-  function planRows(plan){
-    if(!plan) return '<p class="ed-sub">目標がまだ設定されていません（Apps Scriptの GOALS）。</p>';
-    return '<div class="exp-row"><span>現在の人数</span><b>' + plan.current + '人</b></div>'
-      + '<div class="exp-row"><span>目標までの人数</span><b>あと ' + plan.remaining + '人</b></div>'
-      + '<div class="exp-row"><span>年間（' + esc(plan.by) + 'まで）の目標</span><b>' + plan.goal + '人</b></div>'
-      + '<div class="exp-row"><span>毎月の目標（月に増やす人数）</span><b>' + plan.monthGoal + '人</b></div>';
-  }
-  function loginLinkHtml(){
-    return '<p class="ed-sub" style="margin-top:8px;"><button type="button" class="login-cancel" data-staff-login style="width:auto;padding:8px 14px;">会員の名前を見る（ログイン）</button></p>';
-  }
-  function bindStaffLogin(root){
-    (root || document).querySelectorAll('[data-staff-login]').forEach(function(b){
-      b.addEventListener('click', function(){ loginAs = 'staff'; openLogin(); });
-    });
-  }
-  function namesBox(title, rows, fmt){
-    var h = '<details class="names-box"><summary>' + esc(title) + '（' + rows.length + '人）</summary>';
-    rows.forEach(function(r){ h += '<div class="exp-row"><span>' + esc(r.name) + '</span><b>' + fmt(r) + '</b></div>'; });
-    return h + '</details>';
-  }
-  function reviewHtml(bizId, d){
-    var rv = d.reviews && d.reviews[bizId]; if(!rv) return '';
-    var up = (rv.targetChange === null || rv.targetChange === undefined) ? '' : (rv.targetChange > 0 ? '　前回より目標が +' + rv.targetChange + '件' : '　前回から目標は変わらず');
-    var h = '<p class="ed-eyebrow" style="margin-top:14px;">Google口コミ｜米子のトップを超える</p>';
-    h += '<div class="month-goal" style="margin-bottom:10px;"><div class="mg-label">目標（米子の同じ種類で一番多い口コミ数）</div><div class="mg-num">' + rv.top.count + '件</div><div class="mg-sub">' + esc(rv.top.name) + up + '</div></div>';
-    h += '<div class="exp-row"><span>うちの口コミ数（評価 ' + rv.own.rating + '）</span><b>' + rv.own.count + '件</b></div>';
-    h += '<div class="exp-row"><span>トップを超えるまで</span><b>' + (rv.remaining === 0 ? '超えています' : 'あと ' + rv.remaining + '件') + '</b></div>';
-    if(rv.history && rv.history.length > 1){
-      h += '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;"><tr style="background:#FFF1F2;"><th>日付</th><th>目標</th><th>うち</th></tr>';
-      rv.history.slice().reverse().forEach(function(x){ h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:6px 2px;">' + esc(x.date.slice(5)) + '</td><td>' + x.target + '</td><td>' + x.own + '</td></tr>'; });
-      h += '</table></div>';
-    }
-    return h + '<p class="ed-sub" style="margin-top:6px;">毎週月曜に更新（' + esc(rv.date) + ' 時点）。他社が増えると目標も上がります。</p>';
-  }
-  function peopleHtml(bizId, d){
-    var pp = d.people; if(!pp) return '';
-    var h = '';
-    if(bizId === 'boxing' && pp.boxing){
-      var b = pp.boxing;
-      h += '<p class="ed-eyebrow" style="margin-top:14px;">継続月数｜入会日から数える（退会した人は除く）</p>';
-      h += '<div class="exp-row"><span>平均の継続月数</span><b>' + (b.avgMonths === null ? '不明' : b.avgMonths + 'ヶ月') + '</b></div>';
-      h += '<div class="exp-row"><span>数えた人数</span><b>' + b.counted + '人</b></div>';
-      if(b.members){ h += namesBox('会員ごとの継続月数', b.members, function(r){ return r.months + 'ヶ月'; }); }
-      else if(!isOwner()){ h += loginLinkHtml(); }
-      h += '<p class="ed-sub" style="margin-top:6px;">入会日が不明・一括登録の人は数えていません。</p>';
-    }
-    if(bizId === 'onetre' && pp.onetre){
-      var o = pp.onetre;
-      h += '<p class="ed-eyebrow" style="margin-top:14px;">継続回数｜契約したコースの回数を足し続ける</p>';
-      h += '<div class="exp-row"><span>会員数</span><b>' + o.count + '人</b></div>';
-      h += '<div class="exp-row"><span>みんなの継続回数（合計）</span><b>' + o.totalSessions + '回</b></div>';
-      h += '<div class="exp-row"><span>1人あたりの平均</span><b>' + (o.avgSessions === null ? '不明' : o.avgSessions + '回') + '</b></div>';
-      if(o.members){ h += namesBox('会員ごとの継続回数', o.members, function(r){ return r.sessions + '回（' + r.contracts + '契約）'; }); }
-      else if(!isOwner()){ h += loginLinkHtml(); }
-    }
-    return h;
-  }
-
-  function rentalHtml(){
-    return '<div class="ed-card" id="rental-card"><p class="ed-eyebrow">RENTAL GYM｜' + (isOwner() ? '数字と進み具合' : '計画と今の人数') + '</p><div id="rental-body" class="ed-sub">読み込み中…</div></div>';
-  }
-  function fillRental(){
-    var body = document.getElementById('rental-body');
-    if(!body) return;
-    loadDash(function(j, err){
-      body = document.getElementById('rental-body');
-      if(!body) return;
-      if(err === 'denied'){ body.textContent = ''; return; }
-      if(err || !j || !j.data){ body.textContent = '読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
-      var owner = isOwner(), r = j.data.rental || null, rp = j.data.people && j.data.people.rental, h = '';
-      var nm = (r && r.name) || 'レンタルジムONE-TRE';
-      h += '<div class="rental-hero"><div class="rh-name">' + esc(nm) + '</div><div class="rh-catch">' + esc((r && r.catch1) || 'じぶんだけの時間') + '　／　' + esc((r && r.catch2) || '自分に酔える場所') + '</div></div>';
-      if(rp){
-        h += '<div style="margin-top:14px;">' + remainHtml(rp.plan, 'レンタルジム') + '</div>';
-        h += '<p class="ed-eyebrow">計画と実績（人数）</p>' + planRows(rp.plan);
-        if(rp.leaving){ h += '<div class="exp-row"><span>うち退会予定</span><b>' + rp.leaving + '人</b></div>'; }
-        if(rp.waiting){ h += '<div class="exp-row"><span>入会手続き中（決済待ち）</span><b>' + rp.waiting + '人</b></div>'; }
-        if(rp.members){ h += rp.members.length ? namesBox('いま誰がいるか', rp.members, function(m){ return m.status.indexOf('退会予定') >= 0 ? '退会予定' : '利用中'; }) : '<p class="ed-sub">まだ会員さんはいません。</p>'; }
-        else if(!owner){ h += loginLinkHtml(); }
-      } else { h += '<p class="ed-sub" style="margin-top:12px;">人数を読み込めませんでした。</p>'; }
-      if(owner && r){
-        h += '<p class="ed-eyebrow" style="margin-top:14px;">数字｜予約システムの集計と連動' + (r.linked ? '' : '（まだつながっていません）') + '</p><div class="rental-kpi">';
-        r.kpi.forEach(function(k){ h += '<div class="rk"><div class="rk-l">' + esc(k.label) + '</div><div class="rk-v">' + esc(k.value) + '</div></div>'; });
-        h += '</div>';
-        h += '<div class="rental-be"><b>損益分岐</b>　' + esc(r.breakeven) + '</div>';
-        h += '<p class="ed-eyebrow" style="margin-top:14px;">料金とルール</p>';
-        r.terms.forEach(function(t){ h += '<div class="exp-row"><span class="rt-k">' + esc(t[0]) + '</span><b class="rt-v">' + esc(t[1]) + '</b></div>'; });
-        h += '<p class="ed-eyebrow" style="margin-top:14px;">進み具合</p>';
-        r.progress.forEach(function(p){ h += '<div class="exp-row rp"><span class="chip ' + (p[0] === '済' ? 'done' : 'todo') + '">' + esc(p[0]) + '</span><span class="rp-t">' + esc(p[1]) + '</span></div>'; });
-        h += '<p class="ed-sub" style="margin-top:8px;">' + esc(r.asOf) + 'までの話し合いの内容です。</p>';
-      }
-      body.innerHTML = h; bindStaffLogin(body);
-    });
-  }
 
   function renderDataCard(biz){
     var title = document.getElementById('data-title');
@@ -996,19 +679,17 @@
     loadDash(function(j, err){
       if(!document.getElementById('data-body')) return;
       if(err === 'nourl'){ body.textContent = '準備中です（数字を読み込む設定がまだありません）'; return; }
-      if(err === 'denied'){ body.textContent = ''; return; }
       if(err){ body.textContent = '数字を読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
       var d = j.data, h = '';
       var fin = d.finance;
       if(fin && fin[biz.id]){
-        var fb = fin[biz.id], ft = fin.total, owner = isOwner();
+        var fb = fin[biz.id], ft = fin.total, owner = (activeUser === '長尾');
         h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">売上（累計・手数料引き前）</div><div class="mg-num">' + yen(fb.sales) + '</div><div class="mg-sub">今月 ' + yen(fb.monthSales) + '　／　入金額 ' + yen(fb.net) + '</div></div>';
         if(owner){
           h += '<div class="exp-row"><span>経費（累計）</span><b>' + yen(fb.expense) + '</b></div>';
           h += '<div class="exp-row"><span>利益（入金額 − 経費）</span><b>' + yen(fb.net - fb.expense) + '</b></div>';
           h += '<div class="exp-row"><span>今月の経費</span><b>' + yen(fb.monthExpense) + '</b></div>';
         }
-        if(owner && d.fixed){ h += fixedHtml(d.fixed, biz.id, fb); }
         if(owner && biz.id === 'onetre'){
           h += '<div id="payroll-box"><div class="exp-row"><span>人件費（稲田さん・時間外）今月</span><b id="pr-month">読み込み中…</b></div><div class="exp-row"><span>人件費 2026年 累計</span><b id="pr-year">読み込み中…</b></div><div class="exp-row"><span>利益（入金額 − 経費 − 人件費）</span><b id="pr-profit">-</b></div></div>';
         }
@@ -1019,7 +700,7 @@
         }
         h += '<p class="ed-sub" style="margin:6px 0 12px;">台帳の「売上」「経費」から自動で出しています（返金は入金額から引いています）。</p>';
       }
-      if(biz.id === 'happykids' && d.happykids){
+      if(biz.id === 'happykids'){
         var t = d.happykids.taikai, pt = d.happykids.partners, c = pt.contracts;
         h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">大会の余り（HAPPY KIDSに入る額）</div><div class="mg-num">' + yen(t.surplus) + '</div><div class="mg-sub">スポンサー手取り ' + yen(t.sponsorNet) + ' − 大会運営費 ' + yen(t.cost) + '</div></div>';
         h += '<div class="exp-row"><span>大会スポンサー</span><b>' + t.sponsorCount + '社（額面 ' + yen(t.sponsorGross) + '）</b></div>';
@@ -1028,9 +709,9 @@
         h += '<div class="exp-row"><span>パートナー（年契約・Stripe）</span><b>' + pt.stripeCount + '件 ' + yen(pt.stripeGross) + '</b></div>';
         if(c){ h += '<div class="exp-row"><span>パートナー契約（年契約・更新管理）</span><b>' + c.total + '件（契約中 ' + c.active + '・契約日待ち ' + c.waiting + '）</b></div>'; }
         h += '<div class="exp-row"><span>HAPPY KIDS 売上（手取り）</span><b>' + yen(d.happykids.hkSalesNet) + '</b></div>';
-        if(isOwner()){
+        if(activeUser === '長尾'){
           h += '<div class="exp-row"><span>HAPPY KIDS 経費</span><b>' + yen(d.happykids.hkCost) + '</b></div>';
-          h += '<div class="exp-row"><span>現金の残り（売上 − 経費）</span><b>' + yen(d.happykids.hkBalance) + '</b></div>';
+          h += '<div class="exp-row"><span>残金（売上 − 経費）</span><b>' + yen(d.happykids.hkBalance) + '</b></div>';
         }
         h += '<p class="ed-sub" style="margin-top:8px;">台帳から自動で出しています。大会スポンサーとパートナー契約は別の数え方です（浜田興業・MODESTOなどは両方に入ります）。売上は台帳が正で、契約一覧の金額は足していません。</p>';
       } else {
@@ -1044,19 +725,7 @@
           h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">男性</td><td>' + tr.m.trial + '人</td><td>' + tr.m.closed + '人</td><td style="font-weight:700;">' + gr(tr.m) + '</td></tr>';
           h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">女性</td><td>' + tr.f.trial + '人</td><td>' + tr.f.closed + '人</td><td style="font-weight:700;">' + gr(tr.f) + '</td></tr>';
           h += '</table><p class="ed-sub" style="margin-top:6px;">体験→成約の男女別（記録がある期間の通算）。スタッフは除いています。</p></div>';
-          var tt = tr.m.trial + tr.f.trial, tc = tr.m.closed + tr.f.closed, gt = ac.m + ac.f;
-          var ag = mb.ages;
-          if(ag){
-            h += '<p class="ed-eyebrow" style="margin-top:14px;">年代別｜体験 → 入会</p><table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center;margin-bottom:10px;"><tr style="background:#FFF1F2;"><th></th><th>体験</th><th>入会</th><th>成約率</th></tr>';
-            Object.keys(ag).forEach(function(k){ var o = ag[k]; h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">' + esc(k) + '</td><td>' + o.trial + '人</td><td>' + o.closed + '人</td><td style="font-weight:700;">' + (o.trial ? Math.round(o.closed / o.trial * 100) + '%' : '-') + '</td></tr>'; });
-            h += '</table>';
-          }
-          h += '<div class="exp-row"><span>体験 → 入会</span><b>' + tt + '人 → ' + tc + '人</b></div>';
-          h += '<div class="exp-row"><span>成約率</span><b>' + (tt ? Math.round(tc / tt * 100) + '%' : '-') + '</b></div>';
-          h += '<div class="exp-row"><span>男女比率（いまの会員）</span><b>男性 ' + (gt ? Math.round(ac.m / gt * 100) : 0) + '% ／ 女性 ' + (gt ? Math.round(ac.f / gt * 100) : 0) + '%</b></div>';
         }
-        h += reviewHtml(biz.id, d);
-        h += peopleHtml(biz.id, d);
         var av = d.avg || {};
         function A(k){ return av[k] ? av[k][biz.id] : null; }
         h += '<div class="exp-row"><span>成約率（通算）</span><b>' + (typeof A('通算成約率') === 'number' ? pct(A('通算成約率')) : '不明') + '</b></div>';
@@ -1069,7 +738,7 @@
         });
         h += '</table></div><p class="ed-sub" style="margin-top:8px;">体験した月で数えています（5月に体験して6月に入会した人は5月の成約）。「-」は記録なしです。当月は途中経過です。</p>';
       }
-      body.innerHTML = h; bindStaffLogin(body);
+      body.innerHTML = h;
       if(document.getElementById('payroll-box')){ loadPayroll(d.finance && d.finance.onetre); }
     });
   }
@@ -1098,30 +767,25 @@
     return esc(name);
   }
 
-  var BIZ_LOGO = { boxing:'logo-boxing.jpg?v=3', onetre:'logo-onetre.jpg?v=3', happykids:'logo-happykids.jpg?v=3', rental:'logo-onetre.jpg?v=3' };
-  var BIZ_SHORT = { boxing:'ONE-BALANCE<br>ボクシングジム', onetre:'ONE-TRE', happykids:'HAPPY KIDS<br>PROJECT', rental:'レンタル<br>ジム' };
+  var BIZ_LOGO = { boxing:'logo-boxing.jpg?v=3', onetre:'logo-onetre.jpg?v=3', happykids:'logo-happykids.jpg?v=3' };
+  var BIZ_SHORT = { boxing:'ONE-BALANCE<br>ボクシングジム', onetre:'ONE-TRE', happykids:'HAPPY KIDS<br>PROJECT' };
 
   var bizSwitchEl = document.getElementById('biz-switch');
-  function buildBizSwitch(){
-    var list = visibleBizList();
-    if(!list.some(function(b){ return b.id === currentBiz; })){ currentBiz = list[0].id; }
-    bizSwitchEl.innerHTML = '';
-    list.forEach(function(b){
-      var btn = document.createElement('button');
-      btn.className = 'logo-btn';
-      btn.innerHTML = '<img src="' + BIZ_LOGO[b.id] + '" alt=""><span>' + BIZ_SHORT[b.id] + '</span>';
-      btn.dataset.biz = b.id;
-      if(b.id === currentBiz) btn.classList.add('active');
-      btn.addEventListener('click', function(){
-        currentBiz = b.id;
-        try{ localStorage.setItem('wb_current_biz', currentBiz); }catch(e){}
-        bizSwitchEl.querySelectorAll('button').forEach(function(bt){ bt.classList.remove('active'); });
-        btn.classList.add('active');
-        renderBusinessContent();
-      });
-      bizSwitchEl.appendChild(btn);
+  BUSINESSES.forEach(function(b){
+    var btn = document.createElement('button');
+    btn.className = 'logo-btn';
+    btn.innerHTML = '<img src="' + BIZ_LOGO[b.id] + '" alt=""><span>' + BIZ_SHORT[b.id] + '</span>';
+    btn.dataset.biz = b.id;
+    if(b.id === currentBiz) btn.classList.add('active');
+    btn.addEventListener('click', function(){
+      currentBiz = b.id;
+      localStorage.setItem('wb_current_biz', currentBiz);
+      bizSwitchEl.querySelectorAll('button').forEach(function(bt){ bt.classList.remove('active'); });
+      btn.classList.add('active');
+      renderBusinessContent();
     });
-  }
+    bizSwitchEl.appendChild(btn);
+  });
 
   var bizYearNote = document.getElementById('biz-year-note');
   var chartInstance = null;
@@ -1134,9 +798,6 @@
   function renderBusinessContent(){
     var biz = getBiz(currentBiz);
     var container = document.getElementById('business-content');
-    if(biz.id === 'rental'){
-      container.innerHTML = rentalHtml(); fillRental(); return;
-    }
 
     var valueAll = loadJSON(VALUE_KEY, {});
     var valueList = valueAll[biz.id] || biz.defaultValue.slice();
@@ -1156,7 +817,6 @@
 
     var html = '';
 
-    html += priorityHtml();
     // 今月の目標（長尾・稲田どちらにも表示）
     html += '<div class="month-goal"><div class="mg-label" id="mg-label"></div><div class="mg-num" id="mg-num">-</div><div class="mg-sub" id="mg-sub"></div></div>';
 
@@ -1164,7 +824,7 @@
     html += '<div class="ed-card" id="data-card"><p class="ed-eyebrow" id="data-title"></p><div id="data-body" class="ed-sub">読み込み中…</div></div>';
 
     // 経費（長尾のみ）
-    if(isOwner()){
+    if(activeUser === '長尾'){
       html += '<div class="ed-card" id="exp-card">';
       html += '<p class="ed-eyebrow">経費｜長尾のみ表示</p>';
       html += '<div class="todo-add"><input class="ed-input" id="exp-text" placeholder="内容"><input class="ed-input" id="exp-amt" inputmode="numeric" placeholder="金額" style="max-width:110px;"><button id="exp-add">追加</button></div>';
