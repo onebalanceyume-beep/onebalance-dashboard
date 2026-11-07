@@ -24,7 +24,7 @@ var ONETRE_QUIT = ['河合正子'];              // ONE-TREで退会が確定し
 
 // 目標（検索ワード：GOALS）。人数は「会員数」。不明は null にしておく（画面には出ない）
 var GOALS = {
-  rental: { members: 16, by: '2027/10' },   // 16名＝月6,600円で月10万円を超えるライン。期限までに到達する想定
+  rental: { members: 16, by: '2027/10', first: { members: 3, label: 'モニター枠' } },   // まず最優先はモニター3名。その先は16名（月6,600円で月10万円を超えるライン）
   boxing: null,                             // 例：{ members: 120, by: '2027/03' }
   onetre: null
 };
@@ -295,6 +295,12 @@ function buildFinance_(sales, exp) {
 }
 
 function normName_(s) { return String(s || '').replace(/[\s\u3000]/g, ''); }
+function ageBand_(age) {
+  if (age < 20) return '10代以下';
+  if (age >= 60) return '60代以上';
+  return Math.floor(age / 10) * 10 + '代';
+}
+var AGE_BANDS = ['10代以下', '20代', '30代', '40代', '50代', '60代以上'];
 function genderKey_(g) { g = String(g || ''); return (g === '男性' || g === 'm' || g === 'M') ? 'm' : ((g === '女性' || g === 'f' || g === 'F') ? 'f' : 'x'); }
 
 // 現在の会員数と、体験→成約の男女別（名前一致＝成約。スペース除く）
@@ -319,11 +325,18 @@ function buildMembers_() {
   }
   var tf = bx.getSheetByName('体験者フォーム').getDataRange().getValues();
   var bxTrial = { m: { trial: 0, closed: 0 }, f: { trial: 0, closed: 0 } };
+  var bxAges = {}; AGE_BANDS.forEach(function (b) { bxAges[b] = { trial: 0, closed: 0 }; });
   for (var j = 1; j < tf.length; j++) {
     var t = tf[j]; if (!t[2]) continue;
     var k = genderKey_(t[3]); if (k === 'x') continue;
     bxTrial[k].trial++;
-    if (bxNames[normName_(t[2])]) bxTrial[k].closed++;
+    var closedNow = !!bxNames[normName_(t[2])];
+    if (closedNow) bxTrial[k].closed++;
+    var bd = parseYmd_(t[6]), at = parseYmd_(t[0]);          // 年代は体験した日の年齢で数える（生年月日がない人は年代別に入らない）
+    if (bd && at) {
+      var age = at.getUTCFullYear() - bd.getUTCFullYear() - ((at.getUTCMonth() < bd.getUTCMonth() || (at.getUTCMonth() === bd.getUTCMonth() && at.getUTCDate() < bd.getUTCDate())) ? 1 : 0);
+      if (age >= 0 && age < 110) { var bk = bxAges[ageBand_(age)]; bk.trial++; if (closedNow) bk.closed++; }
+    }
   }
 
   // --- ONE-TRE ---
@@ -345,7 +358,7 @@ function buildMembers_() {
     otTrial[k2].trial++;
     if (otNames[normName_(u[1])]) otTrial[k2].closed++;
   }
-  return { boxing: { active: bxActive, trial: bxTrial }, onetre: { active: otActive, trial: otTrial } };
+  return { boxing: { active: bxActive, trial: bxTrial, ages: bxAges }, onetre: { active: otActive, trial: otTrial } };
 }
 
 // ===== 人の数字（継続月数・継続回数・レンタル会員）=====
@@ -364,7 +377,8 @@ function goalInfo_(goal, current) {
   var nowYm = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM');
   var left = Math.max(1, monthDiff_(nowYm, goal.by));
   var remaining = Math.max(0, goal.members - current);
-  return { goal: goal.members, by: goal.by, current: current, remaining: remaining, monthsLeft: left, monthGoal: Math.ceil(remaining / left) };
+  var first = goal.first ? { goal: goal.first.members, label: goal.first.label, remaining: Math.max(0, goal.first.members - current) } : null;
+  return { goal: goal.members, by: goal.by, current: current, remaining: remaining, monthsLeft: left, monthGoal: Math.ceil(remaining / left), first: first };
 }
 // 名前入りの全部（長尾・稲田ログイン後だけ）
 function buildPeople_() {
