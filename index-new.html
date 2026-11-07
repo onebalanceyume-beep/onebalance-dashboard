@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>ONE-BALANCE 経営ダッシュボード</title>
+<link rel="manifest" href="manifest.json?v=2">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ONE-BALANCE">
+<meta name="theme-color" content="#DD0B1B">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --red:#DB444C;
+    --red-dark:#B83039;
+    --teal:#5BB9CD;
+    --teal-dark:#3E97AB;
+    --bg:#F6F3EF;
+    --card:#FFFFFF;
+    --text:#2B2B2B;
+    --text-light:#767676;
+    --border:#EAE4DC;
+    --radius:18px;
+    --ed-red:#AD002D;
+    --ed-border:#F0DCDF;
+    --ed-font:"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN",sans-serif;
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-top:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    touch-action:manipulation;
+    overscroll-behavior:none;
+  }
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","M PLUS Rounded 1c","Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    padding-bottom:calc(78px + var(--safe-bottom));
+  }
+  button, input, textarea, select{
+    font-family:inherit;
+    touch-action:manipulation;
+  }
+  a{ color:inherit; }
+
+  header.app-header{
+    background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);
+    color:#fff;
+    padding:calc(16px + var(--safe-top)) 20px 14px;
+    text-align:center;
+    position:sticky;
+    top:0;
+    z-index:20;
+    box-shadow:0 2px 10px rgba(0,0,0,0.12);
+  }
+  header.app-header .logo-row{
+    display:flex;align-items:center;justify-content:center;gap:10px;
+  }
+  header.app-header img{
+    width:34px;height:34px;border-radius:9px;
+  }
+  header.app-header h1{
+    font-size:17px;
+    margin:0;
+    font-weight:800;
+    letter-spacing:.02em;
+  }
+  .ctrl-row{
+    display:flex;align-items:center;justify-content:center;gap:16px;
+    margin-top:10px;flex-wrap:wrap;
+  }
+  .yr-bar{ display:flex;align-items:center;gap:10px; }
+  .yr-bar button{
+    background:rgba(255,255,255,.18);border:none;color:#fff;
+    width:26px;height:26px;border-radius:8px;font-size:15px;font-weight:800;cursor:pointer;
+  }
+  .yr-bar .yr-val{ font-size:13.5px;font-weight:800;min-width:44px;text-align:center; }
+  .user-row{ font-size:11.5px;font-weight:700;display:flex;align-items:center;gap:6px; }
+  .user-row select{
+    background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);
+    border-radius:8px;padding:4px 8px;font-size:12px;font-weight:800;
+  }
+  .user-row select option{ color:#111; }
+
+  nav.tabs{
+    display:flex;
+    background:#fff;
+    border-top:1px solid var(--border);
+    position:fixed;
+    bottom:0;left:0;right:0;
+    z-index:30;
+    padding-bottom:var(--safe-bottom);
+    box-shadow:0 -2px 10px rgba(0,0,0,0.06);
+  }
+  nav.tabs button{
+    flex:1;
+    background:none;border:none;
+    padding:9px 2px 8px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+    color:var(--text-light);
+    font-size:10.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  nav.tabs button .ic{ font-size:19px; line-height:1; }
+  nav.tabs button.active{ color:var(--red); }
+
+  main{ max-width:920px; margin:0 auto; padding:18px 16px 24px; }
+  section.tab{ display:none; }
+  section.tab.active{ display:block; animation:fadeIn .25s ease; }
+  @keyframes fadeIn{ from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+  h2.section-title{
+    font-size:16px;font-weight:800;margin:4px 0 14px;
+    display:flex;align-items:center;gap:8px;
+  }
+  h2.section-title .dot{ width:8px;height:8px;border-radius:50%;background:var(--red); }
+
+  /* ===== Editorial style (理念/事業) ===== */
+  .ed-card{
+    background:#fff;
+    border:1px solid var(--ed-border);
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:12px;
+    font-family:var(--ed-font);
+  }
+  .ed-eyebrow{ font-size:10.5px;font-weight:700;color:var(--ed-red);letter-spacing:.1em;margin:0 0 8px; }
+  .ed-h{ font-size:23px;font-weight:800;color:var(--ed-red);line-height:1.35;margin:0 0 8px; }
+  .ed-h.sm{ font-size:17px; }
+  .ed-sub{ font-size:11.5px;color:#9a9a9a;font-weight:700;margin:0 0 12px; }
+  .ed-body{ font-size:12.5px;color:#555;line-height:1.85;margin:0; }
+  .ed-input, .ed-textarea{
+    width:100%;border:1px solid var(--ed-border);border-radius:10px;
+    padding:10px 12px;font-size:13px;font-family:var(--ed-font);background:#FCFAFA;color:var(--text);
+  }
+  .ed-textarea{ min-height:80px;resize:vertical;line-height:1.6; }
+  .ed-label{ font-size:11px;font-weight:700;color:#9a9a9a;margin:0 0 4px;display:block; }
+  .ed-row{ margin-bottom:10px; }
+
+  /* year/user note */
+  .yr-note{ font-size:11px;color:var(--ed-red);font-weight:700;margin-bottom:10px; }
+
+  /* business switcher */
+  .biz-switch{ display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap; }
+  .biz-switch button{
+    flex:1;min-width:100px;
+    border:1.5px solid var(--ed-red);background:#fff;color:var(--ed-red);
+    font-weight:800;font-size:12px;border-radius:12px;padding:10px 6px;cursor:pointer;
+    font-family:var(--ed-font);
+  }
+  .biz-switch button.active{ background:var(--ed-red);color:#fff; }
+  #biz-switch{ flex-wrap:nowrap; }
+  #biz-switch button.logo-btn{
+    min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+    padding:10px 4px 8px;border:2px solid #E5DED5;background:#fff;color:#444;
+  }
+  #biz-switch button.logo-btn img{ width:60px;height:60px;border-radius:14px;object-fit:cover;display:block;opacity:.55;transition:opacity .15s; }
+  #biz-switch button.logo-btn span{ font-size:11px;line-height:1.25;font-weight:800;text-align:center; }
+  #biz-switch button.logo-btn.active{ border-color:var(--ed-red);background:#FFF1F2;color:var(--ed-red); }
+  #biz-switch button.logo-btn.active img{ opacity:1; }
+  .month-goal{ text-align:center;background:linear-gradient(135deg,#DB444C,#B8323A);color:#fff;border-radius:18px;padding:18px 12px;margin-bottom:14px; }
+  .month-goal .mg-label{ font-size:13px;font-weight:800;opacity:.9; }
+  .month-goal .mg-num{ font-size:56px;font-weight:900;line-height:1.1;margin:4px 0; }
+  .month-goal .mg-num small{ font-size:20px;font-weight:800;margin-left:4px; }
+  .month-goal .mg-sub{ font-size:12px;opacity:.92; }
+  .exp-row{ display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #EEE;font-size:13px; }
+  .exp-row button{ border:none;background:none;color:#B33;font-size:16px;cursor:pointer; }
+
+  /* value list */
+  .value-list{ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px; }
+  .value-list li{
+    font-size:13px;font-weight:800;color:var(--text);
+    padding:10px 12px;background:#FBF3F4;border-radius:10px;
+    border-left:4px solid var(--ed-red);
+  }
+
+  /* goal numbers */
+  .goal-nums-ed{ display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px; }
+  .goal-nums-ed .g-item{ text-align:center; }
+  .goal-diff{
+    display:flex;justify-content:center;gap:18px;margin:6px 0 16px;flex-wrap:wrap;
+  }
+  .goal-diff .d-item{ text-align:center; }
+  .goal-diff .d-num{ font-size:20px;font-weight:800;color:var(--ed-red); }
+  .goal-diff .d-label{ font-size:10.5px;color:#9a9a9a;font-weight:700; }
+  .chart-wrap{ position:relative;height:180px;margin-bottom:8px; }
+
+  /* todos */
+  .todo-add{ display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap; }
+  .todo-add input{ flex:1;min-width:110px; }
+  .todo-add button{
+    background:var(--ed-red);color:#fff;border:none;border-radius:10px;
+    padding:0 14px;font-size:12px;font-weight:800;cursor:pointer;
+  }
+  .todo-cat{ font-size:11px;font-weight:800;color:var(--ed-red);margin:14px 0 6px;letter-spacing:.05em; }
+  .todo-item{
+    display:flex;align-items:center;gap:10px;
+    background:#FAFAFA;border:1px solid var(--ed-border);border-radius:10px;
+    padding:10px 12px;margin-bottom:6px;
+  }
+  .todo-item input[type=checkbox]{ width:19px;height:19px;accent-color:var(--ed-red);flex:none; }
+  .todo-item .t-text{ flex:1;font-size:13px;font-weight:700; }
+  .todo-item.done .t-text{ text-decoration:line-through;color:#b7b7b7; }
+  .todo-item .t-del{ background:none;border:none;color:#c7c0c0;font-size:16px;cursor:pointer; }
+
+  /* checklist rows (cleaning / heat) */
+  .chk-row{
+    display:flex;align-items:center;gap:12px;
+    background:#fff;border:1px solid var(--ed-border);border-radius:12px;
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .chk-row img{ width:34px;height:34px;flex:none; }
+  .chk-row .chk-main{ flex:1; }
+  .chk-row .chk-label{ font-size:13px;font-weight:800; }
+  .chk-row .chk-meta{ font-size:10.5px;color:#9a9a9a;margin-top:2px; }
+  .chk-row input[type=checkbox]{ width:22px;height:22px;accent-color:var(--ed-red);flex:none; }
+  .chk-row.checked{ background:#FBF3F4; }
+
+  /* WBGT */
+  .wbgt-chips{ display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px; }
+  .wbgt-chip{
+    flex:none;border:none;border-radius:10px;padding:9px 10px;font-size:10.5px;font-weight:800;
+    color:#fff;cursor:pointer;min-width:74px;text-align:center;opacity:.55;
+  }
+  .wbgt-chip.active{ opacity:1;box-shadow:0 0 0 2px #1a1a1a inset; }
+  .wbgt-banner{
+    border-radius:12px;padding:14px 16px;color:#fff;margin-bottom:16px;
+  }
+  .wbgt-banner .wb-lv{ font-size:16px;font-weight:800;margin:0 0 4px; }
+  .wbgt-banner .wb-desc{ font-size:12px;opacity:.95;margin:0; }
+
+  /* ===== Share (unchanged) ===== */
+  .share-list{ display:flex;flex-direction:column;gap:12px; margin-bottom:16px;}
+  .share-item{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:16px;display:flex;gap:14px;align-items:center;
+  }
+  .share-qr{ width:84px;height:84px;flex:none;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden; }
+  .share-qr img{ width:100%;height:100%; }
+  .share-info{ flex:1;min-width:0; }
+  .share-info .name{ font-weight:800;font-size:14px;margin:0 0 4px; }
+  .share-info .url{ font-size:12px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 8px; }
+  .share-actions{ display:flex;gap:8px; }
+  .btn{ border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer; }
+  .btn-copy{ background:var(--teal); color:#fff; }
+  .btn-copy.copied{ background:#3FA85A; }
+  .btn-del{ background:#F1EBE4; color:var(--text-light); }
+  .btn-primary{ background:var(--red);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;width:100%; }
+  .add-card{ background:var(--card);border:1.5px dashed #D9CFC4;border-radius:var(--radius);padding:16px; }
+  .add-card.open{ border-style:solid; }
+  .add-toggle{ display:flex;align-items:center;justify-content:center;gap:6px;color:var(--red);font-weight:800;font-size:14px;background:none;border:none;width:100%;padding:6px;cursor:pointer; }
+  .add-form{ display:none;margin-top:12px;flex-direction:column;gap:10px; }
+  .add-form.show{ display:flex; }
+  .add-form input{ border:1px solid var(--border);border-radius:10px;padding:11px 12px;font-size:14px;width:100%; }
+  .empty-hint{ text-align:center;color:var(--text-light);font-size:12.5px;padding:18px 0; }
+
+  /* ===== Emergency (unchanged) ===== */
+  .em-hero{ background:linear-gradient(135deg,var(--red) 0%,var(--red-dark) 100%);color:#fff;border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px; }
+  .em-hero .em-icon{ font-size:32px; }
+  .em-hero h2{ margin:6px 0 4px;font-size:19px;font-weight:900; }
+  .em-hero p{ margin:0;font-size:12.5px;opacity:.9; }
+  .em-call{ display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--red);font-weight:800;font-size:14px;padding:10px 20px;border-radius:999px;margin-top:12px;text-decoration:none; }
+  .em-steps{ list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px; }
+  .em-steps li{ background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 14px 12px;display:flex;gap:12px;align-items:flex-start; }
+  .em-steps .num{ flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center; }
+  .em-steps .step-text{ font-size:13.5px;line-height:1.6;flex:1; }
+  .em-steps .step-text b{ font-size:14px; }
+  .em-steps .sub-list{ list-style:none;margin:6px 0 0;padding:0; }
+  .em-steps .sub-list li{ font-size:12.5px;color:var(--text-light);padding:2px 0 2px 14px;position:relative;background:none;border:none;border-radius:0;display:block; }
+  .em-steps .sub-list li::before{ content:"・";position:absolute;left:0; }
+  .em-note{ font-size:11.5px;color:var(--text-light);background:#F1EBE4;border-radius:12px;padding:12px 14px;line-height:1.6; }
+
+
+  /* ===== v2.0 新デザイン：しっかりした赤(#DD0B1B)×白、ヘルベチカ、角は小さく、絵文字なし ===== */
+  :root{ --red:#DD0B1B; --red-dark:#A80815; --ed-red:#DD0B1B; --ed-border:#D9D9D9; --border:#D9D9D9; --bg:#FFFFFF; --text:#111111; --text-light:#555555; --radius:2px;
+    --ed-font:Helvetica,"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
+  html,body{ overflow-x:hidden; }
+  body{ font-family:var(--ed-font); background:#fff; }
+  header.app-header{ background:#fff; color:#111; text-align:left; box-shadow:none; border-bottom:1px solid #111; padding:calc(18px + var(--safe-top)) 20px 14px; }
+  header.app-header .logo-row{ justify-content:flex-start; gap:12px; }
+  header.app-header img{ width:38px;height:38px;border-radius:2px; }
+  header.app-header h1{ font-size:clamp(20px,6.4vw,26px); font-weight:700; letter-spacing:.01em; white-space:nowrap; line-height:1.15; }
+  header.app-header h1 small{ display:block; font-size:11px; letter-spacing:.18em; color:#DD0B1B; font-weight:700; margin-bottom:2px; }
+  #data-body,#rental-body{ color:#111; font-size:13px; font-weight:400; }
+  #data-body .ed-sub,#rental-body .ed-sub{ color:#555; font-size:11.5px; font-weight:400; }
+  #biz-switch button.logo-btn span{ font-size:10px; letter-spacing:0; }
+  .ctrl-row{ justify-content:space-between; gap:12px; margin-top:12px; flex-wrap:nowrap; }
+  .yr-bar button{ background:#fff; color:#111; border:1px solid #111; border-radius:2px; width:32px; height:32px; }
+  .yr-bar .yr-val{ color:#111; font-size:14px; font-weight:700; }
+  .user-row{ gap:0; border:1px solid #111; border-radius:2px; overflow:hidden; }
+  .user-chip{ min-height:40px; min-width:64px; padding:0 14px; border:0; background:#fff; color:#111; font-size:14px; font-weight:700; cursor:pointer; }
+  .user-chip + .user-chip{ border-left:1px solid #111; }
+  .user-chip.on{ background:#D4AF37; color:#111; }
+  nav.tabs{ border-top:1px solid #111; box-shadow:none; }
+  nav.tabs button{ min-height:56px; font-size:13px; font-weight:700; color:#555; justify-content:center; border-top:3px solid transparent; }
+  nav.tabs button.active{ color:#DD0B1B; border-top-color:#DD0B1B; }
+  h2.section-title .dot{ border-radius:0; }
+  .ed-card{ border-radius:2px; }
+  .ed-input,.ed-textarea{ border-radius:2px; background:#fff; font-size:16px; }
+  .month-goal{ background:#DD0B1B; border-radius:2px; }
+  .biz-switch button,.todo-add button,.todo-item,.chk-row,.value-list li,.btn,.btn-primary,.add-card,.add-form input,.share-item,.share-qr,.em-hero,.em-steps li,.em-note,.wbgt-banner,.wbgt-chip{ border-radius:2px; }
+  .value-list li{ background:#F5F5F5; border-left-color:#DD0B1B; }
+  #biz-switch button.logo-btn{ border-radius:2px; border:1px solid #D9D9D9; }
+  #biz-switch button.logo-btn img{ border-radius:2px; }
+  #biz-switch button.logo-btn.active{ border:2px solid #DD0B1B; background:#fff; }
+  .em-hero{ background:#DD0B1B; }
+  .em-call{ border-radius:2px; }
+  .em-steps .num{ background:#111; border-radius:2px; }
+  ::selection{ background:#DD0B1B; }
+  .app-foot{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:20px; font-size:11px; color:#555; }
+  .app-foot button{ min-height:40px; padding:0 12px; border:1px solid #111; background:#fff; color:#111; font-size:12px; font-weight:700; border-radius:2px; cursor:pointer; }
+  .exp-row small{ color:#555; }
+
+  /* ログイン */
+  .login-overlay{ position:fixed; inset:0; background:rgba(17,17,17,.82); display:flex; align-items:center; justify-content:center; padding:24px; z-index:200; }
+  .login-overlay[hidden]{ display:none; }
+  .login-box{ width:100%; max-width:340px; background:#fff; border-radius:2px; padding:24px 20px; display:flex; flex-direction:column; gap:12px; }
+  .login-eyebrow{ font-size:11px; letter-spacing:.18em; font-weight:700; color:#DD0B1B; }
+  .login-title{ font-size:22px; font-weight:700; }
+  .login-msg{ margin:0; font-size:13px; color:#555; min-height:1.4em; }
+  #login-pw{ min-height:52px; padding:0 14px; font-size:16px; border:1px solid #111; border-radius:2px; width:100%; }
+  .login-go{ min-height:52px; border:0; border-radius:2px; background:#DD0B1B; color:#fff; font-size:16px; font-weight:700; cursor:pointer; }
+  .login-cancel{ min-height:44px; border:1px solid #111; border-radius:2px; background:#fff; color:#111; font-size:14px; font-weight:700; cursor:pointer; }
+
+  /* レンタルジム */
+  .rental-hero{ background:#111; color:#fff; border-bottom:4px solid #B8923A; border-radius:2px; padding:16px; }
+  .rental-hero .rh-name{ font-size:20px; font-weight:700; }
+  .rental-hero .rh-catch{ font-size:13px; color:#D4AF37; margin-top:4px; }
+  .rental-kpi{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:10px; }
+  .rental-kpi .rk{ border:1px solid #D9D9D9; border-radius:2px; padding:10px; }
+  .rental-kpi .rk-l{ font-size:11px; color:#555; font-weight:700; }
+  .rental-kpi .rk-v{ font-size:22px; font-weight:700; margin-top:6px; }
+  .rental-be{ border:1px solid #111; border-radius:2px; padding:12px 14px; font-size:13px; line-height:1.6; }
+  .rt-k{ width:96px; flex:none; font-size:12px; color:#555; font-weight:700; }
+  .rt-v{ flex:1; text-align:right; font-weight:700; line-height:1.5; }
+  .exp-row.rp{ justify-content:flex-start; align-items:flex-start; }
+  .rp .chip{ flex:none; width:32px; text-align:center; font-size:11px; font-weight:700; padding:3px 0; border-radius:2px; color:#fff; }
+  .rp .chip.done{ background:#111; }
+  .rp .chip.todo{ background:#DD0B1B; }
+  .rp-t{ font-size:13px; font-weight:700; line-height:1.5; }
+  ::selection{ background:var(--teal);color:#fff; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="logo-row">
+    <img src="apple-touch-icon.png?v=2" alt="logo">
+    <h1><small>ONE-BALANCE</small>経営ダッシュボード</h1>
+  </div>
+  <div class="ctrl-row">
+    <div class="yr-bar">
+      <button id="yr-prev" aria-label="前年">‹</button>
+      <span class="yr-val" id="yr-val">2026</span>
+      <button id="yr-next" aria-label="翌年">›</button>
+    </div>
+    <div class="user-row" id="user-row">
+      <button type="button" class="user-chip" data-user="長尾">長尾</button>
+      <button type="button" class="user-chip" data-user="稲田">稲田</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- 会社理念 -->
+  <!-- 提案ボード（最初に開く画面） -->
+  <section class="tab active" id="tab-proposal" style="margin:-18px -16px -24px;">
+    <iframe id="proposal-frame" title="提案ボード" style="display:block;width:100%;border:0;height:70vh;background:#fff;"></iframe>
+  </section>
+
+  <!-- 会社理念 -->
+  <section class="tab" id="tab-philosophy">
+    <h2 class="section-title"><span class="dot"></span>私たちの方向性</h2>
+
+    <div class="ed-card">
+      <p class="ed-eyebrow">PHILOSOPHY</p>
+      <p class="ed-h">心と体を、元気に。<br>カッコよく、素敵に。</p>
+      <p class="ed-body">人との繋がりの中で心と体を元気に。目的や目標を実現することで、カッコよく、素敵になってもらう。</p>
+    </div>
+
+    <div class="ed-card">
+      <p class="ed-eyebrow">MISSION</p>
+      <p class="ed-h sm">ボクシング革命を起こす</p>
+      <p class="ed-body">「厳しい」「怖い」を「楽しい」に。常識を変える。そしてそれを、生活必需品にしてもらう。</p>
+    </div>
+
+    <div class="ed-card">
+      <p class="ed-eyebrow">VISION</p>
+      <p class="ed-h sm">日本一になる</p>
+    </div>
+
+    <div class="ed-card" id="theme-card">
+      <p class="ed-eyebrow" id="theme-year-label">2026｜年間テーマ</p>
+      <div class="ed-row">
+        <label class="ed-label">テーマ（例：革新）</label>
+        <input class="ed-input" id="theme-title" placeholder="今年のテーマ">
+      </div>
+      <div class="ed-row">
+        <label class="ed-label">意味・方針</label>
+        <textarea class="ed-textarea" id="theme-desc" placeholder="例：今あるものを壊し、新しい価値を創る。"></textarea>
+      </div>
+    </div>
+
+    <div class="ed-card" id="personal-card">
+      <p class="ed-eyebrow" id="personal-year-label">個人の今年のテーマ</p>
+      <p class="ed-sub" id="personal-user-label">長尾</p>
+      <textarea class="ed-textarea" id="personal-theme" placeholder="今年、自分が大事にすること・成し遂げたいことを書く"></textarea>
+    </div>
+  </section>
+
+  <!-- シェア -->
+  <section class="tab" id="tab-share">
+    <h2 class="section-title"><span class="dot"></span>シェア（QRコード・URL）</h2>
+    <div class="biz-switch" id="share-biz-switch"></div>
+    <div class="share-list" id="share-list"></div>
+    <div class="add-card" id="add-card">
+      <button class="add-toggle" id="add-toggle">＋ QR・URLを追加</button>
+      <div class="add-form" id="add-form">
+        <input type="text" id="add-name" placeholder="名称（例：公式LINE、ジムHP、YouTube）">
+        <input type="url" id="add-url" placeholder="URL（https://から入力）">
+        <select class="ed-input" id="add-biz"></select>
+        <input type="text" id="add-biz-new" placeholder="新しいカテゴリ名" style="display:none;">
+        <button class="btn btn-primary" id="add-submit">追加してQRコードを作成</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 事業 -->
+  <section class="tab" id="tab-business">
+    <h2 class="section-title"><span class="dot"></span>事業別 今年の目標</h2>
+    <p class="yr-note" id="biz-year-note">2026年</p>
+
+    <div class="biz-switch" id="biz-switch"></div>
+    <div id="business-content"></div>
+  </section>
+
+  <!-- 緊急マニュアル -->
+  <section class="tab" id="tab-emergency">
+    <h2 class="section-title"><span class="dot"></span>緊急マニュアル</h2>
+
+    <div class="em-hero">
+      <h2>熱中症になったら</h2>
+      <p>気づいた人がすぐ動く。落ち着いて順番に対応してください。</p>
+      <a class="em-call" href="tel:119">119番へ電話する</a>
+    </div>
+
+    <ol class="em-steps">
+      <li><span class="num">1</span><span class="step-text"><b>意識・反応を確認する。</b>
+        <ul class="sub-list">
+          <li>呼びかけて反応があるか見る</li>
+          <li>受け答えができるか確認する</li>
+        </ul>
+      </span></li>
+      <li><span class="num">2</span><span class="step-text"><b>涼しい場所へ移動させる。</b>
+        <ul class="sub-list">
+          <li>日陰、またはエアコンの効いた室内へ</li>
+          <li>衣服（ベルト・胴着など）を緩める</li>
+          <li>靴・靴下を脱がせる</li>
+        </ul>
+      </span></li>
+      <li><span class="num">3</span><span class="step-text"><b>体を冷やす。</b>
+        <ul class="sub-list">
+          <li>首・脇の下・太ももの付け根を保冷剤や濡れタオルで冷却</li>
+          <li>うちわ・扇風機で送風する</li>
+        </ul>
+      </span></li>
+      <li><span class="num">4</span><span class="step-text"><b>水分・塩分を補給する。</b>
+        <ul class="sub-list">
+          <li>本人の意識がはっきりしていて自分で飲める場合のみ</li>
+          <li>スポーツドリンクや経口補水液を少しずつ</li>
+        </ul>
+      </span></li>
+      <li><span class="num">5</span><span class="step-text"><b>症状を観察する。</b>
+        <ul class="sub-list">
+          <li>めまい・頭痛・吐き気はないか</li>
+          <li>けいれんしていないか</li>
+          <li>意識がもうろうとしていないか</li>
+        </ul>
+      </span></li>
+      <li><span class="num">6</span><span class="step-text"><b>危険サインがあれば、ただちに119番。</b>
+        <ul class="sub-list">
+          <li>呼びかけへの反応がない</li>
+          <li>けいれんしている</li>
+          <li>自分で水が飲めない</li>
+          <li>症状が良くならない</li>
+        </ul>
+      </span></li>
+      <li><span class="num">7</span><span class="step-text"><b>到着まで冷却と観察を続ける。</b>
+        <ul class="sub-list">
+          <li>一人にせず、状態の変化を見守る</li>
+        </ul>
+      </span></li>
+    </ol>
+
+    <div class="em-note">
+      ※本マニュアルは一般的な熱中症対応の目安です。医学的な診断・処置に代わるものではありません。少しでも異常を感じたら、ためらわず119番へ連絡してください。日々の予防チェック（暑さ指数・準備物）は「事業」タブの各事業ページから行えます。
+    </div>
+  </section>
+
+  <div class="app-foot"><span>ONE-BALANCE 経営ダッシュボード v2.0</span><button type="button" id="force-update">最新版に更新</button></div>
+</main>
+
+<div class="login-overlay" id="login-overlay" hidden>
+  <div class="login-box">
+    <div class="login-eyebrow">ONE-BALANCE</div>
+    <div class="login-title">長尾のログイン</div>
+    <p class="login-msg" id="login-msg">パスワードを入れてください</p>
+    <input type="password" id="login-pw" autocomplete="current-password" placeholder="パスワード" aria-label="パスワード">
+    <button type="button" class="login-go" id="login-go">ログイン</button>
+    <button type="button" class="login-cancel" id="login-cancel">やめる</button>
+  </div>
+</div>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="tab-proposal">提案</button>
+  <button class="tab-btn" data-tab="tab-philosophy">理念</button>
+  <button class="tab-btn" data-tab="tab-share">シェア</button>
+  <button class="tab-btn" data-tab="tab-business">事業</button>
+  <button class="tab-btn" data-tab="tab-emergency">緊急</button>
+</nav>
+
+<script>
+(function(){
+  "use strict";
+
+  function esc(str){
+    if(!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function nowStr(){
+    var d = new Date();
+    return (d.getMonth()+1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+  function loadJSON(key, fallback){
+    try{ var v = JSON.parse(localStorage.getItem(key)); return (v===null||v===undefined) ? fallback : v; }
+    catch(e){ return fallback; }
+  }
+  function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+  /* =========================================================
+     年度 / 担当者 状態
+     ========================================================= */
+  var YEARS = [2025,2026,2027,2028,2029,2030,2031];
+  var currentYear = Number(localStorage.getItem('wb_year')) || 2026;
+  if(YEARS.indexOf(currentYear) === -1) currentYear = 2026;
+  var OWNER_TOKEN_KEY = 'wb_owner_token';
+  function ownerToken(){ try{ return localStorage.getItem(OWNER_TOKEN_KEY) || ''; }catch(e){ return ''; } }
+  // ログインしていない端末は、いつも稲田の画面から始まる（長尾はパスワードが必要）
+  var activeUser = (localStorage.getItem('wb_active_user') === '長尾' && ownerToken()) ? '長尾' : '稲田';
+  try{ localStorage.setItem('wb_active_user', activeUser); }catch(e){}
+  function isOwner(){ return activeUser === '長尾' && !!ownerToken(); }
+
+  var yrVal = document.getElementById('yr-val');
+  var yrPrev = document.getElementById('yr-prev');
+  var yrNext = document.getElementById('yr-next');
+
+  function setYear(y){
+    currentYear = y;
+    localStorage.setItem('wb_year', String(y));
+    yrVal.textContent = y + '年';
+    renderAll();
+  }
+  yrPrev.addEventListener('click', function(){
+    var idx = YEARS.indexOf(currentYear);
+    if(idx > 0) setYear(YEARS[idx-1]);
+  });
+  yrNext.addEventListener('click', function(){
+    var idx = YEARS.indexOf(currentYear);
+    if(idx < YEARS.length-1) setYear(YEARS[idx+1]);
+  });
+  var userChips = document.querySelectorAll('.user-chip');
+  function paintChips(){
+    userChips.forEach(function(c){ c.classList.toggle('on', c.dataset.user === activeUser); });
+  }
+  function setUser(u){
+    activeUser = u;
+    try{ localStorage.setItem('wb_active_user', u); }catch(e){}
+    dashCache = null;
+    paintChips();
+    renderAll();
+  }
+  userChips.forEach(function(c){
+    c.addEventListener('click', function(){
+      if(c.dataset.user === '稲田'){ setUser('稲田'); return; }
+      if(ownerToken()){ setUser('長尾'); } else { openLogin(); }
+    });
+  });
+
+  var loginOv = document.getElementById('login-overlay');
+  var loginPw = document.getElementById('login-pw');
+  var loginMsg = document.getElementById('login-msg');
+  function openLogin(msg){
+    loginMsg.textContent = msg || 'パスワードを入れてください';
+    loginPw.value = '';
+    loginOv.hidden = false;
+    setTimeout(function(){ loginPw.focus(); }, 50);
+  }
+  function closeLogin(){ loginOv.hidden = true; loginPw.blur(); }
+  document.getElementById('login-cancel').addEventListener('click', closeLogin);
+  function doLogin(){
+    var pw = loginPw.value;
+    if(!pw){ loginMsg.textContent = 'パスワードを入れてください'; return; }
+    loginMsg.textContent = '確認しています…';
+    fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'login', pw: pw }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.status === 'ok' && j.token){
+          try{ localStorage.setItem(OWNER_TOKEN_KEY, j.token); }catch(e){}
+          closeLogin(); setUser('長尾');
+        } else if(j && j.status === 'locked'){
+          loginMsg.textContent = 'まちがいが続いたので、10分たってからもう一度入れてください';
+        } else if(j && j.status === 'denied'){
+          loginMsg.textContent = 'パスワードが違います'; loginPw.value = '';
+        } else {
+          loginMsg.textContent = 'ログインできませんでした（' + ((j && j.message) || '設定を確認してください') + '）';
+        }
+      })
+      .catch(function(){ loginMsg.textContent = '通信できませんでした。電波のよいところでもう一度どうぞ'; });
+  }
+  document.getElementById('login-go').addEventListener('click', doLogin);
+  loginPw.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ doLogin(); } });
+  paintChips();
+
+  /* 最新版に更新：キャッシュを全部消して読み込み直す（ホーム画面に入れたときの更新漏れ対策） */
+  function forceUpdate(){
+    try{ if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }); } }catch(e){}
+    if(window.caches && caches.keys){
+      caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).finally(function(){ location.href = location.pathname + '?v=' + Date.now(); });
+    } else { location.href = location.pathname + '?v=' + Date.now(); }
+  }
+  document.getElementById('force-update').addEventListener('click', forceUpdate);
+
+  function renderAll(){
+    buildBizSwitch();
+    yrVal.textContent = currentYear + '年';
+    renderTheme();
+    renderPersonal();
+    renderBusinessTab();
+  }
+
+  /* =========================================================
+     タブ切り替え
+     ========================================================= */
+  /* 提案ボード：毎回キャッシュを避けて読み込み、画面サイズに合わせる */
+  var proposalFrame = document.getElementById('proposal-frame');
+  function sizeProposal(){
+    var nav = document.querySelector('nav.tabs');
+    var top = proposalFrame.getBoundingClientRect().top + window.scrollY;
+    var h = window.innerHeight - top - (nav ? nav.offsetHeight : 0);
+    proposalFrame.style.height = Math.max(h, 400) + 'px';
+  }
+  proposalFrame.src = 'proposal-new.html?t=' + Date.now();
+  window.addEventListener('resize', sizeProposal);
+  window.addEventListener('orientationchange', function(){ setTimeout(sizeProposal, 200); });
+  setTimeout(sizeProposal, 0);
+
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  var tabSections = document.querySelectorAll('section.tab');
+  tabBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      tabSections.forEach(function(s){ s.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+      window.scrollTo({top:0, behavior:'instant'});
+      if(btn.dataset.tab==='tab-proposal'){ sizeProposal(); }
+    });
+  });
+
+  /* =========================================================
+     年間テーマ
+     ========================================================= */
+  var THEME_KEY = 'wb_theme_v1';
+  var themeTitleEl = document.getElementById('theme-title');
+  var themeDescEl = document.getElementById('theme-desc');
+  var themeYearLabel = document.getElementById('theme-year-label');
+
+  function renderTheme(){
+    var all = loadJSON(THEME_KEY, {});
+    var t = all[currentYear] || { title:'', desc:'' };
+    themeTitleEl.value = t.title || '';
+    themeDescEl.value = t.desc || '';
+    themeYearLabel.textContent = currentYear + '｜年間テーマ';
+  }
+  function saveTheme(){
+    var all = loadJSON(THEME_KEY, {});
+    all[currentYear] = { title: themeTitleEl.value, desc: themeDescEl.value };
+    saveJSON(THEME_KEY, all);
+  }
+  themeTitleEl.addEventListener('input', saveTheme);
+  themeDescEl.addEventListener('input', saveTheme);
+
+  /* =========================================================
+     個人の今年のテーマ
+     ========================================================= */
+  var PERSONAL_KEY = 'wb_personal_v1';
+  var personalYearLabel = document.getElementById('personal-year-label');
+  var personalUserLabel = document.getElementById('personal-user-label');
+  var personalThemeEl = document.getElementById('personal-theme');
+
+  function renderPersonal(){
+    var all = loadJSON(PERSONAL_KEY, {});
+    var userData = all[activeUser] || {};
+    personalThemeEl.value = userData[currentYear] || '';
+    personalYearLabel.textContent = currentYear + '｜個人の今年のテーマ';
+    personalUserLabel.textContent = activeUser;
+  }
+  personalThemeEl.addEventListener('input', function(){
+    var all = loadJSON(PERSONAL_KEY, {});
+    if(!all[activeUser]) all[activeUser] = {};
+    all[activeUser][currentYear] = personalThemeEl.value;
+    saveJSON(PERSONAL_KEY, all);
+  });
+
+  /* =========================================================
+     事業データ
+     ========================================================= */
+  var HEAT_ITEMS = [
+    { id:'drink', label:'経口補水液の準備', icon:'ic-drink.png' },
+    { id:'ice',   label:'保冷剤・アイス枕の準備', icon:'ic-ice.png' },
+    { id:'ac',    label:'涼しい部屋（エアコン）の確保', icon:'ic-ac.png' },
+    { id:'fan',   label:'扇風機の稼働', icon:'ic-fan.png' }
+  ];
+  var WBGT_LEVELS = [
+    { level:0, label:'ほぼ安全', range:'〜21', color:'#3E97AB', advice:'通常通り活動して問題ありません。' },
+    { level:1, label:'注意',     range:'21〜25', color:'#5BB9CD', advice:'こまめな水分補給を心がけましょう。' },
+    { level:2, label:'警戒',     range:'25〜28', color:'#E8A93A', advice:'積極的に休憩を取り、水分・塩分を補給してください。' },
+    { level:3, label:'厳重警戒', range:'28〜31', color:'#E8752E', advice:'激しい運動は中止。休憩を頻繁に取ってください。' },
+    { level:4, label:'危険（運動原則中止）', range:'31〜', color:'#AD002D', advice:'運動は原則中止です。安全を最優先してください。' }
+  ];
+
+  var BUSINESSES = [
+    {
+      id:'boxing', name:'ワンバランスボクシングジム', hasOps:true,
+      defaultValue:['圧倒的スピードこそが誠意','答えは逆にある','成長の先に成功はある','モテるは正しい','神は細部に宿る','数字は真実である','価格以上の価値を常に高めよ'],
+      defaultGoal:{ current:'138', target:'180', monthly:'3.5', lastYear:'' },
+      defaultTodos:[
+        {cat:'フリートレーニング教育', text:'みんなが自分で動ける'},
+        {cat:'フリートレーニング教育', text:'会員同士が高め合う'},
+        {cat:'フリートレーニング教育', text:'ジムの文化として定着させる'},
+        {cat:'満足度と仕組み', text:'基本カリキュラムを軸にする'},
+        {cat:'満足度と仕組み', text:'Lステップで連絡を仕組み化'},
+        {cat:'満足度と仕組み', text:'継続しやすい環境をつくる'}
+      ],
+      cleaning:['玄関','更衣室','シャワー室','鏡','テーブル','トイレ','リングの上','サンドバッグ','床','機械まわり','整理整頓','身だしなみ']
+    },
+    {
+      id:'onetre', name:'ONE-TRE', hasOps:true,
+      defaultValue:[],
+      defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' },
+      defaultTodos:[],
+      cleaning:['玄関','更衣室','シャワー室','フロアの床','機材','エアコン','ウエイトエリア','鏡','身だしなみ']
+    },
+    {
+      id:'happykids', name:'HAPPY KIDS PROJECT', hasOps:false,
+      defaultValue:[],
+      defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' },
+      defaultTodos:[],
+      cleaning:[]
+    }
+  ];
+
+  BUSINESSES.push({
+    id:'rental', name:'レンタルジムONE-TRE', hasOps:false,
+    defaultValue:[], defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' }, defaultTodos:[], cleaning:[]
+  });
+  function visibleBizList(){
+    return BUSINESSES.filter(function(b){ return isOwner() || (b.id !== 'happykids' && b.id !== 'rental'); });
+  }
+
+  var currentBiz = localStorage.getItem('wb_current_biz') || 'boxing';
+
+  var VALUE_KEY   = 'wb_value_v1';
+  var GOAL_KEY    = 'wb_goal_v1';
+  var TODO_KEY    = 'wb_todo_v1';
+  var CLEAN_KEY   = 'wb_clean_v1';
+  var HEAT_KEY    = 'wb_heat_v1';
+
+  function getBiz(id){
+    for(var i=0;i<BUSINESSES.length;i++){ if(BUSINESSES[i].id===id) return BUSINESSES[i]; }
+    return BUSINESSES[0];
+  }
+
+  /* ---- 台帳の数字を読むAPI（GAS）。URLは gas/dashboard-api.gs を公開して貼る ---- */
+  var DASH_API_URL = 'https://script.google.com/macros/s/AKfycbwDLyDx98_uZIQaHtB1iqB937dOGUZ5mB06Q1VdYl_KRZd5TZ6refX1L-Ty8JLeElLjKw/exec';
+  var dashCache = null;
+  function loadDash(cb){
+    if(!DASH_API_URL){ cb(null, 'nourl'); return; }
+    if(dashCache){ cb(dashCache); return; }
+    var owner = isOwner();
+    var url = DASH_API_URL + (owner ? '?action=getPrivate&token=' + encodeURIComponent(ownerToken()) : '?action=getDashboard') + '&t=' + Date.now();
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.status === 'denied' && owner){
+          try{ localStorage.removeItem(OWNER_TOKEN_KEY); }catch(e){}
+          setUser('稲田'); openLogin('ログインの期限が切れました。もう一度ログインしてください');
+          cb(null, 'denied'); return;
+        }
+        if(j && j.status === 'ok'){ dashCache = j; cb(j); } else { cb(null, 'error'); }
+      })
+      .catch(function(){ cb(null, 'error'); });
+  }
+  function yen(n){ return (n === null || n === undefined || isNaN(n)) ? '-' : '¥' + Math.round(n).toLocaleString(); }
+  function pct(v){ return (v === null || v === undefined || v === '' || isNaN(v)) ? '-' : Math.round(Number(v) * 100) + '%'; }
+  function numOrDash(v){ return (v === null || v === undefined) ? '-' : v; }
+
+  function fixedHtml(fx, bizId, fb){
+    if(!fx.setup){
+      return '<p class="ed-sub" style="margin-top:12px;">固定経費のシートがまだありません。Apps Scriptで setupFixedCosts を1回実行すると、家賃・駐車場が入ります。</p>';
+    }
+    var h = '<p class="ed-eyebrow" style="margin-top:16px;">固定経費｜毎月自動で入る</p>';
+    var items = fx.items.filter(function(i){ return i.biz === bizId; });
+    if(!items.length){ h += '<p class="ed-sub">この事業の固定経費は登録されていません</p>'; }
+    items.forEach(function(i){
+      h += '<div class="exp-row"><span>' + esc(i.name) + '（毎月' + i.day + '日）' + (i.recorded ? '<small>　今月は台帳に記帳済み</small>' : '') + '</span><b>' + yen(i.amount) + '</b></div>';
+    });
+    var add = (fx.byBiz && fx.byBiz[bizId]) || 0;
+    h += '<div class="exp-row"><span>今月の固定経費（台帳にない分を自動で足す）</span><b>' + yen(add) + '</b></div>';
+    if(fb){ h += '<div class="exp-row"><span>今月の利益（入金額 − 経費 − 固定経費）</span><b>' + yen(fb.monthNet - fb.monthExpense - add) + '</b></div>'; }
+    h += '<p class="ed-sub" style="margin-top:6px;">追加・変更は、台帳スプレッドシートの「固定経費」シートで行います。</p>';
+    return h;
+  }
+
+  function rentalHtml(){
+    return '<div class="ed-card" id="rental-card"><p class="ed-eyebrow">RENTAL GYM｜長尾のみ表示</p><div id="rental-body" class="ed-sub">読み込み中…</div></div>';
+  }
+  function fillRental(){
+    var body = document.getElementById('rental-body');
+    if(!body) return;
+    loadDash(function(j, err){
+      body = document.getElementById('rental-body');
+      if(!body) return;
+      if(err === 'denied'){ body.textContent = ''; return; }
+      if(err || !j || !j.data || !j.data.rental){ body.textContent = '読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
+      var r = j.data.rental, h = '';
+      h += '<div class="rental-hero"><div class="rh-name">' + esc(r.name) + '</div><div class="rh-catch">' + esc(r.catch1) + '　／　' + esc(r.catch2) + '</div></div>';
+      h += '<p class="ed-eyebrow" style="margin-top:14px;">数字｜予約システムの集計と連動</p><div class="rental-kpi">';
+      r.kpi.forEach(function(k){ h += '<div class="rk"><div class="rk-l">' + esc(k.label) + '</div><div class="rk-v">' + esc(k.value) + '</div></div>'; });
+      h += '</div>';
+      h += '<div class="rental-be"><b>損益分岐</b>　' + esc(r.breakeven) + '</div>';
+      h += '<p class="ed-eyebrow" style="margin-top:14px;">料金とルール</p>';
+      r.terms.forEach(function(t){ h += '<div class="exp-row"><span class="rt-k">' + esc(t[0]) + '</span><b class="rt-v">' + esc(t[1]) + '</b></div>'; });
+      h += '<p class="ed-eyebrow" style="margin-top:14px;">進み具合</p>';
+      r.progress.forEach(function(p){ h += '<div class="exp-row rp"><span class="chip ' + (p[0] === '済' ? 'done' : 'todo') + '">' + esc(p[0]) + '</span><span class="rp-t">' + esc(p[1]) + '</span></div>'; });
+      h += '<p class="ed-sub" style="margin-top:8px;">' + esc(r.asOf) + 'までの話し合いの内容です。</p>';
+      body.innerHTML = h;
+    });
+  }
+
+  function renderDataCard(biz){
+    var title = document.getElementById('data-title');
+    var body = document.getElementById('data-body');
+    if(!title || !body) return;
+    title.textContent = biz.id === 'happykids' ? 'NUMBERS｜HAPPY KIDS PROJECT の数字' : 'NUMBERS｜体験→成約・入会・退会';
+    loadDash(function(j, err){
+      if(!document.getElementById('data-body')) return;
+      if(err === 'nourl'){ body.textContent = '準備中です（数字を読み込む設定がまだありません）'; return; }
+      if(err === 'denied'){ body.textContent = ''; return; }
+      if(err){ body.textContent = '数字を読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
+      var d = j.data, h = '';
+      var fin = d.finance;
+      if(fin && fin[biz.id]){
+        var fb = fin[biz.id], ft = fin.total, owner = isOwner();
+        h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">売上（累計・手数料引き前）</div><div class="mg-num">' + yen(fb.sales) + '</div><div class="mg-sub">今月 ' + yen(fb.monthSales) + '　／　入金額 ' + yen(fb.net) + '</div></div>';
+        if(owner){
+          h += '<div class="exp-row"><span>経費（累計）</span><b>' + yen(fb.expense) + '</b></div>';
+          h += '<div class="exp-row"><span>利益（入金額 − 経費）</span><b>' + yen(fb.net - fb.expense) + '</b></div>';
+          h += '<div class="exp-row"><span>今月の経費</span><b>' + yen(fb.monthExpense) + '</b></div>';
+        }
+        if(owner && d.fixed){ h += fixedHtml(d.fixed, biz.id, fb); }
+        if(owner && biz.id === 'onetre'){
+          h += '<div id="payroll-box"><div class="exp-row"><span>人件費（稲田さん・時間外）今月</span><b id="pr-month">読み込み中…</b></div><div class="exp-row"><span>人件費 2026年 累計</span><b id="pr-year">読み込み中…</b></div><div class="exp-row"><span>利益（入金額 − 経費 − 人件費）</span><b id="pr-profit">-</b></div></div>';
+        }
+        h += '<div class="exp-row" style="margin-top:6px;"><span>全事業の売上合計</span><b>' + yen(ft.sales) + '</b></div>';
+        if(owner){
+          h += '<div class="exp-row"><span>全事業の経費合計</span><b>' + yen(ft.expense) + '</b></div>';
+          h += '<div class="exp-row"><span>全事業の利益合計</span><b>' + yen(ft.net - ft.expense) + '</b></div>';
+        }
+        h += '<p class="ed-sub" style="margin:6px 0 12px;">台帳の「売上」「経費」から自動で出しています（返金は入金額から引いています）。</p>';
+      }
+      if(biz.id === 'happykids' && d.happykids){
+        var t = d.happykids.taikai, pt = d.happykids.partners, c = pt.contracts;
+        h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">大会の余り（HAPPY KIDSに入る額）</div><div class="mg-num">' + yen(t.surplus) + '</div><div class="mg-sub">スポンサー手取り ' + yen(t.sponsorNet) + ' − 大会運営費 ' + yen(t.cost) + '</div></div>';
+        h += '<div class="exp-row"><span>大会スポンサー</span><b>' + t.sponsorCount + '社（額面 ' + yen(t.sponsorGross) + '）</b></div>';
+        h += '<div class="exp-row"><span>カード手数料</span><b>' + yen(t.cardFee) + '</b></div>';
+        h += '<div class="exp-row"><span>選手の申込</span><b>' + (t.players === null ? '不明' : t.players + '人') + '</b></div>';
+        h += '<div class="exp-row"><span>パートナー（年契約・Stripe）</span><b>' + pt.stripeCount + '件 ' + yen(pt.stripeGross) + '</b></div>';
+        if(c){ h += '<div class="exp-row"><span>パートナー契約（年契約・更新管理）</span><b>' + c.total + '件（契約中 ' + c.active + '・契約日待ち ' + c.waiting + '）</b></div>'; }
+        h += '<div class="exp-row"><span>HAPPY KIDS 売上（手取り）</span><b>' + yen(d.happykids.hkSalesNet) + '</b></div>';
+        if(isOwner()){
+          h += '<div class="exp-row"><span>HAPPY KIDS 経費</span><b>' + yen(d.happykids.hkCost) + '</b></div>';
+          h += '<div class="exp-row"><span>現金の残り（売上 − 経費）</span><b>' + yen(d.happykids.hkBalance) + '</b></div>';
+        }
+        h += '<p class="ed-sub" style="margin-top:8px;">台帳から自動で出しています。大会スポンサーとパートナー契約は別の数え方です（浜田興業・MODESTOなどは両方に入ります）。売上は台帳が正で、契約一覧の金額は足していません。</p>';
+      } else {
+        var rows = (d.kpi[biz.id] || []).slice().sort(function(a,b){ return (a.year*100+a.month) - (b.year*100+b.month); });
+        var mb = d.members && d.members[biz.id];
+        if(mb){
+          var ac = mb.active, tr = mb.trial;
+          function gr(o){ return o.trial ? Math.round(o.closed / o.trial * 100) + '%' : '-'; }
+          h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">現在の会員数</div><div class="mg-num">' + ac.total + '人</div><div class="mg-sub">男性 ' + ac.m + '人 ／ 女性 ' + ac.f + '人' + (typeof ac.paused === 'number' && ac.paused > 0 ? '（うち休会中 ' + ac.paused + '人）' : '') + '</div></div>';
+          h += '<div style="overflow-x:auto;margin-bottom:10px;"><table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center;"><tr style="background:#FFF1F2;"><th></th><th>体験</th><th>成約</th><th>成約率</th></tr>';
+          h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">男性</td><td>' + tr.m.trial + '人</td><td>' + tr.m.closed + '人</td><td style="font-weight:700;">' + gr(tr.m) + '</td></tr>';
+          h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:8px 2px;font-weight:700;">女性</td><td>' + tr.f.trial + '人</td><td>' + tr.f.closed + '人</td><td style="font-weight:700;">' + gr(tr.f) + '</td></tr>';
+          h += '</table><p class="ed-sub" style="margin-top:6px;">体験→成約の男女別（記録がある期間の通算）。スタッフは除いています。</p></div>';
+        }
+        var av = d.avg || {};
+        function A(k){ return av[k] ? av[k][biz.id] : null; }
+        h += '<div class="exp-row"><span>成約率（通算）</span><b>' + (typeof A('通算成約率') === 'number' ? pct(A('通算成約率')) : '不明') + '</b></div>';
+        h += '<div class="exp-row"><span>成約率（月平均）</span><b>' + (typeof A('月平均 成約率') === 'number' ? pct(A('月平均 成約率')) : '不明') + '</b></div>';
+        h += '<div class="exp-row"><span>体験（月平均）</span><b>' + (typeof A('月平均 体験数') === 'number' ? A('月平均 体験数').toFixed(1) + '人' : '不明') + '</b></div>';
+        h += '<div class="exp-row"><span>新規入会（月平均）</span><b>' + (typeof A('月平均 新規入会') === 'number' ? A('月平均 新規入会').toFixed(1) + '人' : '不明') + '</b></div>';
+        h += '<div style="overflow-x:auto;margin-top:10px;"><table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;"><tr style="background:#FFF1F2;"><th>月</th><th>体験</th><th>成約</th><th>成約率</th><th>新規</th><th>更新</th><th>退会</th></tr>';
+        rows.slice(-7).forEach(function(r){
+          h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:7px 2px;font-weight:700;">' + r.month + '月</td><td>' + numOrDash(r.trial) + '</td><td>' + numOrDash(r.closed) + '</td><td>' + pct(r.rate) + '</td><td>' + numOrDash(r.newJoin) + '</td><td>' + numOrDash(r.renew) + '</td><td>' + numOrDash(r.quit) + '</td></tr>';
+        });
+        h += '</table></div><p class="ed-sub" style="margin-top:8px;">体験した月で数えています（5月に体験して6月に入会した人は5月の成約）。「-」は記録なしです。当月は途中経過です。</p>';
+      }
+      body.innerHTML = h;
+      if(document.getElementById('payroll-box')){ loadPayroll(d.finance && d.finance.onetre); }
+    });
+  }
+
+  /* ONE-TREの人件費：トレーナー管理アプリ（private-gym-trainer）のAPIを読む。時間外のみ・台帳には入っていない */
+  var TRAINER_API_URL = 'https://script.google.com/macros/s/AKfycbzlR1zmKyyLcvWANYpKiO7oPqaaGlx-BOPKhi7redVr1G2MQ0Gj0WRBLLL46jeUxKI/exec';
+  function loadPayroll(fo){
+    var now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+    function g(q){ return fetch(TRAINER_API_URL + '?' + q + '&t=' + Date.now()).then(function(r){ return r.json(); }); }
+    Promise.all([g('action=getPayroll&year=' + y + '&month=' + m), g('action=getYearlyPayroll&year=' + y)]).then(function(res){
+      var a = res[0], b = res[1];
+      var pm = document.getElementById('pr-month'), py = document.getElementById('pr-year'), pp = document.getElementById('pr-profit');
+      if(!pm) return;
+      pm.textContent = (a && a.ok) ? yen(a.totalAmount || 0) + '（' + (a.totalCount || 0) + '件）' : '不明';
+      py.textContent = (b && b.ok) ? yen(b.totalAmount || 0) + '（' + (b.totalCount || 0) + '件）' : '不明';
+      if(b && b.ok && fo){ pp.textContent = yen(fo.net - fo.expense - (b.totalAmount || 0)); } else { pp.textContent = '不明'; }
+    }).catch(function(){
+      ['pr-month','pr-year','pr-profit'].forEach(function(id){ var e = document.getElementById(id); if(e) e.textContent = '不明'; });
+    });
+  }
+
+  function bizButtonHtml(name){
+    if(name.indexOf('ワンバランス') === 0){
+      return 'ONE-BALANCE<br>' + esc(name.slice('ワンバランス'.length));
+    }
+    return esc(name);
+  }
+
+  var BIZ_LOGO = { boxing:'logo-boxing.jpg?v=3', onetre:'logo-onetre.jpg?v=3', happykids:'logo-happykids.jpg?v=3', rental:'logo-onetre.jpg?v=3' };
+  var BIZ_SHORT = { boxing:'ONE-BALANCE<br>ボクシングジム', onetre:'ONE-TRE', happykids:'HAPPY KIDS<br>PROJECT', rental:'レンタル<br>ジム' };
+
+  var bizSwitchEl = document.getElementById('biz-switch');
+  function buildBizSwitch(){
+    var list = visibleBizList();
+    if(!list.some(function(b){ return b.id === currentBiz; })){ currentBiz = list[0].id; }
+    bizSwitchEl.innerHTML = '';
+    list.forEach(function(b){
+      var btn = document.createElement('button');
+      btn.className = 'logo-btn';
+      btn.innerHTML = '<img src="' + BIZ_LOGO[b.id] + '" alt=""><span>' + BIZ_SHORT[b.id] + '</span>';
+      btn.dataset.biz = b.id;
+      if(b.id === currentBiz) btn.classList.add('active');
+      btn.addEventListener('click', function(){
+        currentBiz = b.id;
+        try{ localStorage.setItem('wb_current_biz', currentBiz); }catch(e){}
+        bizSwitchEl.querySelectorAll('button').forEach(function(bt){ bt.classList.remove('active'); });
+        btn.classList.add('active');
+        renderBusinessContent();
+      });
+      bizSwitchEl.appendChild(btn);
+    });
+  }
+
+  var bizYearNote = document.getElementById('biz-year-note');
+  var chartInstance = null;
+
+  function renderBusinessTab(){
+    bizYearNote.textContent = currentYear + '年';
+    renderBusinessContent();
+  }
+
+  function renderBusinessContent(){
+    var biz = getBiz(currentBiz);
+    var container = document.getElementById('business-content');
+    if(biz.id === 'rental'){
+      if(!isOwner()){ currentBiz = 'boxing'; biz = getBiz(currentBiz); }
+      else { container.innerHTML = rentalHtml(); fillRental(); return; }
+    }
+
+    var valueAll = loadJSON(VALUE_KEY, {});
+    var valueList = valueAll[biz.id] || biz.defaultValue.slice();
+
+    var goalAll = loadJSON(GOAL_KEY, {});
+    if(!goalAll[biz.id]) goalAll[biz.id] = {};
+    var goal = goalAll[biz.id][currentYear] || Object.assign({}, biz.defaultGoal);
+
+    var todoAll = loadJSON(TODO_KEY, {});
+    if(!todoAll[biz.id]) todoAll[biz.id] = {};
+    var todos = todoAll[biz.id][currentYear];
+    if(!todos){
+      todos = biz.defaultTodos.map(function(t,i){
+        return { id:'seed'+i, cat:t.cat, text:t.text, done:false, detail:'' };
+      });
+    }
+
+    var html = '';
+
+    // 今月の目標（長尾・稲田どちらにも表示）
+    html += '<div class="month-goal"><div class="mg-label" id="mg-label"></div><div class="mg-num" id="mg-num">-</div><div class="mg-sub" id="mg-sub"></div></div>';
+
+    // 数字（台帳から自動）
+    html += '<div class="ed-card" id="data-card"><p class="ed-eyebrow" id="data-title"></p><div id="data-body" class="ed-sub">読み込み中…</div></div>';
+
+    // 経費（長尾のみ）
+    if(isOwner()){
+      html += '<div class="ed-card" id="exp-card">';
+      html += '<p class="ed-eyebrow">経費｜長尾のみ表示</p>';
+      html += '<div class="todo-add"><input class="ed-input" id="exp-text" placeholder="内容"><input class="ed-input" id="exp-amt" inputmode="numeric" placeholder="金額" style="max-width:110px;"><button id="exp-add">追加</button></div>';
+      html += '<div id="exp-list"></div><p class="ed-sub" id="exp-total" style="margin-top:8px;font-weight:800;"></p>';
+      html += '<p class="ed-sub">この端末だけに保存されます（別の端末には出ません）</p>';
+      html += '</div>';
+    }
+
+    // VALUE
+    html += '<div class="ed-card">';
+    html += '<p class="ed-eyebrow">VALUE｜我々の考え方</p>';
+    html += '<ul class="value-list" id="value-list"></ul>';
+    html += '<div class="todo-add" style="margin-top:10px;">';
+    html += '<input class="ed-input" id="value-add-input" placeholder="価値観を追加">';
+    html += '<button id="value-add-btn">追加</button>';
+    html += '</div></div>';
+
+    // GOAL
+    html += '<div class="ed-card">';
+    html += '<p class="ed-eyebrow">GOAL｜' + currentYear + '年の目標</p>';
+    html += '<div class="goal-nums-ed">';
+    html += '<div class="g-item"><label class="ed-label">昨年実績</label><input class="ed-input" id="goal-lastyear" inputmode="numeric" value="'+esc(goal.lastYear)+'"></div>';
+    html += '<div class="g-item"><label class="ed-label">現在</label><input class="ed-input" id="goal-current" inputmode="numeric" value="'+esc(goal.current)+'"></div>';
+    html += '<div class="g-item"><label class="ed-label">年間目標</label><input class="ed-input" id="goal-target" inputmode="numeric" value="'+esc(goal.target)+'"></div>';
+    html += '</div>';
+    html += '<div class="ed-row"><label class="ed-label">単月目標</label><input class="ed-input" id="goal-monthly" inputmode="numeric" value="'+esc(goal.monthly)+'"></div>';
+    html += '<div class="goal-diff">';
+    html += '<div class="d-item"><div class="d-num" id="diff-target">-</div><div class="d-label">目標まで</div></div>';
+    html += '<div class="d-item"><div class="d-num" id="diff-lastyear">-</div><div class="d-label">昨年比</div></div>';
+    html += '<div class="d-item"><div class="d-num" id="diff-months">-</div><div class="d-label">残り月数</div></div>';
+    html += '<div class="d-item"><div class="d-num" id="diff-permonth">-</div><div class="d-label">月あたり必要</div></div>';
+    html += '</div>';
+    html += '<p class="ed-sub" id="goal-pace-note" style="text-align:center;"></p>';
+    html += '<div class="chart-wrap"><canvas id="goal-chart"></canvas></div>';
+    if(biz.id === 'boxing'){
+      html += '<p class="ed-sub" id="goal-sync-note" style="margin-top:8px;">会員マスタと同期中…</p>';
+    }
+    html += '</div>';
+
+    // TODOS
+    html += '<div class="ed-card">';
+    html += '<p class="ed-eyebrow">やるべきこと</p>';
+    html += '<p class="ed-sub" style="margin-bottom:10px;">カテゴリ名をタップすると名前を変更できます</p>';
+    html += '<div class="todo-add">';
+    html += '<select class="ed-input" id="todo-cat-select" style="max-width:150px;"></select>';
+    html += '<input class="ed-input" id="todo-cat-new" placeholder="新しいカテゴリ名" style="display:none;max-width:130px;">';
+    html += '<input class="ed-input" id="todo-text-input" placeholder="やること">';
+    html += '<button id="todo-add-btn">追加</button>';
+    html += '</div>';
+    html += '<div id="todo-list"></div>';
+    html += '</div>';
+
+    // OPS (cleaning + heat) only for boxing/onetre
+    if(biz.hasOps){
+      html += '<div class="ed-card">';
+      html += '<p class="ed-eyebrow">清掃・身だしなみチェック</p>';
+      html += '<div id="clean-list"></div>';
+      html += '</div>';
+
+      html += '<div class="ed-card">';
+      html += '<p class="ed-eyebrow">熱中症対策（暑さ指数 WBGT）</p>';
+      html += '<div class="wbgt-chips" id="wbgt-chips"></div>';
+      html += '<div class="wbgt-banner" id="wbgt-banner"></div>';
+      html += '<div id="heat-list"></div>';
+      html += '</div>';
+    }
+
+    container.innerHTML = html;
+    renderDataCard(biz);
+
+    /* ---- 経費（長尾のみ・この端末に保存） ---- */
+    (function(){
+      var card=document.getElementById('exp-card'); if(!card) return;
+      var EXP_KEY='wb_expense_v1';
+      function load(){ var all=loadJSON(EXP_KEY,{}); return all[biz.id]||[]; }
+      function save(list){ var all=loadJSON(EXP_KEY,{}); all[biz.id]=list; saveJSON(EXP_KEY,all); }
+      function draw(){
+        var list=load(), el=document.getElementById('exp-list'), now=new Date(), ym=now.getFullYear()+'-'+(now.getMonth()+1), sum=0, h='';
+        list.slice().reverse().forEach(function(e){
+          if(e.ym===ym) sum+=e.amt;
+          h+='<div class="exp-row"><span>'+esc(e.date)+'　'+esc(e.text)+'</span><span>¥'+e.amt.toLocaleString()+' <button data-del="'+e.id+'">✕</button></span></div>';
+        });
+        el.innerHTML = h || '<p class="ed-sub">まだありません</p>';
+        document.getElementById('exp-total').textContent = (now.getMonth()+1)+'月の経費合計：¥'+sum.toLocaleString();
+        el.querySelectorAll('button[data-del]').forEach(function(bt){
+          bt.addEventListener('click',function(){ save(load().filter(function(x){return x.id!==bt.dataset.del;})); draw(); });
+        });
+      }
+      document.getElementById('exp-add').addEventListener('click',function(){
+        var t=document.getElementById('exp-text').value.trim(), a=parseInt(document.getElementById('exp-amt').value.replace(/[^0-9]/g,''),10);
+        if(!t||isNaN(a)) return;
+        var n=new Date(), l=load();
+        l.push({id:'e'+Date.now(),date:(n.getMonth()+1)+'/'+n.getDate(),ym:n.getFullYear()+'-'+(n.getMonth()+1),text:t,amt:a});
+        save(l); document.getElementById('exp-text').value=''; document.getElementById('exp-amt').value=''; draw();
+      });
+      draw();
+    })();
+
+    /* ---- VALUE ---- */
+    function renderValueList(){
+      var ul = document.getElementById('value-list');
+      ul.innerHTML = '';
+      if(valueList.length === 0){
+        var li = document.createElement('li');
+        li.style.background = 'transparent';
+        li.style.borderLeft = 'none';
+        li.style.color = '#9a9a9a';
+        li.style.fontWeight = '600';
+        li.textContent = 'まだありません。下から追加してください。';
+        ul.appendChild(li);
+        return;
+      }
+      valueList.forEach(function(v, i){
+        var li = document.createElement('li');
+        li.textContent = v;
+        li.style.cursor = 'pointer';
+        li.title = 'タップで削除';
+        li.addEventListener('click', function(){
+          if(confirm('「' + v + '」を削除しますか？')){
+            valueList.splice(i,1);
+            valueAll[biz.id] = valueList;
+            saveJSON(VALUE_KEY, valueAll);
+            renderValueList();
+          }
+        });
+        ul.appendChild(li);
+      });
+    }
+    renderValueList();
+    document.getElementById('value-add-btn').addEventListener('click', function(){
+      var input = document.getElementById('value-add-input');
+      var v = input.value.trim();
+      if(!v) return;
+      valueList.push(v);
+      valueAll[biz.id] = valueList;
+      saveJSON(VALUE_KEY, valueAll);
+      input.value = '';
+      renderValueList();
+    });
+
+    /* ---- GOAL ---- */
+    function saveGoal(){
+      goal.lastYear = document.getElementById('goal-lastyear').value;
+      goal.current  = document.getElementById('goal-current').value;
+      goal.target   = document.getElementById('goal-target').value;
+      goal.monthly  = document.getElementById('goal-monthly').value;
+      goalAll[biz.id][currentYear] = goal;
+      saveJSON(GOAL_KEY, goalAll);
+      updateGoalDerived();
+    }
+    ['goal-lastyear','goal-current','goal-target','goal-monthly'].forEach(function(id){
+      document.getElementById(id).addEventListener('input', saveGoal);
+    });
+
+    function updateGoalDerived(){
+      (function(){
+        var mgL=document.getElementById('mg-label'), mgN=document.getElementById('mg-num'), mgS=document.getElementById('mg-sub');
+        if(!mgL) return;
+        var m=(new Date().getMonth()+1);
+        var mv=parseFloat(goal.monthly);
+        var unit = biz.id==='happykids' ? '' : '人';
+        mgL.textContent = m + '月の目標' + (biz.id==='happykids' ? '' : '（入会してほしい人数）');
+        if(isNaN(mv) || goal.monthly===''){ mgN.innerHTML = '-'; mgS.textContent = '下の「単月目標」に数字を入れてください'; }
+        else{ mgN.innerHTML = mv + '<small>' + unit + '</small>'; mgS.textContent = 'この数字を達成しにいく月です'; }
+      })();
+      var cur = parseFloat(goal.current) || 0;
+      var tgt = parseFloat(goal.target) || 0;
+      var last = goal.lastYear === '' ? null : (parseFloat(goal.lastYear) || 0);
+
+      var diffTargetEl = document.getElementById('diff-target');
+      var diffLastEl = document.getElementById('diff-lastyear');
+      var diffTarget = tgt - cur;
+      diffTargetEl.textContent = (goal.current==='' && goal.target==='') ? '-' : (diffTarget>=0? '+'+diffTarget : diffTarget);
+      if(last === null || goal.current===''){
+        diffLastEl.textContent = '-';
+      }else{
+        var d = cur - last;
+        diffLastEl.textContent = (d>=0?'+':'') + d;
+      }
+
+      var diffMonthsEl = document.getElementById('diff-months');
+      var diffPerMonthEl = document.getElementById('diff-permonth');
+      var paceNoteEl = document.getElementById('goal-pace-note');
+      var todayReal = new Date();
+      var remainMonths;
+      if(currentYear < todayReal.getFullYear()) remainMonths = 0;
+      else if(currentYear > todayReal.getFullYear()) remainMonths = 12;
+      else remainMonths = 12 - todayReal.getMonth();
+      if(diffMonthsEl) diffMonthsEl.textContent = remainMonths + 'ヶ月';
+      if(diffPerMonthEl && paceNoteEl){
+        if(goal.current==='' && goal.target===''){
+          diffPerMonthEl.textContent = '-';
+          paceNoteEl.textContent = '';
+        }else if(remainMonths <= 0){
+          diffPerMonthEl.textContent = '-';
+          paceNoteEl.textContent = '今年の残り期間がありません';
+        }else if(diffTarget <= 0){
+          diffPerMonthEl.textContent = '0人';
+          paceNoteEl.textContent = '目標に到達済みです';
+        }else{
+          var perMonth = Math.ceil(diffTarget / remainMonths);
+          diffPerMonthEl.textContent = perMonth + '人';
+          paceNoteEl.textContent = '12月末まで残り' + remainMonths + 'ヶ月。目標まで' + diffTarget + '人 → 月' + perMonth + '人ペースが必要';
+        }
+      }
+
+      var ctx = document.getElementById('goal-chart');
+      if(chartInstance){ chartInstance.destroy(); chartInstance = null; }
+      if(ctx && window.Chart){
+        chartInstance = new Chart(ctx, {
+          type:'bar',
+          data:{
+            labels:['昨年実績','現在','年間目標'],
+            datasets:[{
+              data:[last===null?0:last, cur, tgt],
+              backgroundColor:['#D9CFC4','#5BB9CD','#AD002D'],
+              borderRadius:6,
+              maxBarThickness:56
+            }]
+          },
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{ legend:{ display:false } },
+            scales:{ y:{ beginAtZero:true, ticks:{ font:{ size:10 } } }, x:{ ticks:{ font:{ size:11, weight:'bold' } } } }
+          }
+        });
+      }
+    }
+    updateGoalDerived();
+
+    /* ---- 会員マスタと自動同期（ボクシングジムのみ） ---- */
+    if(biz.id === 'boxing'){
+      var BOXING_GAS_URL = 'https://script.google.com/macros/s/AKfycbzGrHeV7BAiJSrz9XkpuFDZw_rRcPMZDEzynzMZEx5-K5YM4QXhEHg88bsguUpcyvPafQ/exec';
+      fetch(BOXING_GAS_URL + '?action=getStats')
+        .then(function(res){ return res.json(); })
+        .then(function(json){
+          var noteEl = document.getElementById('goal-sync-note');
+          if(!json || json.status !== 'ok' || !json.data){
+            if(noteEl) noteEl.textContent = '自動取得できませんでした。手動で入力してください。';
+            return;
+          }
+          var total = json.data.total;
+          var curInput = document.getElementById('goal-current');
+          if(curInput){ curInput.value = total; }
+          goal.current = String(total);
+          goalAll[biz.id][currentYear] = goal;
+          saveJSON(GOAL_KEY, goalAll);
+          updateGoalDerived();
+          if(noteEl){
+            var t = new Date();
+            noteEl.textContent = '会員マスタから自動取得：' + total + '名（' + (t.getMonth()+1) + '/' + t.getDate() + ' ' + String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0') + '時点）';
+          }
+        })
+        .catch(function(){
+          var noteEl = document.getElementById('goal-sync-note');
+          if(noteEl) noteEl.textContent = '自動取得できませんでした。手動で入力してください。';
+        });
+    }
+
+    /* ---- TODOS ---- */
+    var DEFAULT_TODO_CATS = ['集客・営業','会員満足度・接客','教育・仕組み化','環境整備・設備','数字管理・分析','広報・SNS'];
+
+    function saveTodos(){
+      todoAll[biz.id][currentYear] = todos;
+      saveJSON(TODO_KEY, todoAll);
+    }
+    function getAllCats(){
+      var cats = [];
+      todos.forEach(function(t){
+        var c = t.cat || 'その他';
+        if(cats.indexOf(c) === -1) cats.push(c);
+      });
+      DEFAULT_TODO_CATS.forEach(function(c){
+        if(cats.indexOf(c) === -1) cats.push(c);
+      });
+      return cats;
+    }
+    function renderCatSelect(){
+      var sel = document.getElementById('todo-cat-select');
+      var prevVal = sel.value;
+      sel.innerHTML = '';
+      getAllCats().forEach(function(c){
+        var opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        sel.appendChild(opt);
+      });
+      var newOpt = document.createElement('option');
+      newOpt.value = '__new__';
+      newOpt.textContent = '＋ 新しいカテゴリを追加';
+      sel.appendChild(newOpt);
+      if(prevVal && Array.prototype.some.call(sel.options, function(o){return o.value===prevVal;})){
+        sel.value = prevVal;
+      }
+      var newInput = document.getElementById('todo-cat-new');
+      newInput.style.display = (sel.value === '__new__') ? '' : 'none';
+    }
+    document.getElementById('todo-cat-select').addEventListener('change', function(){
+      var newInput = document.getElementById('todo-cat-new');
+      newInput.style.display = (this.value === '__new__') ? '' : 'none';
+      if(this.value === '__new__') newInput.focus();
+    });
+
+    function renderTodos(){
+      var listEl = document.getElementById('todo-list');
+      listEl.innerHTML = '';
+      renderCatSelect();
+      if(todos.length === 0){
+        var e = document.createElement('div');
+        e.className = 'empty-hint';
+        e.textContent = 'まだありません。上から追加してください。';
+        listEl.appendChild(e);
+        return;
+      }
+      var cats = [];
+      todos.forEach(function(t){
+        var c = t.cat || 'その他';
+        if(cats.indexOf(c) === -1) cats.push(c);
+      });
+      cats.forEach(function(cat){
+        var catEl = document.createElement('div');
+        catEl.className = 'todo-cat';
+        catEl.textContent = cat;
+        catEl.style.cursor = 'pointer';
+        catEl.title = 'タップして名前を変更';
+        catEl.addEventListener('click', function(){
+          var name = prompt('カテゴリ名を変更', cat);
+          if(name === null) return;
+          name = name.trim();
+          if(!name || name === cat) return;
+          todos.forEach(function(t){
+            var c = t.cat || 'その他';
+            if(c === cat) t.cat = name;
+          });
+          saveTodos();
+          renderTodos();
+        });
+        listEl.appendChild(catEl);
+
+        todos.forEach(function(t, i){
+          var c = t.cat || 'その他';
+          if(c !== cat) return;
+          var row = document.createElement('div');
+          row.className = 'todo-item' + (t.done ? ' done' : '');
+          row.innerHTML =
+            '<input type="checkbox" ' + (t.done?'checked':'') + '>' +
+            '<span class="t-text">' + esc(t.text) + '</span>' +
+            '<button class="t-del">×</button>';
+          row.querySelector('input').addEventListener('change', function(e){
+            todos[i].done = e.target.checked;
+            saveTodos();
+            renderTodos();
+          });
+          row.querySelector('.t-del').addEventListener('click', function(){
+            if(confirm('削除しますか？')){
+              todos.splice(i,1);
+              saveTodos();
+              renderTodos();
+            }
+          });
+          listEl.appendChild(row);
+        });
+      });
+    }
+    renderTodos();
+    document.getElementById('todo-add-btn').addEventListener('click', function(){
+      var catSelect = document.getElementById('todo-cat-select');
+      var catNew = document.getElementById('todo-cat-new');
+      var textInput = document.getElementById('todo-text-input');
+      var text = textInput.value.trim();
+      if(!text) return;
+      var cat = catSelect.value === '__new__' ? catNew.value.trim() : catSelect.value;
+      todos.push({ id:'t'+Date.now(), cat:cat, text:text, done:false, detail:'' });
+      saveTodos();
+      textInput.value=''; catNew.value='';
+      renderTodos();
+    });
+
+    /* ---- CLEANING ---- */
+    if(biz.hasOps){
+      var cleanAll = loadJSON(CLEAN_KEY, {});
+      if(!cleanAll[biz.id]) cleanAll[biz.id] = {};
+      var cleanData = cleanAll[biz.id];
+
+      function renderClean(){
+        var listEl = document.getElementById('clean-list');
+        listEl.innerHTML = '';
+        biz.cleaning.forEach(function(label){
+          var rec = cleanData[label];
+          var row = document.createElement('div');
+          row.className = 'chk-row' + (rec && rec.checked ? ' checked' : '');
+          var meta = (rec && rec.checked) ? ('最終確認: ' + rec.at + ' ' + rec.by) : '未チェック';
+          row.innerHTML =
+            '<div class="chk-main"><div class="chk-label">' + esc(label) + '</div><div class="chk-meta">' + esc(meta) + '</div></div>' +
+            '<input type="checkbox" ' + (rec && rec.checked ? 'checked' : '') + '>';
+          row.querySelector('input').addEventListener('change', function(e){
+            if(e.target.checked){
+              cleanData[label] = { checked:true, by:activeUser, at:nowStr() };
+            }else{
+              cleanData[label] = { checked:false, by:'', at:'' };
+            }
+            cleanAll[biz.id] = cleanData;
+            saveJSON(CLEAN_KEY, cleanAll);
+            renderClean();
+          });
+          listEl.appendChild(row);
+        });
+      }
+      renderClean();
+
+      /* ---- HEAT ---- */
+      var heatAll = loadJSON(HEAT_KEY, {});
+      if(!heatAll[biz.id]) heatAll[biz.id] = { wbgt:null, items:{} };
+      var heatData = heatAll[biz.id];
+
+      function renderWbgt(){
+        var chipsEl = document.getElementById('wbgt-chips');
+        chipsEl.innerHTML = '';
+        WBGT_LEVELS.forEach(function(lv){
+          var chip = document.createElement('button');
+          chip.className = 'wbgt-chip' + (heatData.wbgt === lv.level ? ' active' : '');
+          chip.style.background = lv.color;
+          chip.textContent = lv.label + ' ' + lv.range;
+          chip.addEventListener('click', function(){
+            heatData.wbgt = lv.level;
+            heatAll[biz.id] = heatData;
+            saveJSON(HEAT_KEY, heatAll);
+            renderWbgt();
+          });
+          chipsEl.appendChild(chip);
+        });
+        var bannerEl = document.getElementById('wbgt-banner');
+        if(heatData.wbgt === null || heatData.wbgt === undefined){
+          bannerEl.style.background = '#B4B2A9';
+          bannerEl.innerHTML = '<p class="wb-lv">本日の暑さ指数を選択してください</p><p class="wb-desc">日本スポーツ協会の運動指針を基準にしています。</p>';
+        }else{
+          var lv = WBGT_LEVELS[heatData.wbgt];
+          bannerEl.style.background = lv.color;
+          bannerEl.innerHTML = '<p class="wb-lv">' + esc(lv.label) + '（WBGT ' + esc(lv.range) + '）</p><p class="wb-desc">' + esc(lv.advice) + '</p>';
+        }
+      }
+      renderWbgt();
+
+      function renderHeatList(){
+        var listEl = document.getElementById('heat-list');
+        listEl.innerHTML = '';
+        HEAT_ITEMS.forEach(function(item){
+          var rec = heatData.items[item.id];
+          var row = document.createElement('div');
+          row.className = 'chk-row' + (rec && rec.checked ? ' checked' : '');
+          var meta = (rec && rec.checked) ? ('最終確認: ' + rec.at + ' ' + rec.by) : '未チェック';
+          row.innerHTML =
+            '<img src="' + item.icon + '?v=1" alt="">' +
+            '<div class="chk-main"><div class="chk-label">' + esc(item.label) + '</div><div class="chk-meta">' + esc(meta) + '</div></div>' +
+            '<input type="checkbox" ' + (rec && rec.checked ? 'checked' : '') + '>';
+          row.querySelector('input').addEventListener('change', function(e){
+            if(e.target.checked){
+              heatData.items[item.id] = { checked:true, by:activeUser, at:nowStr() };
+            }else{
+              heatData.items[item.id] = { checked:false, by:'', at:'' };
+            }
+            heatAll[biz.id] = heatData;
+            saveJSON(HEAT_KEY, heatAll);
+            renderHeatList();
+          });
+          listEl.appendChild(row);
+        });
+      }
+      renderHeatList();
+    }
+  }
+
+  /* =========================================================
+     シェア（QRコード & URL）
+     ========================================================= */
+  var LINKS_KEY = 'wb_share_links_v1';
+  function loadLinks(){
+    var links = loadJSON(LINKS_KEY, []);
+    var changed = false;
+    links.forEach(function(l, i){
+      if(!l.id){ l.id = 'l' + Date.now() + '_' + i; changed = true; }
+      if(l.biz === undefined || l.biz === null || l.biz === 'common'){ l.biz = ''; changed = true; }
+    });
+    if(changed) saveJSON(LINKS_KEY, links);
+    return links;
+  }
+  function saveLinks(list){ saveJSON(LINKS_KEY, list); }
+  var shareListEl = document.getElementById('share-list');
+
+  var SHARE_CUSTOM_KEY = 'wb_share_custom_cats_v1';
+  function loadCustomShareCats(){ return loadJSON(SHARE_CUSTOM_KEY, []); }
+  function saveCustomShareCats(list){ saveJSON(SHARE_CUSTOM_KEY, list); }
+
+  function getShareCats(){
+    var base = BUSINESSES.map(function(b){ return { id:b.id, name:b.name }; });
+    loadCustomShareCats().forEach(function(name){
+      if(!base.some(function(b){ return b.id === name; })){
+        base.push({ id:name, name:name });
+      }
+    });
+    return base;
+  }
+
+  var currentShareFilter = localStorage.getItem('wb_share_filter') || 'all';
+  var shareBizSwitchEl = document.getElementById('share-biz-switch');
+  var addBizSelect = document.getElementById('add-biz');
+  var addBizNewInput = document.getElementById('add-biz-new');
+
+  function renderShareFilterRow(){
+    shareBizSwitchEl.innerHTML = '';
+    var filters = [{ id:'all', name:'すべて' }].concat(getShareCats());
+    filters.forEach(function(f){
+      var btn = document.createElement('button');
+      btn.innerHTML = bizButtonHtml(f.name);
+      if(f.id === currentShareFilter) btn.classList.add('active');
+      btn.addEventListener('click', function(){
+        currentShareFilter = f.id;
+        localStorage.setItem('wb_share_filter', currentShareFilter);
+        renderShareFilterRow();
+        renderLinks();
+      });
+      shareBizSwitchEl.appendChild(btn);
+    });
+  }
+  renderShareFilterRow();
+
+  function renderAddBizSelect(){
+    var prevVal = addBizSelect.value;
+    addBizSelect.innerHTML = '';
+    getShareCats().forEach(function(f){
+      var opt = document.createElement('option');
+      opt.value = f.id; opt.textContent = f.name;
+      addBizSelect.appendChild(opt);
+    });
+    var newOpt = document.createElement('option');
+    newOpt.value = '__new__';
+    newOpt.textContent = '＋ 新しいカテゴリを追加';
+    addBizSelect.appendChild(newOpt);
+    if(prevVal && Array.prototype.some.call(addBizSelect.options, function(o){ return o.value===prevVal; })){
+      addBizSelect.value = prevVal;
+    }
+    addBizNewInput.style.display = (addBizSelect.value === '__new__') ? '' : 'none';
+  }
+  renderAddBizSelect();
+  addBizSelect.addEventListener('change', function(){
+    addBizNewInput.style.display = (this.value === '__new__') ? '' : 'none';
+    if(this.value === '__new__') addBizNewInput.focus();
+  });
+
+  function renderLinks(){
+    var links = loadLinks();
+    var filtered = (currentShareFilter === 'all') ? links : links.filter(function(l){ return l.biz === currentShareFilter; });
+    shareListEl.innerHTML = '';
+    if(filtered.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty-hint';
+      empty.textContent = 'まだ登録がありません。下の「＋ QR・URLを追加」から登録してください。';
+      shareListEl.appendChild(empty);
+      return;
+    }
+    filtered.forEach(function(link){
+      var item = document.createElement('div');
+      item.className = 'share-item';
+      var qrBox = document.createElement('div');
+      qrBox.className = 'share-qr';
+      item.appendChild(qrBox);
+      var info = document.createElement('div');
+      info.className = 'share-info';
+      info.innerHTML =
+        '<p class="name">' + esc(link.name) + '</p>' +
+        '<p class="url">' + esc(link.url) + '</p>' +
+        '<select class="ed-input share-biz-edit" data-editbiz="' + esc(link.id) + '" style="margin-bottom:8px;max-width:180px;"></select>' +
+        '<div class="share-actions">' +
+          '<button class="btn btn-copy" data-copy="' + esc(link.id) + '">URLをコピー</button>' +
+          '<button class="btn btn-del" data-del="' + esc(link.id) + '">削除</button>' +
+        '</div>';
+      item.appendChild(info);
+      shareListEl.appendChild(item);
+      try{
+        new QRCode(qrBox, { text: link.url, width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
+      }catch(e){ qrBox.textContent = 'QR'; }
+
+      var selectEl = info.querySelector('[data-editbiz]');
+      var placeholderOpt = document.createElement('option');
+      placeholderOpt.value = '';
+      placeholderOpt.textContent = '未分類（タップして選択）';
+      selectEl.appendChild(placeholderOpt);
+      getShareCats().forEach(function(f){
+        var opt = document.createElement('option');
+        opt.value = f.id; opt.textContent = f.name;
+        selectEl.appendChild(opt);
+      });
+      selectEl.value = link.biz || '';
+      selectEl.addEventListener('change', function(){
+        var allLinks = loadLinks();
+        var target = allLinks.filter(function(l){ return String(l.id) === selectEl.dataset.editbiz; })[0];
+        if(target){
+          target.biz = selectEl.value;
+          saveLinks(allLinks);
+          renderLinks();
+        }
+      });
+    });
+    shareListEl.querySelectorAll('[data-copy]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var links = loadLinks();
+        var link = links.filter(function(l){ return String(l.id) === btn.dataset.copy; })[0];
+        copyText(link ? link.url : '', btn);
+      });
+    });
+    shareListEl.querySelectorAll('[data-del]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var links = loadLinks();
+        var link = links.filter(function(l){ return String(l.id) === btn.dataset.del; })[0];
+        if(!link) return;
+        if(confirm('「' + link.name + '」を削除しますか？')){
+          links = links.filter(function(l){ return String(l.id) !== btn.dataset.del; });
+          saveLinks(links);
+          renderLinks();
+        }
+      });
+    });
+  }
+  function copyText(text, btn){
+    function done(){
+      if(btn){
+        var orig = btn.textContent;
+        btn.textContent = 'コピーしました';
+        btn.classList.add('copied');
+        setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 1400);
+      }
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
+    }else{ fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text){
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+  }
+  renderLinks();
+
+  var addToggle = document.getElementById('add-toggle');
+  var addForm = document.getElementById('add-form');
+  var addCard = document.getElementById('add-card');
+  addToggle.addEventListener('click', function(){
+    addForm.classList.toggle('show');
+    addCard.classList.toggle('open');
+    addToggle.textContent = addForm.classList.contains('show') ? '－ 閉じる' : '＋ QR・URLを追加';
+    if(addForm.classList.contains('show') && currentShareFilter !== 'all'){
+      var hasOpt = Array.prototype.some.call(addBizSelect.options, function(o){ return o.value === currentShareFilter; });
+      if(hasOpt) addBizSelect.value = currentShareFilter;
+    }
+  });
+  document.getElementById('add-submit').addEventListener('click', function(){
+    var nameEl = document.getElementById('add-name');
+    var urlEl = document.getElementById('add-url');
+    var bizEl = document.getElementById('add-biz');
+    var bizNewEl = document.getElementById('add-biz-new');
+    var name = nameEl.value.trim();
+    var url = urlEl.value.trim();
+    if(!name || !url){ alert('名称とURLの両方を入力してください。'); return; }
+    if(!/^https?:\/\//i.test(url)){ alert('URLは http:// または https:// から入力してください。'); return; }
+
+    var bizValue = bizEl.value;
+    if(bizValue === '__new__'){
+      var newCatName = bizNewEl.value.trim();
+      if(!newCatName){ alert('新しいカテゴリ名を入力してください。'); return; }
+      var customCats = loadCustomShareCats();
+      if(customCats.indexOf(newCatName) === -1){
+        customCats.push(newCatName);
+        saveCustomShareCats(customCats);
+      }
+      bizValue = newCatName;
+    }
+
+    var links = loadLinks();
+    links.push({ id:'l'+Date.now(), name:name, url:url, biz:bizValue });
+    saveLinks(links);
+    nameEl.value=''; urlEl.value=''; bizNewEl.value='';
+    addForm.classList.remove('show'); addCard.classList.remove('open');
+    addToggle.textContent = '＋ QR・URLを追加';
+    renderShareFilterRow();
+    renderAddBizSelect();
+    renderLinks();
+  });
+
+  /* =========================================================
+     初期描画
+     ========================================================= */
+  renderAll();
+
+})();
+</script>
+</body>
+</html>

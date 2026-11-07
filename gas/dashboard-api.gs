@@ -1,7 +1,15 @@
 /**
- * ONE-BALANCE 経営ダッシュボード用API（読み取り専用）
- * 台帳（事務部隊_経理台帳）などから数字だけを返す。経費の明細は返さない（合計のみ）。
- * 使い方：ウェブアプリとして公開（実行：自分／アクセス：全員）→ URL末尾に ?action=getDashboard
+ * ONE-BALANCE 経営ダッシュボード用API
+ * 台帳（事務部隊_経理台帳）などから数字を返す。
+ *
+ * 【v2：長尾だけが見られる数字はパスワードで守る】
+ *   ?action=getDashboard           … 誰でも見てよい数字（売上・KPI・会員数）。経費・利益・HAPPY KIDSは入っていない
+ *   ?action=getPrivate&token=XXXX  … 長尾だけ。経費・利益・HAPPY KIDS・固定経費。ログインで受け取った合言葉(token)が必要
+ *   POST {"action":"login","pw":"..."} … パスワードが合えばtokenを返す
+ *
+ * パスワードはこのファイルに書かない。Apps Scriptの
+ *   プロジェクトの設定 → スクリプト プロパティ → 「OWNER_PASSWORD」
+ * に入れる（検索ワード：OWNER_PASSWORD）。
  */
 var LEDGER_ID  = '1UB2GAO_-aX7SE7t9l4tNAsJJr7NhpzTCMcgYO_AZ9TM'; // 事務部隊_経理台帳
 var TAIKAI_ID  = '18TPuqVVVbO7Fbc1pL6XheeXuFtLVdXe0agpQRNXeFr0'; // 2026大会&スポンサー
@@ -12,16 +20,183 @@ var ONETRE_ID = '1LYNNK1_gY3UvrAGgErfOmR00lXsigZYry8RWeBIUWKk';         // パ�
 // ===== 設定エリア（検索ワード：DASH_CONFIG）=====
 var STAFF_NAMES = ['長尾儀弘', '松本実紗'];   // 会員から除外するスタッフ
 var ONETRE_QUIT = ['河合正子'];              // ONE-TREで退会が確定している人（ヨシさん確認済みのみ）
+
+// レンタルジムONE-TRE（長尾だけに見せる）。内容を直したいときはここを書き換える（検索ワード：RENTAL_INFO）
+// 数字（会員数・今月の利用・月の売上）は、予約システムの集計とつなぐまで「-」のまま
+var RENTAL_INFO = {
+  name: 'レンタルジムONE-TRE',
+  catch1: 'じぶんだけの時間',
+  catch2: '自分に酔える場所',
+  asOf: '2026/11/04',
+  kpi: [ { label: '会員数', value: '-' }, { label: '今月の利用', value: '-' }, { label: '月の売上', value: '-' } ],
+  breakeven: '月10万円（家賃・電気・借入返済）。通常6,600円なら16名で超えます。',
+  terms: [
+    ['モニター料金', '先着3名　月3,980円（アンケートに答える）'],
+    ['通常料金', '月6,600円　使い放題'],
+    ['退会手数料', '3,300円（登録したカードから引き落とし）'],
+    ['利用時間', '月〜金 16〜22時 / 土 16〜20時　日祝は休み'],
+    ['1回の利用', '60分　予約は1日1回まで'],
+    ['2人で利用', '2人とも会員登録が必要'],
+    ['禁止', '指導を仕事にする利用（違反は罰金33,000円）'],
+    ['無断キャンセル', 'イエロー・レッドカードで段階的に罰則']
+  ],
+  progress: [
+    ['済', '予約・入会・退会のページ'],
+    ['済', 'QRでの来店の記録'],
+    ['済', '月6,600円のStripe決済リンク'],
+    ['済', '集計ダッシュボード（スプレッドシート）'],
+    ['残', 'モニター3,980円のStripeリンクを作り、予約サイトの料金も直す'],
+    ['残', 'モニターの条件に「顔なしの動画を広告に使う」を足す'],
+    ['残', 'モニター3名を集める'],
+    ['残', 'A4チラシ（3案）から1つ選ぶ']
+  ]
+};
 // ===== 設定エリアここまで =====
 
+function json_(o) {
+  return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doGet(e) {
-  var out;
+  var action = (e && e.parameter && e.parameter.action) || 'getDashboard';
   try {
-    out = { status: 'ok', updated: new Date().toISOString(), data: buildDashboard_() };
+    if (action === 'getPrivate') {
+      if (!tokenOk_(e.parameter.token)) return json_({ status: 'denied' });
+      return json_({ status: 'ok', updated: new Date().toISOString(), data: buildPrivate_() });
+    }
+    // 誰でも見てよい数字（経費・利益・HAPPY KIDSは含めない）
+    return json_({ status: 'ok', updated: new Date().toISOString(), data: publicOnly_(buildDashboard_()) });
   } catch (err) {
-    out = { status: 'error', message: String(err) };
+    return json_({ status: 'error', message: String(err) });
   }
-  return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (body.action === 'login') return json_(login_(String(body.pw || '')));
+    return json_({ status: 'error', message: 'unknown action' });
+  } catch (err) {
+    return json_({ status: 'error', message: String(err) });
+  }
+}
+
+// ===== ログイン（長尾だけ）=====
+var TOKEN_DAYS = 90;      // 一度ログインしたら、この端末では何日ログインのままにするか
+var MAX_FAILS  = 5;       // 10分間にこの回数まちがえたら、いったんロック
+
+function login_(pw) {
+  var cache = CacheService.getScriptCache();
+  var fails = Number(cache.get('login_fails') || 0);
+  if (fails >= MAX_FAILS) return { status: 'locked' };
+  var real = PropertiesService.getScriptProperties().getProperty('OWNER_PASSWORD');
+  if (!real) return { status: 'error', message: 'OWNER_PASSWORD が未設定です' };
+  if (pw !== real) {
+    cache.put('login_fails', String(fails + 1), 600);
+    return { status: 'denied' };
+  }
+  cache.remove('login_fails');
+  var token = Utilities.getUuid() + Utilities.getUuid();
+  var props = PropertiesService.getScriptProperties();
+  var all = JSON.parse(props.getProperty('TOKENS') || '{}');
+  var now = Date.now();
+  Object.keys(all).forEach(function (k) { if (all[k] < now) delete all[k]; });   // 期限切れを掃除
+  all[token] = now + TOKEN_DAYS * 86400000;
+  props.setProperty('TOKENS', JSON.stringify(all));
+  return { status: 'ok', token: token };
+}
+
+function tokenOk_(token) {
+  if (!token) return false;
+  var all = JSON.parse(PropertiesService.getScriptProperties().getProperty('TOKENS') || '{}');
+  return !!(all[token] && all[token] > Date.now());
+}
+
+// 全端末をログアウトさせたいときは、Apps Scriptでこの関数を1回実行する
+function logoutAll() {
+  PropertiesService.getScriptProperties().deleteProperty('TOKENS');
+}
+
+// 誰でも見てよい形にする：経費・今月の経費・HAPPY KIDSの数字を取り除く
+function publicOnly_(d) {
+  var out = JSON.parse(JSON.stringify(d));
+  delete out.happykids;
+  if (out.finance) {
+    ['boxing', 'onetre', 'happykids', 'total'].forEach(function (k) {
+      if (!out.finance[k]) return;
+      delete out.finance[k].expense;
+      delete out.finance[k].monthExpense;
+    });
+    delete out.finance.happykids;
+  }
+  return out;
+}
+
+// 長尾だけ：経費・利益・HAPPY KIDS・固定経費を足した全部
+function buildPrivate_() {
+  var ss = SpreadsheetApp.openById(LEDGER_ID);
+  var exp = ss.getSheetByName('経費').getDataRange().getValues();
+  var d = buildDashboard_();
+  d.fixed = buildFixed_(ss, exp);
+  d.rental = RENTAL_INFO;
+  return d;
+}
+
+// ===== 固定経費（家賃・駐車場など。毎月自動で足す）=====
+// 台帳スプレッドシートの「固定経費」シートを読む。列：名称／事業／金額／払い日／開始月(例 2026/11)／終了月(空欄＝続く)
+// 台帳の「経費」に、同じ事業・同じ名称（例：家賃）が今月すでに記帳されていれば二重に足さない。
+// 初回だけ、Apps Scriptで setupFixedCosts を1回実行するとシートができる。
+function setupFixedCosts() {
+  var ss = SpreadsheetApp.openById(LEDGER_ID);
+  if (ss.getSheetByName('固定経費')) return;
+  var sh = ss.insertSheet('固定経費');
+  var ym = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyy/MM');
+  sh.getRange(1, 1, 3, 6).setValues([
+    ['名称', '事業', '金額', '払い日', '開始月', '終了月'],
+    ['家賃', 'ワンバランスボクシングジム', 80000, 1, ym, ''],
+    ['駐車場', 'ワンバランスボクシングジム', 20000, 1, ym, '']
+  ]);
+  sh.setFrozenRows(1);
+}
+
+function monthDiff_(a, b) { // 'yyyy/MM' どうしの差（b - a）
+  var pa = a.split('/'), pb = b.split('/');
+  return (Number(pb[0]) - Number(pa[0])) * 12 + (Number(pb[1]) - Number(pa[1]));
+}
+
+function buildFixed_(ss, exp) {
+  var keys = { 'ワンバランスボクシングジム': 'boxing', 'ONE-TRE': 'onetre', 'HAPPY KIDS PROJECT': 'happykids' };
+  var sh = ss.getSheetByName('固定経費');
+  var out = { setup: !!sh, items: [], monthTotal: 0, byBiz: { boxing: 0, onetre: 0, happykids: 0 }, cumulativeByBiz: { boxing: 0, onetre: 0, happykids: 0 } };
+  if (!sh) return out;
+  var rows = sh.getDataRange().getValues();
+  var now = new Date();
+  var nowYm = Utilities.formatDate(now, 'Asia/Tokyo', 'yyyy/MM');
+  var today = Number(Utilities.formatDate(now, 'Asia/Tokyo', 'd'));
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i];
+    var name = String(r[0] || '').trim();
+    var key = keys[String(r[1] || '').trim()];
+    var amount = toNum_(r[2]);
+    var day = Math.max(1, Math.min(28, toNum_(r[3]) || 1));
+    var start = ymOf_(r[4]), end = ymOf_(r[5]);
+    if (!name || !key || !amount || !start) continue;
+    var active = (start <= nowYm) && (!end || end >= nowYm);
+    var recorded = false;                           // 台帳にすでに記帳済みか
+    for (var j = 1; j < exp.length; j++) {
+      var e = exp[j];
+      if (keys[e[1]] === key && ymOf_(e[0]) === nowYm && String(e[3] || '').indexOf(name) >= 0) { recorded = true; break; }
+    }
+    var lastYm = (end && end < nowYm) ? end : nowYm;
+    var months = Math.max(0, monthDiff_(start, lastYm) + 1);
+    if (lastYm === nowYm && today < day) months = Math.max(0, months - 1);   // 払い日前の今月は数えない
+    var monthAdd = (active && !recorded && today >= day) ? amount : 0;
+    out.items.push({ name: name, biz: key, amount: amount, day: day, start: start, end: end || '', active: active, recorded: recorded, monthAdd: monthAdd, months: months });
+    out.byBiz[key] += monthAdd;
+    out.monthTotal += monthAdd;
+    out.cumulativeByBiz[key] += amount * months;
+  }
+  return out;
 }
 
 function toNum_(v) {
