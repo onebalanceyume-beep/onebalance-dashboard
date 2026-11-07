@@ -1339,7 +1339,7 @@
         var unit = biz.id==='happykids' ? '' : '人';
         mgL.textContent = m + '月の目標' + (biz.id==='happykids' ? '' : '（入会してほしい人数）');
         if(isNaN(mv) || goal.monthly===''){ mgN.innerHTML = '-'; mgS.textContent = '下の「単月目標」に数字を入れてください'; }
-        else{ mgN.innerHTML = mv + '<small>' + unit + '</small>'; mgS.textContent = 'この数字を達成しにいく月です'; }
+        else{ mgN.innerHTML = mv + '<small>' + unit + '</small>'; mgS.textContent = '達成数字'; }
       })();
       var cur = parseFloat(goal.current) || 0;
       var tgt = parseFloat(goal.target) || 0;
