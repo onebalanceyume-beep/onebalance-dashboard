@@ -914,6 +914,16 @@
     rows.forEach(function(r){ h += '<div class="exp-row"><span>' + esc(r.name) + '</span><b>' + fmt(r) + '</b></div>'; });
     return h + '</details>';
   }
+  var ACTIONS = [   // 成約率を上げるためにやること（直すときの検索ワード：ACTIONS）
+    '体験では、その人が何を成し遂げたくて来たのかを、最初にしっかり聞く',
+    'その目的に合わせて、このジムでできることを伝える（目的に沿った体験にする）',
+    '今すぐ入る理由をつくる（特典の内容は決まり次第ここに載せる）'
+  ];
+  function actionsHtml(){
+    var h = '<p class="ed-eyebrow" style="margin-top:14px;">成約率を上げるためにやること</p>';
+    ACTIONS.forEach(function(t, i){ h += '<div class="exp-row"><span><b style="color:#DD0B1B;margin-right:8px;">' + (i + 1) + '</b>' + esc(t) + '</span></div>'; });
+    return h;
+  }
   function reviewHtml(bizId, d){
     var rv = d.reviews && d.reviews[bizId]; if(!rv) return '';
     var up = (rv.targetChange === null || rv.targetChange === undefined) ? '' : (rv.targetChange > 0 ? '　前回より目標が +' + rv.targetChange + '件' : '　前回から目標は変わらず');
@@ -1057,6 +1067,7 @@
           h += '<div class="exp-row"><span>男女比率（いまの会員）</span><b>男性 ' + (gt ? Math.round(ac.m / gt * 100) : 0) + '% ／ 女性 ' + (gt ? Math.round(ac.f / gt * 100) : 0) + '%</b></div>';
         }
         h += reviewHtml(biz.id, d);
+        h += actionsHtml();
         h += peopleHtml(biz.id, d);
         var av = d.avg || {};
         function A(k){ return av[k] ? av[k][biz.id] : null; }
