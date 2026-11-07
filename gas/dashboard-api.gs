@@ -138,19 +138,12 @@ function logoutAll() {
   PropertiesService.getScriptProperties().deleteProperty('TOKENS');
 }
 
-// 誰でも見てよい形にする：経費・今月の経費・HAPPY KIDSの数字を取り除く
+// 誰でも見てよい形にする：お金の数字（売上・入金額・経費・HAPPY KIDS）を全部取り除く。人数・成約率・口コミだけ残す
 function publicOnly_(d) {
   var out = JSON.parse(JSON.stringify(d));
   delete out.happykids;
   if (out.people) out.people = peopleAgg_(out.people);
-  if (out.finance) {
-    ['boxing', 'onetre', 'happykids', 'total'].forEach(function (k) {
-      if (!out.finance[k]) return;
-      delete out.finance[k].expense;
-      delete out.finance[k].monthExpense;
-    });
-    delete out.finance.happykids;
-  }
+  delete out.finance;     // 売上・入金額・経費は、すべて長尾だけ（稲田・一般には出さない）
   return out;
 }
 
