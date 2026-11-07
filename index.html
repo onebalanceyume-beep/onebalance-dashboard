@@ -538,7 +538,6 @@
   <button class="tab-btn" data-tab="tab-share">シェア</button>
   <button class="tab-btn" data-tab="tab-philosophy">理念</button>
   <button class="tab-btn" data-tab="tab-emergency">緊急</button>
-  <button class="tab-btn" data-tab="tab-proposal">提案</button>
 </nav>
 
 <script>
@@ -1011,7 +1010,7 @@
       if(err){ body.textContent = '数字を読み込めませんでした。少し待ってからもう一度開いてください。'; return; }
       var d = j.data, h = '';
       var fin = d.finance;
-      if(fin && fin[biz.id]){
+      if(fin && fin[biz.id] && isOwner()){
         var fb = fin[biz.id], ft = fin.total, owner = isOwner();
         h += '<div class="month-goal" style="margin-bottom:12px;"><div class="mg-label">売上（累計・手数料引き前）</div><div class="mg-num">' + yen(fb.sales) + '</div><div class="mg-sub">今月 ' + yen(fb.monthSales) + '　／　入金額 ' + yen(fb.net) + '</div></div>';
         if(owner){
