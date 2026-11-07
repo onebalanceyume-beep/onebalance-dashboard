@@ -258,6 +258,7 @@ function buildDashboard_() {
   try { out.members = buildMembers_(); } catch (e3) { out.members = null; }
   try { out.finance = buildFinance_(sales, exp); } catch (e4) { out.finance = null; }
   try { out.people = buildPeople_(); } catch (e5) { out.people = null; }
+  try { out.reviews = buildReviews_(ss); } catch (e6) { out.reviews = null; }
   return out;
 }
 
@@ -450,6 +451,38 @@ function buildPeople_() {
   out.goals = { boxing: GOALS.boxing ? goalInfo_(GOALS.boxing, null) : null };
   return out;
 }
+// ===== Google口コミの数（自社と、米子の同じ種類のお店の一番上）=====
+// 台帳スプレッドシートの「口コミ記録」シート。列：記録日／事業／区分(自社・他社)／店名／口コミ数／評価／範囲／備考
+// 毎週月曜に、予定タスク（Claude）が新しい行を足していく。目標＝他社の一番上の口コミ数。他社が増えると目標も上がる。
+function buildReviews_(ss) {
+  var sh = ss.getSheetByName('口コミ記録'); if (!sh) return null;
+  var rows = sh.getDataRange().getValues();
+  var keys = { 'ボクシング': 'boxing', 'ONE-TRE': 'onetre' };
+  var by = { boxing: {}, onetre: {} };
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i], k = keys[String(r[1]).trim()], d = parseYmd_(r[0]); if (!k || !d) continue;
+    var ds = Utilities.formatDate(d, 'Asia/Tokyo', 'yyyy/MM/dd');
+    var cnt = toNum_(r[4]); if (!by[k][ds]) by[k][ds] = { own: null, top: null };
+    var o = by[k][ds];
+    if (String(r[2]).trim() === '自社') o.own = { name: String(r[3]), count: cnt, rating: toNum_(r[5]) };
+    else if (!o.top || cnt > o.top.count) o.top = { name: String(r[3]), count: cnt, rating: toNum_(r[5]) };
+  }
+  var out = {};
+  Object.keys(by).forEach(function (k) {
+    var dates = Object.keys(by[k]).filter(function (x) { return by[k][x].own && by[k][x].top; }).sort();
+    if (!dates.length) { out[k] = null; return; }
+    var last = by[k][dates[dates.length - 1]], prev = dates.length > 1 ? by[k][dates[dates.length - 2]] : null;
+    out[k] = {
+      date: dates[dates.length - 1], own: last.own, top: last.top,
+      remaining: Math.max(0, last.top.count + 1 - last.own.count),      // 他社トップを1件でも超えるまで
+      targetChange: prev ? last.top.count - prev.top.count : null,      // 前回から目標が何件上がったか
+      ownChange: prev ? last.own.count - prev.own.count : null,
+      history: dates.slice(-8).map(function (x) { return { date: x, target: by[k][x].top.count, own: by[k][x].own.count }; })
+    };
+  });
+  return out;
+}
+
 // 名前を除いた人数だけ（誰でも見てよい形）
 function peopleAgg_(p) {
   var o = JSON.parse(JSON.stringify(p));

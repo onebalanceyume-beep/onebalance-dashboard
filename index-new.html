@@ -913,6 +913,20 @@
     rows.forEach(function(r){ h += '<div class="exp-row"><span>' + esc(r.name) + '</span><b>' + fmt(r) + '</b></div>'; });
     return h + '</details>';
   }
+  function reviewHtml(bizId, d){
+    var rv = d.reviews && d.reviews[bizId]; if(!rv) return '';
+    var up = (rv.targetChange === null || rv.targetChange === undefined) ? '' : (rv.targetChange > 0 ? '　前回より目標が +' + rv.targetChange + '件' : '　前回から目標は変わらず');
+    var h = '<p class="ed-eyebrow" style="margin-top:14px;">Google口コミ｜米子のトップを超える</p>';
+    h += '<div class="month-goal" style="margin-bottom:10px;"><div class="mg-label">目標（米子の同じ種類で一番多い口コミ数）</div><div class="mg-num">' + rv.top.count + '件</div><div class="mg-sub">' + esc(rv.top.name) + up + '</div></div>';
+    h += '<div class="exp-row"><span>うちの口コミ数（評価 ' + rv.own.rating + '）</span><b>' + rv.own.count + '件</b></div>';
+    h += '<div class="exp-row"><span>トップを超えるまで</span><b>' + (rv.remaining === 0 ? '超えています' : 'あと ' + rv.remaining + '件') + '</b></div>';
+    if(rv.history && rv.history.length > 1){
+      h += '<div style="overflow-x:auto;margin-top:6px;"><table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;"><tr style="background:#FFF1F2;"><th>日付</th><th>目標</th><th>うち</th></tr>';
+      rv.history.slice().reverse().forEach(function(x){ h += '<tr style="border-bottom:1px solid #EEE;"><td style="padding:6px 2px;">' + esc(x.date.slice(5)) + '</td><td>' + x.target + '</td><td>' + x.own + '</td></tr>'; });
+      h += '</table></div>';
+    }
+    return h + '<p class="ed-sub" style="margin-top:6px;">毎週月曜に更新（' + esc(rv.date) + ' 時点）。他社が増えると目標も上がります。</p>';
+  }
   function peopleHtml(bizId, d){
     var pp = d.people; if(!pp) return '';
     var h = '';
@@ -1041,6 +1055,7 @@
           h += '<div class="exp-row"><span>成約率</span><b>' + (tt ? Math.round(tc / tt * 100) + '%' : '-') + '</b></div>';
           h += '<div class="exp-row"><span>男女比率（いまの会員）</span><b>男性 ' + (gt ? Math.round(ac.m / gt * 100) : 0) + '% ／ 女性 ' + (gt ? Math.round(ac.f / gt * 100) : 0) + '%</b></div>';
         }
+        h += reviewHtml(biz.id, d);
         h += peopleHtml(biz.id, d);
         var av = d.avg || {};
         function A(k){ return av[k] ? av[k][biz.id] : null; }
