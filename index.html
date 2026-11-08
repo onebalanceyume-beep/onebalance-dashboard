@@ -290,7 +290,7 @@
   /* ===== v2.0 新デザイン：しっかりした赤(var(--accent))×白、ヘルベチカ、角は小さく、絵文字なし ===== */
   :root{ --accent:#DD0B1B; --accent-soft:#FFF1F2; --red:#DD0B1B; --red-dark:#A80815; --ed-red:#DD0B1B; --ed-border:#D9D9D9; --border:#D9D9D9; --bg:#FFFFFF; --text:#111111; --text-light:#555555; --radius:2px;
     --ed-font:Helvetica,"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
-  /* ONE-TRE の画面は、白×黒＋ゴールド（直すときの検索ワード：theme-onetre） */
+  /* レンタルジムの画面は、白×黒＋ゴールド（ONE-TREは赤）（直すときの検索ワード：theme-onetre） */
   #tab-business.theme-onetre{ --accent:#A88944; --accent-soft:#F7F1E3; --red:#A88944; --red-dark:#8A6D2B; --ed-red:#A88944; }
   html,body{ overflow-x:hidden; }
   body{ font-family:var(--ed-font); background:#fff; }
@@ -1197,7 +1197,7 @@
     });
   }
   function renderBusinessContent(){
-    var tb = document.getElementById('tab-business'); if(tb){ tb.classList.toggle('theme-onetre', currentBiz === 'onetre'); }
+    var tb = document.getElementById('tab-business'); if(tb){ tb.classList.toggle('theme-onetre', currentBiz === 'rental'); }
     var biz = getBiz(currentBiz);
     var container = document.getElementById('business-content');
     if(biz.id === 'rental'){
