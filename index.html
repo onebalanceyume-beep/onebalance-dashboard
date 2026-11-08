@@ -308,6 +308,16 @@
   .rn-step.goal{ background:var(--ed-red);border-color:var(--ed-red);color:#fff; } .rn-step.goal small{ color:#fff; }
   .rn-down{ text-align:center;font-size:14px;font-weight:900;color:#111;line-height:1; }
   .rn-three{ display:grid;grid-template-columns:1fr;gap:10px; }
+  .rn-box.soft{ background:#FFF1F2;color:#B3000F; }
+  .rn-box.heart{ background:#E3F4E8;border-color:#4CAF7A;color:#1E5C38;display:flex;flex-direction:column;justify-content:center; }
+  .rn-box.heart .m{ font-size:16px;line-height:1.8;white-space:nowrap; }
+  .rn-box.heart .s{ line-height:1.8;text-wrap:balance; }
+  .rn-box.green{ background:#4CAF7A;border-color:#4CAF7A;color:#fff; }
+  .rn-box.yellow{ background:#FFF3B0;border-color:#E8C84A;color:#5A4A00; }
+  .rn-box.blue{ background:#2F6FD0;border-color:#2F6FD0;color:#fff; }
+  .rn-step.sky{ background:#5BB9CD;border-color:#5BB9CD;color:#0B2A33; } .rn-step.sky small{ color:#0B2A33; }
+  .rn-step.blue{ background:#2F6FD0;border-color:#2F6FD0;color:#fff; } .rn-step.blue small{ color:#fff; }
+  .rn-down{ color:#777; }
   @keyframes rnIn{ from{ opacity:0;transform:translateY(14px); } to{ opacity:1;transform:none; } }
   @media (prefers-reduced-motion: reduce){ .rn-box,.rn-arrow,.rn-step{ animation:none;opacity:1; } }
   /* ONE-TRE の画面は、白×黒＋ゴールド（直すときの検索ワード：theme-onetre） */
@@ -428,7 +438,7 @@
   <section class="tab" id="tab-philosophy">
     <h2 class="section-title"><span class="dot"></span>私たちの方向性</h2>
 
-    <div class="ed-card"><p class="ed-eyebrow">DIRECTION｜私たちの方向性（図）</p><div class="rn"><div class="rn-box fill" style="animation-delay:0.1s"><div class="t">目的</div><div class="m">心と体を、元気に</div><div class="s">その先に「カッコよく、素敵」な自己実現（目的や目標を実現する）</div></div><div class="rn-arrow" style="animation-delay:0.5s">▼</div><div class="rn-two"><div class="rn-box " style="animation-delay:0.8s"><div class="t">心</div><div class="m">人とのつながりの中で心が満たされる</div><div class="s">ここに来ることが「生きがい」になる</div></div><div class="rn-steps"><div class="rn-box" style="animation-delay:1.0s;padding:8px"><div class="t">体</div></div><div class="rn-step base" style="animation-delay:1.3s">① 壊れない体・痛くない体<small>土台づくり＝ONE-TRE（基礎筋力）</small></div><div class="rn-down">▼</div><div class="rn-step " style="animation-delay:1.7s">② 快適な体<small></small></div><div class="rn-down">▼</div><div class="rn-step goal" style="animation-delay:2.1s">③ ボクシング・自己実現<small>ボクシングはハードと感じる人にも</small></div></div></div><div class="rn-arrow" style="animation-delay:2.5s">▼</div><div class="rn-box dark" style="animation-delay:2.8s"><div class="t">入口</div><div class="m">ONE-TREから入って、ボクシングを知ってもらう</div></div><div class="rn-arrow" style="animation-delay:3.1s">▼</div><div class="rn-three"><div class="rn-box fill" style="animation-delay:3.4s"><div class="t">MISSION</div><div class="m">ボクシング革命を起こす</div><div class="s">「厳しい」「怖い」を「楽しい」に。生活必需品にする</div></div><div class="rn-box " style="animation-delay:3.8s"><div class="t">HAPPY KIDS PROJECT</div><div class="m">社会的に意味のある事業・会社</div><div class="s">存在意義として定義しておく</div></div><div class="rn-box dark" style="animation-delay:4.2s"><div class="t">VISION</div><div class="m">日本一になる</div><div class="s">日本一、始めやすいジムにする</div></div></div></div></div>
+    <div class="ed-card"><p class="ed-eyebrow">DIRECTION｜私たちの方向性（図）</p><div class="rn"><div class="rn-box soft" style="animation-delay:0.1s"><div class="t">目的</div><div class="m">心と体を、元気に</div><div class="s">その先に「カッコよく、素敵」な自己実現（目的や目標を実現する）</div></div><div class="rn-arrow" style="animation-delay:0.5s">▼</div><div class="rn-two"><div class="rn-box heart" style="animation-delay:0.8s"><div class="t">心</div><div class="m">人との<br>つながりの中で<br>心が満たされる</div><div class="s">ここに来ることが<br>「生きがい」になる</div></div><div class="rn-steps"><div class="rn-box" style="animation-delay:1.0s;padding:8px"><div class="t">体</div></div><div class="rn-step sky" style="animation-delay:1.3s">① 壊れない体・痛くない体<small>土台づくり＝ONE-TRE（基礎筋力）</small></div><div class="rn-down">▼</div><div class="rn-step blue" style="animation-delay:1.7s">② 快適な体<small></small></div><div class="rn-down">▼</div><div class="rn-step goal" style="animation-delay:2.1s">③ ボクシング・自己実現<small>ボクシングはハードと感じる人にも</small></div></div></div><div class="rn-arrow" style="animation-delay:2.5s">▼</div><div class="rn-box green" style="animation-delay:2.8s"><div class="t">入口</div><div class="m">ONE-TREから入って、ボクシングを知ってもらう</div></div><div class="rn-arrow" style="animation-delay:3.1s">▼</div><div class="rn-three"><div class="rn-box fill" style="animation-delay:3.4s"><div class="t">MISSION</div><div class="m">ボクシング革命を起こす</div><div class="s">「厳しい」「怖い」を「楽しい」に。生活必需品にする</div></div><div class="rn-box yellow" style="animation-delay:3.8s"><div class="t">HAPPY KIDS PROJECT</div><div class="m">社会的に意味のある事業・会社</div><div class="s">存在意義として定義しておく</div></div><div class="rn-box blue" style="animation-delay:4.2s"><div class="t">VISION</div><div class="m">日本一になる</div><div class="s">日本一、始めやすいジムにする</div></div></div></div></div>
 
     <div class="ed-card">
       <p class="ed-eyebrow">PHILOSOPHY</p>
