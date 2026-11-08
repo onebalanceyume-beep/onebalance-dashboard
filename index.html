@@ -654,15 +654,19 @@
 
   /* 稲田用リンク：「…/#k=合言葉」を1回開くと、そのスマホは自動でログインする（パスワードを打たなくてよい）。長尾の合言葉では動かない */
   setTimeout(function(){
-    var m = /^#k=(.+)$/.exec(location.hash || ''); if(!m) return;
-    var k = decodeURIComponent(m[1]);
+    var m = /^#([ko])=(.+)$/.exec(location.hash || ''); if(!m) return;
+    var wantOwner = m[1] === 'o';   // #k=稲田用 / #o=長尾用
+    var k = decodeURIComponent(m[2]);
     try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){}
     fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'login', pw: k }) })
       .then(function(r){ return r.json(); })
       .then(function(j){
-        if(j && j.status === 'ok' && j.token && j.role === 'staff'){
+        if(!wantOwner && j && j.status === 'ok' && j.token && j.role === 'staff'){
           try{ localStorage.setItem(STAFF_TOKEN_KEY, j.token); }catch(e){}
           setUser('稲田');
+        } else if(wantOwner && j && j.status === 'ok' && j.token && j.role !== 'staff'){
+          try{ localStorage.setItem(OWNER_TOKEN_KEY, j.token); }catch(e){}
+          setUser('長尾');
         }
       }).catch(function(){});
   }, 0);
