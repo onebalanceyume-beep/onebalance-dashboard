@@ -183,6 +183,14 @@
   .exp-row button{ border:none;background:none;color:#B33;font-size:16px;cursor:pointer; }
 
   /* value list */
+  /* 横にスワイプして出る編集・削除（検索ワード：swipe-wrap / makeSwipe） */
+  .swipe-wrap{ position:relative;overflow:hidden; }
+  .swipe-wrap > .sw-front{ position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none; }
+  .sw-actions{ position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch; }
+  .sw-actions button{ border:0;color:#fff;font:inherit;font-size:13px;font-weight:800;padding:0 16px;cursor:pointer;background:#8a8a8a;white-space:nowrap; }
+  .sw-actions button.sw-del{ background:var(--ed-red); }
+  .sw-actions .sw-ask{ display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700;color:#fff;background:#444;white-space:nowrap; }
+  .todo-list-wrap{ margin-bottom:6px; }
   .mini-btn{ font:inherit;font-size:12px;font-weight:800;padding:6px 10px;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:2px;cursor:pointer;flex:none; }
   .mini-btn.danger{ color:#fff;background:var(--ed-red);border-color:var(--ed-red); }
   .row-edit{ display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%; }
@@ -1236,6 +1244,39 @@
     renderBusinessContent();
   }
 
+    /* 横にスッとずらすと「編集・削除」が出る（検索ワード：makeSwipe） */
+    var openSwipe = null;
+    function closeSwipe(){ if(openSwipe){ openSwipe.close(); openSwipe = null; } }
+    function makeSwipe(front, actions){
+      var cur = 0, startX = 0, startY = 0, base = 0, down = false, decided = false, horiz = false, moved = false;
+      function w(){ return actions.offsetWidth; }
+      function set(x, anim){ cur = x; front.style.transition = anim ? 'transform .2s ease' : 'none'; front.style.transform = 'translateX(' + x + 'px)'; }
+      var api = { close:function(){ set(0, true); }, open:function(){ set(-w(), true); openSwipe = api; } };
+      front.addEventListener('pointerdown', function(e){
+        if(openSwipe && openSwipe !== api){ closeSwipe(); }
+        down = true; decided = false; horiz = false; moved = false; startX = e.clientX; startY = e.clientY; base = cur;
+      });
+      front.addEventListener('pointermove', function(e){
+        if(!down) return;
+        var dx = e.clientX - startX, dy = e.clientY - startY;
+        if(!decided && (Math.abs(dx) > 8 || Math.abs(dy) > 8)){ decided = true; horiz = Math.abs(dx) > Math.abs(dy); if(horiz){ try{ front.setPointerCapture(e.pointerId); }catch(x){} } }
+        if(decided && horiz){ moved = true; set(Math.max(-w(), Math.min(0, base + dx)), false); }
+      });
+      function end(){
+        if(!down) return; down = false;
+        if(moved){ if(cur < -w() / 3){ api.open(); } else { api.close(); if(openSwipe === api) openSwipe = null; } }
+      }
+      front.addEventListener('pointerup', end);
+      front.addEventListener('pointercancel', end);
+      front.addEventListener('click', function(e){
+        if(moved){ e.stopPropagation(); e.preventDefault(); moved = false; return; }
+        if(cur < 0){ e.stopPropagation(); e.preventDefault(); closeSwipe(); }
+      }, true);
+      return api;
+    }
+    function swipeBtn(text, cls){ var b = document.createElement('button'); b.textContent = text; if(cls) b.className = cls; return b; }
+  document.addEventListener('pointerdown', function(e){ if(openSwipe && !e.target.closest('.swipe-wrap')){ closeSwipe(); } });
+
   /* 今月の入会人数（KPIの「新規」）を引いて「あと◯人」を出す（直すときの検索ワード：monthProgress） */
   function monthProgress(goalNum, mgS){
     if(currentBiz === 'happykids' || currentBiz === 'rental') return;
@@ -1401,31 +1442,37 @@
       }
       valueList.forEach(function(v, i){
         var li = document.createElement('li');
-        li.className = 'v-row';
-        function showRow(){
-          li.innerHTML = '<span class="v-text">' + esc(v) + '</span>' +
-            '<button class="mini-btn" data-a="edit">編集</button>' +
-            '<button class="mini-btn" data-a="del">削除</button>';
-          li.querySelector('[data-a="edit"]').addEventListener('click', function(){
-            li.innerHTML = '<div class="row-edit"><input class="ed-input" value="' + esc(v) + '">' +
-              '<button class="mini-btn" data-a="save">保存</button><button class="mini-btn" data-a="cancel">やめる</button></div>';
-            var inp = li.querySelector('input'); inp.focus();
-            li.querySelector('[data-a="cancel"]').addEventListener('click', showRow);
-            li.querySelector('[data-a="save"]').addEventListener('click', function(){
-              var nv = inp.value.trim(); if(!nv){ return; }
-              valueList[i] = nv; valueAll[biz.id] = valueList; saveJSON(VALUE_KEY, valueAll); renderValueList();
-            });
+        li.className = 'v-row swipe-wrap';
+        li.style.cssText = 'padding:0;background:transparent;border-left:none;';
+        var front = document.createElement('div'); front.className = 'sw-front';
+        front.style.cssText = 'background:#F5F5F5;border-left:4px solid var(--accent);border-radius:2px;padding:10px 12px;font-weight:800;font-size:13px;';
+        var actions = document.createElement('div'); actions.className = 'sw-actions';
+        var be = swipeBtn('編集'), bd = swipeBtn('削除', 'sw-del');
+        actions.appendChild(be); actions.appendChild(bd);
+        li.appendChild(actions); li.appendChild(front);
+        var sw = makeSwipe(front, actions);
+        function showRow(){ front.textContent = v; actions.style.display = ''; sw.close(); }
+        be.addEventListener('click', function(){
+          closeSwipe(); actions.style.display = 'none'; front.style.transform = 'none';
+          front.innerHTML = '<div class="row-edit"><input class="ed-input" value="' + esc(v) + '">' +
+            '<button class="mini-btn" data-a="save">保存</button><button class="mini-btn" data-a="cancel">やめる</button></div>';
+          var inp = front.querySelector('input'); inp.focus();
+          front.querySelector('[data-a="cancel"]').addEventListener('click', showRow);
+          front.querySelector('[data-a="save"]').addEventListener('click', function(){
+            var nv = inp.value.trim(); if(!nv) return;
+            valueList[i] = nv; valueAll[biz.id] = valueList; saveJSON(VALUE_KEY, valueAll); renderValueList();
           });
-          li.querySelector('[data-a="del"]').addEventListener('click', function(){
-            li.innerHTML = '<span class="v-text">「' + esc(v) + '」を削除しますか？</span>' +
-              '<button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button>';
-            li.querySelector('[data-a="no"]').addEventListener('click', showRow);
-            li.querySelector('[data-a="yes"]').addEventListener('click', function(){
-              valueList.splice(i, 1); valueAll[biz.id] = valueList; saveJSON(VALUE_KEY, valueAll); renderValueList();
-            });
+        });
+        bd.addEventListener('click', function(){
+          closeSwipe(); actions.style.display = 'none'; front.style.transform = 'none';
+          front.innerHTML = '<div class="row-edit"><span style="flex:1;min-width:140px;">「' + esc(v) + '」を削除しますか？</span>' +
+            '<button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button></div>';
+          front.querySelector('[data-a="no"]').addEventListener('click', showRow);
+          front.querySelector('[data-a="yes"]').addEventListener('click', function(){
+            valueList.splice(i, 1); valueAll[biz.id] = valueList; saveJSON(VALUE_KEY, valueAll); renderValueList();
           });
-        }
-        showRow();
+        });
+        front.textContent = v;
         ul.appendChild(li);
       });
     }
@@ -1647,15 +1694,20 @@
           row.className = 'todo-item' + (t.done ? ' done' : '');
           row.innerHTML =
             '<input type="checkbox" ' + (t.done?'checked':'') + '>' +
-            '<span class="t-text">' + esc(t.text) + '</span>' +
-            '<button class="mini-btn t-edit">編集</button>' +
-            '<button class="t-del">×</button>';
+            '<span class="t-text">' + esc(t.text) + '</span>';
+          var wrap = document.createElement('div'); wrap.className = 'swipe-wrap'; wrap.style.marginBottom = '6px';
+          row.style.marginBottom = '0'; row.classList.add('sw-front');
+          var tAct = document.createElement('div'); tAct.className = 'sw-actions';
+          var tEdit = swipeBtn('編集'), tDel = swipeBtn('削除', 'sw-del');
+          tAct.appendChild(tEdit); tAct.appendChild(tDel);
+          wrap.appendChild(tAct); wrap.appendChild(row);
+          makeSwipe(row, tAct);
           row.querySelector('input').addEventListener('change', function(e){
             todos[i].done = e.target.checked;
             saveTodos();
             renderTodos();
           });
-          row.querySelector('.t-edit').addEventListener('click', function(){
+          tEdit.addEventListener('click', function(){ closeSwipe();
             row.innerHTML = '<div class="row-edit"><input class="ed-input" value="' + esc(t.text) + '">' +
               '<button class="mini-btn" data-a="save">保存</button><button class="mini-btn" data-a="cancel">やめる</button></div>';
             var inp = row.querySelector('input'); inp.focus();
@@ -1665,7 +1717,7 @@
               todos[i].text = nv; saveTodos(); renderTodos();
             });
           });
-          row.querySelector('.t-del').addEventListener('click', function(){
+          tDel.addEventListener('click', function(){ closeSwipe();
             row.innerHTML = '<span class="t-text">「' + esc(t.text) + '」を削除しますか？</span>' +
               '<button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button>';
             row.querySelector('[data-a="no"]').addEventListener('click', renderTodos);
@@ -1673,7 +1725,7 @@
               todos.splice(i,1); saveTodos(); renderTodos();
             });
           });
-          listEl.appendChild(row);
+          listEl.appendChild(wrap);
         });
       });
     }
@@ -1945,16 +1997,17 @@
         '<select class="ed-input share-biz-edit" data-editbiz="' + esc(link.id) + '" style="margin-bottom:8px;max-width:180px;"></select>' +
         '<div class="share-actions">' +
           '<button class="btn btn-copy" data-copy="' + esc(link.id) + '">URLをコピー</button>' +
-          '<button class="btn" data-edit="' + esc(link.id) + '">編集</button>' +
-          '<button class="btn btn-del" data-del="' + esc(link.id) + '">削除</button>' +
-        '</div>' +
-        '<div class="share-actions" style="margin-top:8px;">' +
-          '<button class="btn" data-mv="top:' + esc(link.id) + '">一番上へ</button>' +
-          '<button class="btn" data-mv="up:' + esc(link.id) + '">↑</button>' +
-          '<button class="btn" data-mv="down:' + esc(link.id) + '">↓</button>' +
         '</div>';
+      var swAct = document.createElement('div'); swAct.className = 'sw-actions';
+      [['一番上へ','top:'],['↑','up:'],['↓','down:']].forEach(function(m){ var bb = document.createElement('button'); bb.textContent = m[0]; bb.setAttribute('data-mv', m[1] + link.id); swAct.appendChild(bb); });
+      var bEd = document.createElement('button'); bEd.textContent = '編集'; bEd.setAttribute('data-edit', link.id); swAct.appendChild(bEd);
+      var bDl = document.createElement('button'); bDl.textContent = '削除'; bDl.className = 'sw-del'; bDl.setAttribute('data-del', link.id); swAct.appendChild(bDl);
+      var swWrap = document.createElement('div'); swWrap.className = 'swipe-wrap';
+      item.classList.add('sw-front');
+      swWrap.appendChild(swAct); swWrap.appendChild(item);
       item.appendChild(info);
-      shareListEl.appendChild(item);
+      shareListEl.appendChild(swWrap);
+      makeSwipe(item, swAct);
       try{
         new QRCode(qrBox, { text: link.url, width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
       }catch(e){ qrBox.textContent = 'QR'; }
@@ -2017,8 +2070,8 @@
         var link = links.filter(function(l){ return String(l.id) === btn.dataset.del; })[0];
         if(!link) return;
         var box = btn.parentNode;
-        box.innerHTML = '<span style="font-size:12px;font-weight:700;">削除しますか？</span>' +
-          '<button class="btn btn-del" data-yes="1">削除する</button><button class="btn" data-no="1">やめる</button>';
+        box.innerHTML = '<span class="sw-ask">削除しますか？</span>' +
+          '<button class="sw-del" data-yes="1">削除する</button><button data-no="1">やめる</button>';
         box.querySelector('[data-no]').addEventListener('click', renderLinks);
         box.querySelector('[data-yes]').addEventListener('click', function(){
           saveLinks(loadLinks().filter(function(l){ return String(l.id) !== link.id; }));
@@ -2031,7 +2084,7 @@
         var links = loadLinks();
         var link = links.filter(function(l){ return String(l.id) === btn.dataset.edit; })[0];
         if(!link) return;
-        var info = btn.closest('.share-info');
+        var info = btn.closest('.swipe-wrap').querySelector('.share-info'); closeSwipe();
         info.innerHTML = '<input class="ed-input" id="le-name" style="margin-bottom:6px;" value="' + esc(link.name) + '">' +
           '<input class="ed-input" id="le-url" style="margin-bottom:8px;" value="' + esc(link.url) + '">' +
           '<div class="share-actions"><button class="btn" id="le-save">保存</button><button class="btn" id="le-cancel">やめる</button></div>';
