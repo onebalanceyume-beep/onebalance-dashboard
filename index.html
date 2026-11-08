@@ -913,8 +913,13 @@
     boxing: 'ボクシング革命を起こす',
     onetre: 'どこも痛くないカラダ。快適なカラダ。'
   };
+  var TRAINER_URL = {   // トレーナー画面への入口（直すときの検索ワード：TRAINER_URL）
+    boxing: 'https://onebalanceyume-beep.github.io/onebalance-member/trainer.html',
+    onetre: 'https://onebalanceyume-beep.github.io/private-gym-trainer/one_tre_trainer.html'
+  };
   function priorityHtml(bizId){
     var h = CATCH[bizId] ? '<p class="ed-h" style="text-align:center;margin:4px 0 14px;font-size:20px;text-wrap:balance;">' + esc(CATCH[bizId]).replace(/。(?!$)/g, '。<br>') + '</p>' : '';
+    if(TRAINER_URL[bizId]){ h += '<a href="' + TRAINER_URL[bizId] + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px;margin:0 0 14px;border-radius:2px;">トレーナー画面を開く</a>'; }
     h += '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p>';
     PRIORITIES.forEach(function(t, i){ h += '<div class="exp-row"><span><b style="color:var(--accent);margin-right:8px;">' + (i + 1) + '</b>' + esc(t) + '</span></div>'; });
     return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3名を集めるのが先です。</p></div>';
