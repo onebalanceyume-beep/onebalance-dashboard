@@ -922,7 +922,7 @@
     if(TRAINER_URL[bizId]){ h += '<a href="' + TRAINER_URL[bizId] + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px;margin:0 0 14px;border-radius:2px;">トレーナー画面を開く</a>'; }
     h += '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p>';
     PRIORITIES.forEach(function(t, i){ h += '<div class="exp-row"><span><b style="color:var(--accent);margin-right:8px;">' + (i + 1) + '</b>' + esc(t) + '</span></div>'; });
-    return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3名を集めるのが先です。</p></div>';
+    return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3人を集めるのが先です。</p></div>';
   }
   function planRows(plan){
     if(!plan) return '<p class="ed-sub">目標がまだ設定されていません（Apps Scriptの GOALS）。</p>';
@@ -1024,9 +1024,9 @@
         h += '</div>';
         h += '<div class="rental-be"><b>損益分岐</b>　' + esc(r.breakeven) + '</div>';
         h += '<p class="ed-eyebrow" style="margin-top:14px;">料金とルール</p>';
-        r.terms.forEach(function(t){ h += '<div class="exp-row"><span class="rt-k">' + esc(t[0]) + '</span><b class="rt-v">' + esc(t[1]) + '</b></div>'; });
+        r.terms.forEach(function(t){ h += '<div class="exp-row"><span class="rt-k">' + esc(t[0]) + '</span><b class="rt-v">' + esc(String(t[1]).replace(/(\d)名/g,'$1人')) + '</b></div>'; });
         h += '<p class="ed-eyebrow" style="margin-top:14px;">進み具合</p>';
-        r.progress.forEach(function(p){ h += '<div class="exp-row rp"><span class="chip ' + (p[0] === '済' ? 'done' : 'todo') + '">' + esc(p[0]) + '</span><span class="rp-t">' + esc(p[1]) + '</span></div>'; });
+        r.progress.forEach(function(p){ h += '<div class="exp-row rp"><span class="chip ' + (p[0] === '済' ? 'done' : 'todo') + '">' + esc(p[0]) + '</span><span class="rp-t">' + esc(String(p[1]).replace(/(\d)名/g,'$1人')) + '</span></div>'; });
         h += '<p class="ed-sub" style="margin-top:8px;">' + esc(r.asOf) + 'までの話し合いの内容です。</p>';
       }
       body.innerHTML = h; bindStaffLogin(body);
