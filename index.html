@@ -1180,6 +1180,22 @@
     renderBusinessContent();
   }
 
+  /* 今月の入会人数（KPIの「新規」）を引いて「あと◯人」を出す（直すときの検索ワード：monthProgress） */
+  function monthProgress(goalNum, mgS){
+    if(currentBiz === 'happykids' || currentBiz === 'rental') return;
+    var bizId = currentBiz;
+    loadDash(function(j){
+      var d = j && j.data;
+      if(!d || !d.kpi || bizId !== currentBiz) return;
+      var now = new Date(), y = now.getFullYear(), m = now.getMonth() + 1;
+      var row = (d.kpi[bizId] || []).filter(function(r){ return r.year === y && r.month === m; })[0];
+      var got = (row && typeof row.newJoin === 'number') ? row.newJoin : null;
+      var el = document.getElementById('mg-sub'); if(!el) return;
+      if(got === null){ el.textContent = '達成数字'; return; }
+      var left = Math.max(0, goalNum - got);
+      el.innerHTML = '達成数字<br>今月の入会 ' + got + '人 ／ ' + (left > 0 ? 'あと ' + left + '人' : '目標達成');
+    });
+  }
   function renderBusinessContent(){
     var tb = document.getElementById('tab-business'); if(tb){ tb.classList.toggle('theme-onetre', currentBiz === 'onetre'); }
     var biz = getBiz(currentBiz);
@@ -1378,7 +1394,7 @@
         var unit = biz.id==='happykids' ? '' : '人';
         mgL.textContent = m + '月の目標' + (biz.id==='happykids' ? '' : '（入会してほしい人数）');
         if(isNaN(mv) || goal.monthly===''){ mgN.innerHTML = '-'; mgS.textContent = '下の「単月目標」に数字を入れてください'; }
-        else{ mgN.innerHTML = mv + '<small>' + unit + '</small>'; mgS.textContent = '達成数字'; }
+        else{ mgN.innerHTML = mv + '<small>' + unit + '</small>'; mgS.textContent = '達成数字'; monthProgress(mv, mgS); }
       })();
       var cur = parseFloat(goal.current) || 0;
       var tgt = parseFloat(goal.target) || 0;
