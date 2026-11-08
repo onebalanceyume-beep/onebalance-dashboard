@@ -185,8 +185,8 @@
   /* value list */
   /* 横にスワイプして出る編集・削除（検索ワード：swipe-wrap / makeSwipe） */
   .swipe-wrap{ position:relative;overflow:hidden; }
-  .swipe-wrap > .sw-front{ position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none; }
-  .sw-actions{ position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch; }
+  .swipe-wrap > .sw-front{ box-sizing:border-box;width:100%;position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none; }
+  .sw-actions{ visibility:hidden;position:absolute;right:0;top:0;bottom:0;display:flex;align-items:stretch; }
   .sw-actions button{ border:0;color:#fff;font:inherit;font-size:13px;font-weight:800;padding:0 16px;cursor:pointer;background:#8a8a8a;white-space:nowrap; }
   .sw-actions button.sw-del{ background:var(--ed-red); }
   .sw-actions .sw-ask{ display:flex;align-items:center;padding:0 10px;font-size:12px;font-weight:700;color:#fff;background:#444;white-space:nowrap; }
@@ -195,8 +195,7 @@
   .mini-btn.danger{ color:#fff;background:var(--ed-red);border-color:var(--ed-red); }
   .row-edit{ display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%; }
   .row-edit input{ flex:1;min-width:140px; }
-  .value-list li.v-row{ display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
-  .value-list li.v-row .v-text{ flex:1;min-width:0;word-break:break-all; }
+  .value-list li.v-row{ display:block; }
   .value-list{ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px; }
   .value-list li{
     font-size:13px;font-weight:800;color:var(--text);
@@ -1250,8 +1249,8 @@
     function makeSwipe(front, actions){
       var cur = 0, startX = 0, startY = 0, base = 0, down = false, decided = false, horiz = false, moved = false;
       function w(){ return actions.offsetWidth; }
-      function set(x, anim){ cur = x; front.style.transition = anim ? 'transform .2s ease' : 'none'; front.style.transform = 'translateX(' + x + 'px)'; }
-      var api = { close:function(){ set(0, true); }, open:function(){ set(-w(), true); openSwipe = api; } };
+      function set(x, anim){ cur = x; actions.style.visibility = (x < 0 || (anim && false)) ? 'visible' : 'hidden'; front.style.transition = anim ? 'transform .2s ease' : 'none'; front.style.transform = 'translateX(' + x + 'px)'; }
+      var api = { close:function(){ set(0, true); actions.style.visibility = 'visible'; setTimeout(function(){ if(cur === 0) actions.style.visibility = 'hidden'; }, 230); }, open:function(){ set(-w(), true); openSwipe = api; } };
       front.addEventListener('pointerdown', function(e){
         if(openSwipe && openSwipe !== api){ closeSwipe(); }
         down = true; decided = false; horiz = false; moved = false; startX = e.clientX; startY = e.clientY; base = cur;
