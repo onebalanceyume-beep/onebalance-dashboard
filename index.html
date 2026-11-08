@@ -290,6 +290,26 @@
   /* ===== v2.0 新デザイン：しっかりした赤(var(--accent))×白、ヘルベチカ、角は小さく、絵文字なし ===== */
   :root{ --accent:#DD0B1B; --accent-soft:#FFF1F2; --red:#DD0B1B; --red-dark:#A80815; --ed-red:#DD0B1B; --ed-border:#D9D9D9; --border:#D9D9D9; --bg:#FFFFFF; --text:#111111; --text-light:#555555; --radius:2px;
     --ed-font:Helvetica,"Helvetica Neue",Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; }
+
+  /* 理念の図（直すときの検索ワード：rn-） */
+  .rn{ display:flex;flex-direction:column;gap:10px;margin-bottom:16px; }
+  .rn-box{ border:2px solid var(--ed-red);background:#fff;padding:12px 12px;text-align:center;opacity:0;animation:rnIn .6s ease forwards; }
+  .rn-box.fill{ background:var(--ed-red);color:#fff; }
+  .rn-box.dark{ background:#111;color:#fff;border-color:#111; }
+  .rn-box .t{ font-size:11px;font-weight:800;letter-spacing:.08em;opacity:.85;margin-bottom:4px; }
+  .rn-box .m{ font-size:17px;font-weight:900;line-height:1.4; }
+  .rn-box .s{ font-size:12.5px;line-height:1.6;margin-top:6px;font-weight:500; }
+  .rn-arrow{ text-align:center;font-size:20px;font-weight:900;color:var(--ed-red);line-height:1;opacity:0;animation:rnIn .6s ease forwards; }
+  .rn-two{ display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+  .rn-steps{ display:flex;flex-direction:column;gap:6px; }
+  .rn-step{ border:2px solid #111;background:#fff;padding:9px 8px;text-align:center;font-size:14px;font-weight:900;line-height:1.4;opacity:0;animation:rnIn .6s ease forwards; }
+  .rn-step small{ display:block;font-size:11px;font-weight:500;color:#555;margin-top:2px; }
+  .rn-step.base{ background:#111;color:#fff; } .rn-step.base small{ color:#ddd; }
+  .rn-step.goal{ background:var(--ed-red);border-color:var(--ed-red);color:#fff; } .rn-step.goal small{ color:#fff; }
+  .rn-down{ text-align:center;font-size:14px;font-weight:900;color:#111;line-height:1; }
+  .rn-three{ display:grid;grid-template-columns:1fr;gap:10px; }
+  @keyframes rnIn{ from{ opacity:0;transform:translateY(14px); } to{ opacity:1;transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .rn-box,.rn-arrow,.rn-step{ animation:none;opacity:1; } }
   /* ONE-TRE の画面は、白×黒＋ゴールド（直すときの検索ワード：theme-onetre） */
   #tab-business.theme-onetre{ --accent:#B8923A; --accent-soft:#F7F1E3; --red:#B8923A; --red-dark:#8A6D2B; --ed-red:#B8923A; }
   #tab-business.theme-onetre .biz-switch button.active{ color:#111; }
@@ -407,6 +427,8 @@
   <!-- 会社理念 -->
   <section class="tab" id="tab-philosophy">
     <h2 class="section-title"><span class="dot"></span>私たちの方向性</h2>
+
+    <div class="ed-card"><p class="ed-eyebrow">DIRECTION｜私たちの方向性（図）</p><div class="rn"><div class="rn-box fill" style="animation-delay:0.1s"><div class="t">目的</div><div class="m">心と体を、元気に</div><div class="s">その先に「カッコよく、素敵」な自己実現（目的や目標を実現する）</div></div><div class="rn-arrow" style="animation-delay:0.5s">▼</div><div class="rn-two"><div class="rn-box " style="animation-delay:0.8s"><div class="t">心</div><div class="m">人とのつながりの中で心が満たされる</div><div class="s">ここに来ることが「生きがい」になる</div></div><div class="rn-steps"><div class="rn-box" style="animation-delay:1.0s;padding:8px"><div class="t">体</div></div><div class="rn-step base" style="animation-delay:1.3s">① 壊れない体・痛くない体<small>土台づくり＝ONE-TRE（基礎筋力）</small></div><div class="rn-down">▼</div><div class="rn-step " style="animation-delay:1.7s">② 快適な体<small></small></div><div class="rn-down">▼</div><div class="rn-step goal" style="animation-delay:2.1s">③ ボクシング・自己実現<small>ボクシングはハードと感じる人にも</small></div></div></div><div class="rn-arrow" style="animation-delay:2.5s">▼</div><div class="rn-box dark" style="animation-delay:2.8s"><div class="t">入口</div><div class="m">ONE-TREから入って、ボクシングを知ってもらう</div></div><div class="rn-arrow" style="animation-delay:3.1s">▼</div><div class="rn-three"><div class="rn-box fill" style="animation-delay:3.4s"><div class="t">MISSION</div><div class="m">ボクシング革命を起こす</div><div class="s">「厳しい」「怖い」を「楽しい」に。生活必需品にする</div></div><div class="rn-box " style="animation-delay:3.8s"><div class="t">HAPPY KIDS PROJECT</div><div class="m">社会的に意味のある事業・会社</div><div class="s">存在意義として定義しておく</div></div><div class="rn-box dark" style="animation-delay:4.2s"><div class="t">VISION</div><div class="m">日本一になる</div><div class="s">日本一、始めやすいジムにする</div></div></div></div></div>
 
     <div class="ed-card">
       <p class="ed-eyebrow">PHILOSOPHY</p>
@@ -1748,31 +1770,38 @@
   function loadCustomShareCats(){ return loadJSON(SHARE_CUSTOM_KEY, []); }
   function saveCustomShareCats(list){ saveJSON(SHARE_CUSTOM_KEY, list); }
 
+  var SHARE_ORDER_KEY = 'wb_share_cat_order_v1';   // カテゴリ（タブ）の並び順（検索ワード：SHARE_ORDER_KEY）
   function getShareCats(){
-    var base = BUSINESSES.filter(function(b){ return isOwner() || (b.id !== 'happykids' && b.id !== 'rental'); }).map(function(b){ return { id:b.id, name:b.name }; });
+    var base = BUSINESSES.filter(function(b){ return isOwner() || b.id !== 'happykids'; }).map(function(b){ return { id:b.id, name:b.name }; });
     loadCustomShareCats().forEach(function(name){
       if(!base.some(function(b){ return b.id === name; })){
         base.push({ id:name, name:name });
       }
     });
+    var order = loadJSON(SHARE_ORDER_KEY, ['boxing', 'onetre', 'rental', 'happykids']);
+    base.sort(function(a, b){
+      var ia = order.indexOf(a.id), ib = order.indexOf(b.id);
+      return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib);
+    });
     return base;
   }
 
-  var currentShareFilter = localStorage.getItem('wb_share_filter') || 'all';
+  var currentShareFilter = (function(){ try{ return localStorage.getItem('wb_share_filter2') || 'boxing'; }catch(e){ return 'boxing'; } })();
   var shareBizSwitchEl = document.getElementById('share-biz-switch');
   var addBizSelect = document.getElementById('add-biz');
   var addBizNewInput = document.getElementById('add-biz-new');
 
   function renderShareFilterRow(){
     shareBizSwitchEl.innerHTML = '';
-    var filters = [{ id:'all', name:'すべて' }].concat(getShareCats()).filter(function(f){ return isOwner() || (f.id !== 'happykids' && f.id !== 'rental'); });
+    var filters = getShareCats().concat([{ id:'all', name:'すべて' }]);
+    if(!filters.some(function(f){ return f.id === currentShareFilter; })){ currentShareFilter = 'boxing'; }
     filters.forEach(function(f){
       var btn = document.createElement('button');
       btn.innerHTML = bizButtonHtml(f.name);
       if(f.id === currentShareFilter) btn.classList.add('active');
       btn.addEventListener('click', function(){
         currentShareFilter = f.id;
-        localStorage.setItem('wb_share_filter', currentShareFilter);
+        try{ localStorage.setItem('wb_share_filter2', currentShareFilter); }catch(e){}
         renderShareFilterRow();
         renderLinks();
       });
@@ -1780,6 +1809,44 @@
     });
   }
   renderShareFilterRow();
+
+  /* タブ（ボクシング／ONE-TRE／…）の順番を入れ替える（検索ワード：shareCatOrderUi） */
+  (function shareCatOrderUi(){
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'margin:-6px 0 14px;';
+    var toggle = document.createElement('button');
+    toggle.className = 'btn'; toggle.textContent = 'タブの順番を変える';
+    var panel = document.createElement('div'); panel.style.cssText = 'display:none;margin-top:8px;';
+    wrap.appendChild(toggle); wrap.appendChild(panel);
+    shareBizSwitchEl.parentNode.insertBefore(wrap, shareBizSwitchEl.nextSibling);
+    function draw(){
+      panel.innerHTML = '';
+      var cats = getShareCats();
+      cats.forEach(function(c, i){
+        var row = document.createElement('div');
+        row.className = 'exp-row';
+        row.innerHTML = '<span>' + esc(c.name) + '</span><span class="share-actions">' +
+          '<button class="btn" data-o="up">↑</button><button class="btn" data-o="down">↓</button></span>';
+        row.querySelectorAll('[data-o]').forEach(function(b){
+          b.addEventListener('click', function(){
+            var ids = cats.map(function(x){ return x.id; });
+            var j = b.dataset.o === 'up' ? i - 1 : i + 1;
+            if(j < 0 || j >= ids.length) return;
+            var t = ids[i]; ids[i] = ids[j]; ids[j] = t;
+            saveJSON(SHARE_ORDER_KEY, ids);
+            renderShareFilterRow(); renderAddBizSelect(); draw();
+          });
+        });
+        panel.appendChild(row);
+      });
+    }
+    toggle.addEventListener('click', function(){
+      var open = panel.style.display === 'none';
+      panel.style.display = open ? '' : 'none';
+      toggle.textContent = open ? '閉じる' : 'タブの順番を変える';
+      if(open) draw();
+    });
+  })();
 
   function renderAddBizSelect(){
     var prevVal = addBizSelect.value;
@@ -1831,6 +1898,11 @@
         '<div class="share-actions">' +
           '<button class="btn btn-copy" data-copy="' + esc(link.id) + '">URLをコピー</button>' +
           '<button class="btn btn-del" data-del="' + esc(link.id) + '">削除</button>' +
+        '</div>' +
+        '<div class="share-actions" style="margin-top:8px;">' +
+          '<button class="btn" data-mv="top:' + esc(link.id) + '">一番上へ</button>' +
+          '<button class="btn" data-mv="up:' + esc(link.id) + '">↑</button>' +
+          '<button class="btn" data-mv="down:' + esc(link.id) + '">↓</button>' +
         '</div>';
       item.appendChild(info);
       shareListEl.appendChild(item);
@@ -1864,6 +1936,30 @@
         var links = loadLinks();
         var link = links.filter(function(l){ return String(l.id) === btn.dataset.copy; })[0];
         copyText(link ? link.url : '', btn);
+      });
+    });
+    shareListEl.querySelectorAll('[data-mv]').forEach(function(btn){   // 並べ替え（検索ワード：data-mv）
+      btn.addEventListener('click', function(){
+        var parts = btn.dataset.mv.split(':'), dir = parts[0], id = parts.slice(1).join(':');
+        var all = loadLinks();
+        var idx = -1; all.forEach(function(l, i){ if(String(l.id) === id) idx = i; });
+        if(idx < 0) return;
+        var item = all.splice(idx, 1)[0];
+        if(dir === 'top'){ all.unshift(item); }
+        else{
+          // 元の位置(idx)より前にある表示中のものの数
+          var before = all.slice(0, idx).filter(function(l){ return currentShareFilter === 'all' || l.biz === currentShareFilter; });
+          var after = all.slice(idx).filter(function(l){ return currentShareFilter === 'all' || l.biz === currentShareFilter; });
+          if(dir === 'up'){
+            var tgt = before[before.length - 1];
+            if(tgt){ all.splice(all.indexOf(tgt), 0, item); } else { all.splice(idx, 0, item); }
+          }else{
+            var tg2 = after[0];
+            if(tg2){ all.splice(all.indexOf(tg2) + 1, 0, item); } else { all.splice(idx, 0, item); }
+          }
+        }
+        saveLinks(all);
+        renderLinks();
       });
     });
     shareListEl.querySelectorAll('[data-del]').forEach(function(btn){
