@@ -183,6 +183,12 @@
   .exp-row button{ border:none;background:none;color:#B33;font-size:16px;cursor:pointer; }
 
   /* value list */
+  .mini-btn{ font:inherit;font-size:12px;font-weight:800;padding:6px 10px;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:2px;cursor:pointer;flex:none; }
+  .mini-btn.danger{ color:#fff;background:var(--ed-red);border-color:var(--ed-red); }
+  .row-edit{ display:flex;gap:6px;align-items:center;flex-wrap:wrap;width:100%; }
+  .row-edit input{ flex:1;min-width:140px; }
+  .value-list li.v-row{ display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+  .value-list li.v-row .v-text{ flex:1;min-width:0;word-break:break-all; }
   .value-list{ list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px; }
   .value-list li{
     font-size:13px;font-weight:800;color:var(--text);
@@ -863,7 +869,9 @@
     defaultValue:[], defaultGoal:{ current:'', target:'', monthly:'', lastYear:'' }, defaultTodos:[], cleaning:[]
   });
   function visibleBizList(){
-    return BUSINESSES.filter(function(b){ return isOwner() || b.id !== 'happykids'; });
+    var order = ['boxing', 'onetre', 'rental', 'happykids'];   // 並び順（検索ワード：visibleBizList）
+    return BUSINESSES.filter(function(b){ return isOwner() || b.id !== 'happykids'; })
+      .sort(function(a, b){ return order.indexOf(a.id) - order.indexOf(b.id); });
   }
 
   var currentBiz = localStorage.getItem('wb_current_biz') || 'boxing';
@@ -1393,17 +1401,31 @@
       }
       valueList.forEach(function(v, i){
         var li = document.createElement('li');
-        li.textContent = v;
-        li.style.cursor = 'pointer';
-        li.title = 'タップで削除';
-        li.addEventListener('click', function(){
-          if(confirm('「' + v + '」を削除しますか？')){
-            valueList.splice(i,1);
-            valueAll[biz.id] = valueList;
-            saveJSON(VALUE_KEY, valueAll);
-            renderValueList();
-          }
-        });
+        li.className = 'v-row';
+        function showRow(){
+          li.innerHTML = '<span class="v-text">' + esc(v) + '</span>' +
+            '<button class="mini-btn" data-a="edit">編集</button>' +
+            '<button class="mini-btn" data-a="del">削除</button>';
+          li.querySelector('[data-a="edit"]').addEventListener('click', function(){
+            li.innerHTML = '<div class="row-edit"><input class="ed-input" value="' + esc(v) + '">' +
+              '<button class="mini-btn" data-a="save">保存</button><button class="mini-btn" data-a="cancel">やめる</button></div>';
+            var inp = li.querySelector('input'); inp.focus();
+            li.querySelector('[data-a="cancel"]').addEventListener('click', showRow);
+            li.querySelector('[data-a="save"]').addEventListener('click', function(){
+              var nv = inp.value.trim(); if(!nv){ return; }
+              valueList[i] = nv; valueAll[biz.id] = valueList; saveJSON(VALUE_KEY, valueAll); renderValueList();
+            });
+          });
+          li.querySelector('[data-a="del"]').addEventListener('click', function(){
+            li.innerHTML = '<span class="v-text">「' + esc(v) + '」を削除しますか？</span>' +
+              '<button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button>';
+            li.querySelector('[data-a="no"]').addEventListener('click', showRow);
+            li.querySelector('[data-a="yes"]').addEventListener('click', function(){
+              valueList.splice(i, 1); valueAll[biz.id] = valueList; saveJSON(VALUE_KEY, valueAll); renderValueList();
+            });
+          });
+        }
+        showRow();
         ul.appendChild(li);
       });
     }
@@ -1626,18 +1648,30 @@
           row.innerHTML =
             '<input type="checkbox" ' + (t.done?'checked':'') + '>' +
             '<span class="t-text">' + esc(t.text) + '</span>' +
+            '<button class="mini-btn t-edit">編集</button>' +
             '<button class="t-del">×</button>';
           row.querySelector('input').addEventListener('change', function(e){
             todos[i].done = e.target.checked;
             saveTodos();
             renderTodos();
           });
+          row.querySelector('.t-edit').addEventListener('click', function(){
+            row.innerHTML = '<div class="row-edit"><input class="ed-input" value="' + esc(t.text) + '">' +
+              '<button class="mini-btn" data-a="save">保存</button><button class="mini-btn" data-a="cancel">やめる</button></div>';
+            var inp = row.querySelector('input'); inp.focus();
+            row.querySelector('[data-a="cancel"]').addEventListener('click', renderTodos);
+            row.querySelector('[data-a="save"]').addEventListener('click', function(){
+              var nv = inp.value.trim(); if(!nv) return;
+              todos[i].text = nv; saveTodos(); renderTodos();
+            });
+          });
           row.querySelector('.t-del').addEventListener('click', function(){
-            if(confirm('削除しますか？')){
-              todos.splice(i,1);
-              saveTodos();
-              renderTodos();
-            }
+            row.innerHTML = '<span class="t-text">「' + esc(t.text) + '」を削除しますか？</span>' +
+              '<button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button>';
+            row.querySelector('[data-a="no"]').addEventListener('click', renderTodos);
+            row.querySelector('[data-a="yes"]').addEventListener('click', function(){
+              todos.splice(i,1); saveTodos(); renderTodos();
+            });
           });
           listEl.appendChild(row);
         });
@@ -1911,6 +1945,7 @@
         '<select class="ed-input share-biz-edit" data-editbiz="' + esc(link.id) + '" style="margin-bottom:8px;max-width:180px;"></select>' +
         '<div class="share-actions">' +
           '<button class="btn btn-copy" data-copy="' + esc(link.id) + '">URLをコピー</button>' +
+          '<button class="btn" data-edit="' + esc(link.id) + '">編集</button>' +
           '<button class="btn btn-del" data-del="' + esc(link.id) + '">削除</button>' +
         '</div>' +
         '<div class="share-actions" style="margin-top:8px;">' +
@@ -1981,11 +2016,31 @@
         var links = loadLinks();
         var link = links.filter(function(l){ return String(l.id) === btn.dataset.del; })[0];
         if(!link) return;
-        if(confirm('「' + link.name + '」を削除しますか？')){
-          links = links.filter(function(l){ return String(l.id) !== btn.dataset.del; });
-          saveLinks(links);
+        var box = btn.parentNode;
+        box.innerHTML = '<span style="font-size:12px;font-weight:700;">削除しますか？</span>' +
+          '<button class="btn btn-del" data-yes="1">削除する</button><button class="btn" data-no="1">やめる</button>';
+        box.querySelector('[data-no]').addEventListener('click', renderLinks);
+        box.querySelector('[data-yes]').addEventListener('click', function(){
+          saveLinks(loadLinks().filter(function(l){ return String(l.id) !== link.id; }));
           renderLinks();
-        }
+        });
+      });
+    });
+    shareListEl.querySelectorAll('[data-edit]').forEach(function(btn){   // 名前・URLの編集（検索ワード：data-edit）
+      btn.addEventListener('click', function(){
+        var links = loadLinks();
+        var link = links.filter(function(l){ return String(l.id) === btn.dataset.edit; })[0];
+        if(!link) return;
+        var info = btn.closest('.share-info');
+        info.innerHTML = '<input class="ed-input" id="le-name" style="margin-bottom:6px;" value="' + esc(link.name) + '">' +
+          '<input class="ed-input" id="le-url" style="margin-bottom:8px;" value="' + esc(link.url) + '">' +
+          '<div class="share-actions"><button class="btn" id="le-save">保存</button><button class="btn" id="le-cancel">やめる</button></div>';
+        info.querySelector('#le-cancel').addEventListener('click', renderLinks);
+        info.querySelector('#le-save').addEventListener('click', function(){
+          var nm = info.querySelector('#le-name').value.trim(), ur = info.querySelector('#le-url').value.trim();
+          if(!nm || !ur) return;
+          link.name = nm; link.url = ur; saveLinks(links); renderLinks();
+        });
       });
     });
   }
