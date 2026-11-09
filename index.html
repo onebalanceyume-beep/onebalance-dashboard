@@ -940,7 +940,14 @@
     });
     var add = (fx.byBiz && fx.byBiz[bizId]) || 0;
     h += '<div class="exp-row"><span>今月の固定経費（台帳にない分を自動で足す）</span><b>' + yen(add) + '</b></div>';
-    if(fb){ h += '<div class="exp-row"><span>今月の利益（入金額 − 経費 − 固定経費）</span><b>' + yen(fb.monthNet - fb.monthExpense - add) + '</b></div>'; }
+    if(fb){
+      var baseProfit = fb.monthNet - fb.monthExpense - add;
+      if(bizId === 'onetre'){   // ONE-TREは、今月の時間外（人件費）も引く。数字はloadPayrollが読み込んだあとに入れ替える
+        h += '<div class="exp-row"><span id="fx-profit-label">今月の利益（入金額 − 経費 − 固定経費）</span><b id="fx-profit" data-base="' + baseProfit + '">' + yen(baseProfit) + '</b></div>';
+      } else {
+        h += '<div class="exp-row"><span>今月の利益（入金額 − 経費 − 固定経費）</span><b>' + yen(baseProfit) + '</b></div>';
+      }
+    }
     h += '<p class="ed-sub" style="margin-top:6px;">追加・変更は、台帳スプレッドシートの「固定経費」シートで行います。</p>';
     return h;
   }
@@ -1211,6 +1218,11 @@
       pm.textContent = (a && a.ok) ? yen(a.totalAmount || 0) + '（' + (a.totalCount || 0) + '件）' : '不明';
       py.textContent = (b && b.ok) ? yen(b.totalAmount || 0) + '（' + (b.totalCount || 0) + '件）' : '不明';
       if(b && b.ok && fo){ pp.textContent = yen(fo.net - fo.expense - (b.totalAmount || 0)); } else { pp.textContent = '不明'; }
+      var fp = document.getElementById('fx-profit'), fl = document.getElementById('fx-profit-label');   // 今月の利益から、今月の時間外（人件費）も引く
+      if(fp && a && a.ok){
+        fp.textContent = yen(Number(fp.getAttribute('data-base')) - (a.totalAmount || 0));
+        if(fl) fl.textContent = '今月の利益（入金額 − 経費 − 固定経費 − 人件費）';
+      }
     }).catch(function(){
       ['pr-month','pr-year','pr-profit'].forEach(function(id){ var e = document.getElementById(id); if(e) e.textContent = '不明'; });
     });
