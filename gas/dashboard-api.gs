@@ -180,9 +180,9 @@ function monthDiff_(a, b) { // 'yyyy/MM' どうしの差（b - a）
 }
 
 function buildFixed_(ss, exp) {
-  var keys = { 'ワンバランスボクシングジム': 'boxing', 'ONE-TRE': 'onetre', 'HAPPY KIDS PROJECT': 'happykids' };
+  var keys = { 'ワンバランスボクシングジム': 'boxing', 'ONE-TRE': 'onetre', 'HAPPY KIDS PROJECT': 'happykids', '会社': 'company' };   // 「会社」＝全事業共通の固定経費（Wi-Fi・水道・ガスなど）
   var sh = ss.getSheetByName('固定経費');
-  var out = { setup: !!sh, items: [], monthTotal: 0, byBiz: { boxing: 0, onetre: 0, happykids: 0 }, cumulativeByBiz: { boxing: 0, onetre: 0, happykids: 0 } };
+  var out = { setup: !!sh, items: [], monthTotal: 0, byBiz: { boxing: 0, onetre: 0, happykids: 0, company: 0 }, cumulativeByBiz: { boxing: 0, onetre: 0, happykids: 0, company: 0 } };
   if (!sh) return out;
   var rows = sh.getDataRange().getValues();
   var now = new Date();

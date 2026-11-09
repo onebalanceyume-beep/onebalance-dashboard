@@ -946,6 +946,18 @@
   }
 
 
+  /* 会社の固定経費（全事業共通。台帳「固定経費」シートの事業が「会社」の行。検索ワード：companyFixedHtml） */
+  function companyFixedHtml(fx){
+    var items = (fx.items || []).filter(function(i){ return i.biz === 'company'; });
+    if(!items.length) return '';
+    var h = '<p class="ed-eyebrow" style="margin-top:16px;">会社の固定経費｜全事業共通・毎月自動で入る</p>';
+    items.forEach(function(i){
+      h += '<div class="exp-row"><span>' + esc(i.name) + '（毎月' + i.day + '日）' + (i.recorded ? '<small>　今月は台帳に記帳済み</small>' : '') + '</span><b>' + yen(i.amount) + '</b></div>';
+    });
+    h += '<div class="exp-row"><span>会社の固定経費 月合計</span><b>' + yen(items.reduce(function(s, i){ return s + (i.active ? i.amount : 0); }, 0)) + '</b></div>';
+    return h;
+  }
+
   /* ---- 人の数字（名前は稲田もログインすれば見える。金額は出さない）---- */
   function weekLabel(){
     var d = new Date(), dow = (d.getDay() + 6) % 7;            // 月曜=0
@@ -1120,6 +1132,7 @@
         if(owner && biz.id === 'onetre'){
           h += '<div id="payroll-box"><div class="exp-row"><span>人件費（稲田さん・時間外）今月</span><b id="pr-month">読み込み中…</b></div><div class="exp-row"><span>人件費 2026年 累計</span><b id="pr-year">読み込み中…</b></div><div class="exp-row"><span>利益（入金額 − 経費 − 人件費）</span><b id="pr-profit">-</b></div></div>';
         }
+        if(owner && d.fixed){ h += companyFixedHtml(d.fixed); }
         h += '<div class="exp-row" style="margin-top:6px;"><span>全事業の売上合計</span><b>' + yen(ft.sales) + '</b></div>';
         if(owner){
           h += '<div class="exp-row"><span>全事業の経費合計</span><b>' + yen(ft.expense) + '</b></div>';
