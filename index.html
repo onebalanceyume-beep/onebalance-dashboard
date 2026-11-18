@@ -16,6 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ONE-BALANCE">
 <meta name="theme-color" content="#DD0B1B">
+<meta name="app-version" content="2026-11-18-1">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -362,12 +363,15 @@
   #data-body .ed-sub,#rental-body .ed-sub{ color:#555; font-size:11.5px; font-weight:400; }
   #biz-switch button.logo-btn span{ font-size:10px; letter-spacing:0; }
   .ctrl-row{ justify-content:space-between; gap:12px; margin-top:12px; flex-wrap:nowrap; }
-  .yr-bar button{ background:#fff; color:#111; border:1px solid #111; border-radius:2px; width:32px; height:32px; }
-  .yr-bar .yr-val{ color:#111; font-size:14px; font-weight:700; }
-  .user-row{ gap:0; border:1px solid #111; border-radius:2px; overflow:hidden; }
-  .user-chip{ min-height:40px; min-width:64px; padding:0 14px; border:0; background:#fff; color:#111; font-size:14px; font-weight:700; cursor:pointer; }
-  .user-chip + .user-chip{ border-left:1px solid #111; }
-  .user-chip.on{ background:#D4AF37; color:#111; }
+  /* 年・長尾/稲田の切り替えは丸いデザイン（B案：黒い細線の丸＋赤の選択）。直すときの検索ワード：yr-bar */
+  .yr-bar{ gap:8px; }
+  .yr-bar button{ background:#fff; color:#111; border:1.5px solid #111; border-radius:50%; width:34px; height:34px; }
+  .yr-bar .yr-val{ color:#111; font-size:15px; font-weight:700; min-width:46px; }
+  .user-row{ gap:2px; border:1.5px solid #111; border-radius:999px; padding:3px; overflow:visible; }
+  .user-chip{ min-height:34px; min-width:62px; padding:0 14px; border:0; border-radius:999px; background:transparent; color:#111; font-size:14px; font-weight:700; cursor:pointer; }
+  .user-chip + .user-chip{ border-left:0; }
+  .user-chip.on{ background:#DD0B1B; color:#fff; }
+  .only-inada #user-row{ display:none; }
   nav.tabs{ border-top:1px solid #111; box-shadow:none; }
   nav.tabs button{ min-height:56px; font-size:13px; font-weight:700; color:#555; justify-content:center; border-top:3px solid transparent; }
   nav.tabs button.active{ color:var(--accent); border-top-color:var(--accent); }
@@ -633,7 +637,10 @@
   function staffToken(){ try{ return localStorage.getItem(STAFF_TOKEN_KEY) || ''; }catch(e){ return ''; } }
   var loginAs = 'owner';
   // ログインしていない端末は、いつも稲田の画面から始まる（長尾はパスワードが必要）
-  var activeUser = (localStorage.getItem('wb_active_user') === '長尾' && ownerToken()) ? '長尾' : '稲田';
+  var urlUser = (function(){ try{ return new URLSearchParams(location.search).get('u') || ''; }catch(e){ return ''; } })();   // ?u=inada（稲田用）／ ?u=nagao（長尾用）
+  var wantUser = urlUser === 'nagao' ? '長尾' : (urlUser === 'inada' ? '稲田' : localStorage.getItem('wb_active_user'));
+  if(urlUser === 'inada'){ document.body.classList.add('only-inada'); }
+  var activeUser = (wantUser === '長尾' && ownerToken()) ? '長尾' : '稲田';
   try{ localStorage.setItem('wb_active_user', activeUser); }catch(e){}
   function isOwner(){ return activeUser === '長尾' && !!ownerToken(); }
 
@@ -734,12 +741,32 @@
 
   /* 最新版に更新：キャッシュを全部消して読み込み直す（ホーム画面に入れたときの更新漏れ対策） */
   function forceUpdate(){
+    var next = location.pathname + '?' + (urlUser ? 'u=' + encodeURIComponent(urlUser) + '&' : '') + 'v=' + Date.now();
     try{ if('serviceWorker' in navigator){ navigator.serviceWorker.getRegistrations().then(function(rs){ rs.forEach(function(r){ r.unregister(); }); }); } }catch(e){}
     if(window.caches && caches.keys){
-      caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).finally(function(){ location.href = location.pathname + '?v=' + Date.now(); });
-    } else { location.href = location.pathname + '?v=' + Date.now(); }
+      caches.keys().then(function(ks){ ks.forEach(function(k){ caches.delete(k); }); }).finally(function(){ location.href = next; });
+    } else { location.href = next; }
   }
   document.getElementById('force-update').addEventListener('click', forceUpdate);
+
+  /* 自動アップデート：開いたとき・アプリに戻ったとき・10分ごとに、公開されている最新版の番号を見て、違えば自動で入れ替える（検索ワード：checkAppUpdate）
+     ※デザインを変えたら、先頭の <meta name="app-version"> の番号を必ず変える */
+  var APP_VERSION = (function(){ var m = document.querySelector('meta[name="app-version"]'); return m ? m.getAttribute('content') : ''; })();
+  function checkAppUpdate(){
+    try{
+      fetch(location.pathname + '?chk=' + Date.now(), { cache:'no-store' }).then(function(r){ return r.text(); }).then(function(t){
+        var m = t.match(/name="app-version" content="([^"]+)"/);
+        if(!m || m[1] === APP_VERSION) return;
+        var last = Number(sessionStorage.getItem('wb_upd_try') || 0);       // 同じ版を何度も読み込み直さない（2分に1回まで）
+        if(Date.now() - last < 120000) return;
+        sessionStorage.setItem('wb_upd_try', String(Date.now()));
+        forceUpdate();
+      }).catch(function(){});
+    }catch(e){}
+  }
+  setTimeout(checkAppUpdate, 3000);
+  setInterval(checkAppUpdate, 600000);
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState === 'visible') checkAppUpdate(); });
 
   function renderAll(){
     buildBizSwitch();
@@ -1002,9 +1029,76 @@
   function priorityHtml(bizId){
     var h = CATCH[bizId] ? '<p class="ed-h" style="text-align:center;margin:4px 0 14px;font-size:20px;text-wrap:balance;">' + esc(CATCH[bizId]).replace(/。(?!$)/g, '。<br>') + '</p>' : '';
     if(TRAINER_URL[bizId]){ h += '<a href="' + TRAINER_URL[bizId] + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px;margin:0 0 14px;border-radius:2px;">トレーナー画面を開く</a>'; }
-    h += '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p>';
-    PRIORITIES.forEach(function(t, i){ h += '<div class="exp-row"><span><b style="color:var(--accent);margin-right:8px;">' + (i + 1) + '</b>' + esc(t) + '</span></div>'; });
+    h += '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p><div id="prio-list"></div><div id="prio-add"></div><p class="ed-sub" id="prio-msg" style="margin-top:6px;"></p>';
     return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3人を集めるのが先です。</p></div>';
+  }
+
+  /* いま優先すること：長尾は横にスワイプして編集・削除、下から追加。稲田は見るだけ。内容は台帳の「優先事項」シートに保存され、全員の端末で同じになる（検索ワード：bindPriorities） */
+  var prioItems = PRIORITIES.slice();
+  function setPrioMsg(t){ var m = document.getElementById('prio-msg'); if(m) m.textContent = t || ''; }
+  function savePrio(){
+    setPrioMsg('保存中…');
+    fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'savePriorities', token: ownerToken(), items: prioItems }) })
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.status === 'ok'){ setPrioMsg('保存しました（稲田の画面にも反映されます）'); if(dashCache && dashCache.data){ dashCache.data.priorities = prioItems.slice(); } }
+        else if(j && j.status === 'denied'){ setPrioMsg('ログインの期限が切れました。もう一度ログインしてください'); }
+        else { setPrioMsg('保存できませんでした（Apps Scriptの更新が必要です）'); }
+      })
+      .catch(function(){ setPrioMsg('保存できませんでした。通信を確認してください'); });
+  }
+  function renderPrio(){
+    var box = document.getElementById('prio-list'); if(!box) return;
+    var owner = isOwner();
+    box.innerHTML = '';
+    prioItems.forEach(function(t, i){
+      var numHtml = '<b style="color:var(--accent);margin-right:8px;">' + (i + 1) + '</b>';
+      if(!owner){ var row = document.createElement('div'); row.className = 'exp-row'; row.innerHTML = '<span>' + numHtml + esc(t) + '</span>'; box.appendChild(row); return; }
+      var wrap = document.createElement('div'); wrap.className = 'swipe-wrap';
+      var front = document.createElement('div'); front.className = 'sw-front';
+      front.style.cssText = 'background:#fff;padding:10px 0;border-bottom:1px solid #EEE;font-size:13px;';
+      var actions = document.createElement('div'); actions.className = 'sw-actions';
+      var be = swipeBtn('編集'), bd = swipeBtn('削除', 'sw-del');
+      actions.appendChild(be); actions.appendChild(bd);
+      wrap.appendChild(actions); wrap.appendChild(front);
+      var sw = makeSwipe(front, actions);
+      function showRow(){ front.innerHTML = numHtml + esc(t); actions.style.display = ''; sw.close(); }
+      be.addEventListener('click', function(){
+        closeSwipe(); actions.style.display = 'none'; front.style.transform = 'none';
+        front.innerHTML = '<div class="row-edit"><input class="ed-input" value="' + esc(t) + '"><button class="mini-btn" data-a="save">保存</button><button class="mini-btn" data-a="cancel">やめる</button></div>';
+        var inp = front.querySelector('input'); inp.focus();
+        front.querySelector('[data-a="cancel"]').addEventListener('click', showRow);
+        front.querySelector('[data-a="save"]').addEventListener('click', function(){
+          var nv = inp.value.trim(); if(!nv) return;
+          prioItems[i] = nv; renderPrio(); savePrio();
+        });
+      });
+      bd.addEventListener('click', function(){
+        closeSwipe(); actions.style.display = 'none'; front.style.transform = 'none';
+        front.innerHTML = '<div class="row-edit"><span style="flex:1;min-width:140px;">「' + esc(t) + '」を削除しますか？</span><button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button></div>';
+        front.querySelector('[data-a="no"]').addEventListener('click', showRow);
+        front.querySelector('[data-a="yes"]').addEventListener('click', function(){ prioItems.splice(i, 1); renderPrio(); savePrio(); });
+      });
+      front.innerHTML = numHtml + esc(t);
+      box.appendChild(wrap);
+    });
+    var add = document.getElementById('prio-add');
+    if(add){
+      if(owner){
+        add.innerHTML = '<div class="row-edit" style="margin-top:10px;"><input class="ed-input" id="prio-add-input" placeholder="優先することを追加"><button class="mini-btn" id="prio-add-btn">追加</button></div>';
+        document.getElementById('prio-add-btn').addEventListener('click', function(){
+          var inp = document.getElementById('prio-add-input'); var v = inp.value.trim(); if(!v) return;
+          prioItems.push(v); renderPrio(); savePrio();
+        });
+      } else { add.innerHTML = ''; }
+    }
+  }
+  function bindPriorities(){
+    renderPrio();
+    loadDash(function(j){
+      var p = j && j.data && j.data.priorities;
+      if(Array.isArray(p) && document.getElementById('prio-list')){ prioItems = p.slice(); renderPrio(); }
+    });
   }
   function planRows(plan){
     if(!plan) return '<p class="ed-sub">目標がまだ設定されていません（Apps Scriptの GOALS）。</p>';
@@ -1420,6 +1514,7 @@
     }
 
     container.innerHTML = html;
+    bindPriorities();
     renderDataCard(biz);
 
     /* ---- 経費（長尾のみ・この端末に保存） ---- */

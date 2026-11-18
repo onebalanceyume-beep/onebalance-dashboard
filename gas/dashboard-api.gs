@@ -88,6 +88,10 @@ function doPost(e) {
   try {
     var body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (body.action === 'login') return json_(login_(String(body.pw || '')));
+    if (body.action === 'savePriorities') {   // 「いま優先すること」の保存（長尾だけ）
+      if (!tokenOk_(body.token)) return json_({ status: 'denied' });
+      return json_(savePriorities_(body.items));
+    }
     return json_({ status: 'error', message: 'unknown action' });
   } catch (err) {
     return json_({ status: 'error', message: String(err) });
@@ -252,7 +256,35 @@ function buildDashboard_() {
   try { out.finance = buildFinance_(sales, exp); } catch (e4) { out.finance = null; }
   try { out.people = buildPeople_(); } catch (e5) { out.people = null; }
   try { out.reviews = buildReviews_(ss); } catch (e6) { out.reviews = null; }
+  try { out.priorities = getPriorities_(ss); } catch (e7) { out.priorities = null; }
   return out;
+}
+
+// ===== いま優先すること（検索ワード：PRIORITY_SHEET）=====
+// 台帳スプレッドシートの「優先事項」シートに保存する。列：順番／内容。シートがまだ無いときは画面の初期値を使う（null を返す）。
+// 画面で長尾が編集・削除・追加すると、このシートが書き換わり、稲田の画面にも同じ内容が出る。
+var PRIORITY_SHEET = '優先事項';
+function getPriorities_(ss) {
+  var sh = ss.getSheetByName(PRIORITY_SHEET);
+  if (!sh) return null;
+  var v = sh.getDataRange().getValues(), out = [];
+  for (var i = 1; i < v.length; i++) {
+    var t = String(v[i][1] || '').trim();
+    if (t) out.push(t);
+  }
+  return out;
+}
+function savePriorities_(items) {
+  if (!Array.isArray(items)) return { status: 'error', message: 'items が配列ではありません' };
+  var list = items.map(function (x) { return String(x || '').trim().slice(0, 120); }).filter(function (x) { return x; }).slice(0, 20);
+  var ss = SpreadsheetApp.openById(LEDGER_ID);
+  var sh = ss.getSheetByName(PRIORITY_SHEET) || ss.insertSheet(PRIORITY_SHEET);
+  sh.clear();
+  var rows = [['順番', '内容']];
+  list.forEach(function (t, i) { rows.push([i + 1, t]); });
+  sh.getRange(1, 1, rows.length, 2).setValues(rows);
+  sh.setFrozenRows(1);
+  return { status: 'ok', count: list.length };
 }
 
 function ymOf_(v) {
