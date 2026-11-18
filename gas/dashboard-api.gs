@@ -90,7 +90,7 @@ function doPost(e) {
     if (body.action === 'login') return json_(login_(String(body.pw || '')));
     if (body.action === 'savePriorities') {   // 「いま優先すること」の保存（長尾だけ）
       if (!tokenOk_(body.token)) return json_({ status: 'denied' });
-      return json_(savePriorities_(body.items));
+      return json_(savePriorities_(String(body.who || ''), body.items));
     }
     return json_({ status: 'error', message: 'unknown action' });
   } catch (err) {
@@ -146,6 +146,7 @@ function logoutAll() {
 function publicOnly_(d) {
   var out = JSON.parse(JSON.stringify(d));
   delete out.happykids;
+  if (out.priorities && !Array.isArray(out.priorities)) delete out.priorities.nagao;   // 長尾用の優先事項は稲田に渡さない
   if (out.people) out.people = peopleAgg_(out.people);
   delete out.finance;     // 売上・入金額・経費は、すべて長尾だけ（稲田・一般には出さない）
   return out;
@@ -261,28 +262,49 @@ function buildDashboard_() {
 }
 
 // ===== いま優先すること（検索ワード：PRIORITY_SHEET）=====
-// 台帳スプレッドシートの「優先事項」シートに保存する。列：順番／内容。シートがまだ無いときは画面の初期値を使う（null を返す）。
-// 画面で長尾が編集・削除・追加すると、このシートが書き換わり、稲田の画面にも同じ内容が出る。
+// 台帳スプレッドシートの「優先事項」シートに保存する。列：担当（長尾／稲田）／順番／内容。長尾用と稲田用を別々に持つ。
+// シートがまだ無い・その担当の行が無いときは null（画面の初期値を使う）。長尾用は稲田の画面には渡さない（publicOnly_ で消す）。
 var PRIORITY_SHEET = '優先事項';
 function getPriorities_(ss) {
   var sh = ss.getSheetByName(PRIORITY_SHEET);
   if (!sh) return null;
-  var v = sh.getDataRange().getValues(), out = [];
+  var v = sh.getDataRange().getValues();
+  var legacy = String(v[0][0]) !== '担当';           // 古い形（順番／内容）の場合は、全部を稲田用として読む
+  var out = { inada: [], nagao: [] }, seen = { inada: false, nagao: false };
   for (var i = 1; i < v.length; i++) {
-    var t = String(v[i][1] || '').trim();
-    if (t) out.push(t);
+    var who = legacy ? '稲田' : String(v[i][0] || '').trim();
+    var t = String(legacy ? v[i][1] : v[i][2] || '').trim();
+    var k = who === '長尾' ? 'nagao' : (who === '稲田' ? 'inada' : '');
+    if (!k) continue;
+    seen[k] = true;
+    if (t) out[k].push(t);
   }
-  return out;
+  return { inada: seen.inada ? out.inada : null, nagao: seen.nagao ? out.nagao : null };
 }
-function savePriorities_(items) {
+function savePriorities_(who, items) {
+  if (who !== '長尾' && who !== '稲田') return { status: 'error', message: 'who が不正です' };
   if (!Array.isArray(items)) return { status: 'error', message: 'items が配列ではありません' };
   var list = items.map(function (x) { return String(x || '').trim().slice(0, 120); }).filter(function (x) { return x; }).slice(0, 20);
   var ss = SpreadsheetApp.openById(LEDGER_ID);
   var sh = ss.getSheetByName(PRIORITY_SHEET) || ss.insertSheet(PRIORITY_SHEET);
+  var v = sh.getDataRange().getValues();
+  var legacy = v.length > 0 && String(v[0][0]) !== '担当' && String(v[0][0]) !== '';
+  var data = { '長尾': [], '稲田': [] }, has = { '長尾': false, '稲田': false };
+  for (var i = 1; i < v.length; i++) {                 // いまのシートの内容を担当ごとに読む（もう一方の担当はそのまま残す）
+    var w = legacy ? '稲田' : String(v[i][0] || '').trim();
+    var t = String(legacy ? v[i][1] : v[i][2] || '').trim();
+    if (!data[w]) continue;
+    has[w] = true;
+    if (t) data[w].push(t);
+  }
+  data[who] = list; has[who] = true;
+  var table = [['担当', '順番', '内容']];
+  ['長尾', '稲田'].forEach(function (w) {
+    data[w].forEach(function (t, n) { table.push([w, n + 1, t]); });
+    if (has[w] && !data[w].length) table.push([w, '', '']);   // 空にした担当は、目印の行を1つ残す（画面の初期値に戻らないように）
+  });
   sh.clear();
-  var rows = [['順番', '内容']];
-  list.forEach(function (t, i) { rows.push([i + 1, t]); });
-  sh.getRange(1, 1, rows.length, 2).setValues(rows);
+  sh.getRange(1, 1, table.length, 3).setValues(table);
   sh.setFrozenRows(1);
   return { status: 'ok', count: list.length };
 }

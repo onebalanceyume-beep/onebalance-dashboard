@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ONE-BALANCE">
 <meta name="theme-color" content="#DD0B1B">
-<meta name="app-version" content="2026-11-18-1">
+<meta name="app-version" content="2026-11-18-2">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -1029,29 +1029,40 @@
   function priorityHtml(bizId){
     var h = CATCH[bizId] ? '<p class="ed-h" style="text-align:center;margin:4px 0 14px;font-size:20px;text-wrap:balance;">' + esc(CATCH[bizId]).replace(/。(?!$)/g, '。<br>') + '</p>' : '';
     if(TRAINER_URL[bizId]){ h += '<a href="' + TRAINER_URL[bizId] + '" target="_blank" rel="noopener" style="display:block;text-align:center;text-decoration:none;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:14px;margin:0 0 14px;border-radius:2px;">トレーナー画面を開く</a>'; }
-    h += '<div class="ed-card"><p class="ed-eyebrow">いま優先すること</p><div id="prio-list"></div><div id="prio-add"></div><p class="ed-sub" id="prio-msg" style="margin-top:6px;"></p>';
-    return h + '<p class="ed-sub" style="margin-top:6px;">レンタルジムは、まずモニター3人を集めるのが先です。</p></div>';
+    if(isOwner()){ h += prioCardHtml('長尾', '長尾のいま優先すること') + prioCardHtml('稲田', '稲田のいま優先すること'); }
+    else { h += prioCardHtml('稲田', 'いま優先すること'); }
+    return h + '<p class="ed-sub" style="margin:0 0 12px;">レンタルジムは、まずモニター3人を集めるのが先です。</p>';
+  }
+  function prioCardHtml(who, title){
+    return '<div class="ed-card"><p class="ed-eyebrow">' + esc(title) + '</p><div class="prio-list" data-who="' + who + '"></div><div class="prio-add" data-who="' + who + '"></div><p class="ed-sub prio-msg" data-who="' + who + '" style="margin-top:6px;"></p></div>';
   }
 
-  /* いま優先すること：長尾は横にスワイプして編集・削除、下から追加。稲田は見るだけ。内容は台帳の「優先事項」シートに保存され、全員の端末で同じになる（検索ワード：bindPriorities） */
-  var prioItems = PRIORITIES.slice();
-  function setPrioMsg(t){ var m = document.getElementById('prio-msg'); if(m) m.textContent = t || ''; }
-  function savePrio(){
-    setPrioMsg('保存中…');
-    fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'savePriorities', token: ownerToken(), items: prioItems }) })
+  /* いま優先すること：長尾用と稲田用を別々に持つ。長尾は横にスワイプして、長尾用・稲田用どちらも編集・削除・追加できる。稲田は自分用を見るだけ。
+     内容は台帳の「優先事項」シートに保存され、稲田の画面には稲田用だけが出る（長尾用は稲田に渡らない）（検索ワード：bindPriorities） */
+  var prioItems = { '稲田': PRIORITIES.slice(), '長尾': [] };
+  function prioEl(cls, who){ return document.querySelector('.' + cls + '[data-who="' + who + '"]'); }
+  function setPrioMsg(who, t){ var m = prioEl('prio-msg', who); if(m) m.textContent = t || ''; }
+  function savePrio(who){
+    setPrioMsg(who, '保存中…');
+    fetch(DASH_API_URL, { method:'POST', body: JSON.stringify({ action:'savePriorities', token: ownerToken(), who: who, items: prioItems[who] }) })
       .then(function(r){ return r.json(); })
       .then(function(j){
-        if(j && j.status === 'ok'){ setPrioMsg('保存しました（稲田の画面にも反映されます）'); if(dashCache && dashCache.data){ dashCache.data.priorities = prioItems.slice(); } }
-        else if(j && j.status === 'denied'){ setPrioMsg('ログインの期限が切れました。もう一度ログインしてください'); }
-        else { setPrioMsg('保存できませんでした（Apps Scriptの更新が必要です）'); }
+        if(j && j.status === 'ok'){
+          setPrioMsg(who, who === '稲田' ? '保存しました（稲田の画面にも反映されます）' : '保存しました（長尾だけが見られます）');
+          if(dashCache && dashCache.data){ var pr = dashCache.data.priorities; if(!pr || Array.isArray(pr)){ pr = dashCache.data.priorities = {}; } pr[who === '稲田' ? 'inada' : 'nagao'] = prioItems[who].slice(); }
+        }
+        else if(j && j.status === 'denied'){ setPrioMsg(who, 'ログインの期限が切れました。もう一度ログインしてください'); }
+        else { setPrioMsg(who, '保存できませんでした（Apps Scriptの更新が必要です）'); }
       })
-      .catch(function(){ setPrioMsg('保存できませんでした。通信を確認してください'); });
+      .catch(function(){ setPrioMsg(who, '保存できませんでした。通信を確認してください'); });
   }
-  function renderPrio(){
-    var box = document.getElementById('prio-list'); if(!box) return;
+  function renderPrio(who){
+    var box = prioEl('prio-list', who); if(!box) return;
     var owner = isOwner();
+    var list = prioItems[who];
     box.innerHTML = '';
-    prioItems.forEach(function(t, i){
+    if(!list.length){ var none = document.createElement('p'); none.className = 'ed-sub'; none.textContent = owner ? 'まだありません。下から追加してください。' : 'まだありません'; box.appendChild(none); }
+    list.forEach(function(t, i){
       var numHtml = '<b style="color:var(--accent);margin-right:8px;">' + (i + 1) + '</b>';
       if(!owner){ var row = document.createElement('div'); row.className = 'exp-row'; row.innerHTML = '<span>' + numHtml + esc(t) + '</span>'; box.appendChild(row); return; }
       var wrap = document.createElement('div'); wrap.className = 'swipe-wrap';
@@ -1070,34 +1081,37 @@
         front.querySelector('[data-a="cancel"]').addEventListener('click', showRow);
         front.querySelector('[data-a="save"]').addEventListener('click', function(){
           var nv = inp.value.trim(); if(!nv) return;
-          prioItems[i] = nv; renderPrio(); savePrio();
+          list[i] = nv; renderPrio(who); savePrio(who);
         });
       });
       bd.addEventListener('click', function(){
         closeSwipe(); actions.style.display = 'none'; front.style.transform = 'none';
         front.innerHTML = '<div class="row-edit"><span style="flex:1;min-width:140px;">「' + esc(t) + '」を削除しますか？</span><button class="mini-btn danger" data-a="yes">削除する</button><button class="mini-btn" data-a="no">やめる</button></div>';
         front.querySelector('[data-a="no"]').addEventListener('click', showRow);
-        front.querySelector('[data-a="yes"]').addEventListener('click', function(){ prioItems.splice(i, 1); renderPrio(); savePrio(); });
+        front.querySelector('[data-a="yes"]').addEventListener('click', function(){ list.splice(i, 1); renderPrio(who); savePrio(who); });
       });
       front.innerHTML = numHtml + esc(t);
       box.appendChild(wrap);
     });
-    var add = document.getElementById('prio-add');
+    var add = prioEl('prio-add', who);
     if(add){
       if(owner){
-        add.innerHTML = '<div class="row-edit" style="margin-top:10px;"><input class="ed-input" id="prio-add-input" placeholder="優先することを追加"><button class="mini-btn" id="prio-add-btn">追加</button></div>';
-        document.getElementById('prio-add-btn').addEventListener('click', function(){
-          var inp = document.getElementById('prio-add-input'); var v = inp.value.trim(); if(!v) return;
-          prioItems.push(v); renderPrio(); savePrio();
+        add.innerHTML = '<div class="row-edit" style="margin-top:10px;"><input class="ed-input prio-add-input" placeholder="優先することを追加"><button class="mini-btn prio-add-btn">追加</button></div>';
+        add.querySelector('.prio-add-btn').addEventListener('click', function(){
+          var inp = add.querySelector('.prio-add-input'); var v = inp.value.trim(); if(!v) return;
+          list.push(v); renderPrio(who); savePrio(who);
         });
       } else { add.innerHTML = ''; }
     }
   }
   function bindPriorities(){
-    renderPrio();
+    renderPrio('稲田'); renderPrio('長尾');
     loadDash(function(j){
-      var p = j && j.data && j.data.priorities;
-      if(Array.isArray(p) && document.getElementById('prio-list')){ prioItems = p.slice(); renderPrio(); }
+      var p = j && j.data && j.data.priorities; if(!p) return;
+      if(Array.isArray(p)){ p = { inada: p }; }          // 古いAPI（1つだけのリスト）の場合は稲田用として読む
+      if(Array.isArray(p.inada)){ prioItems['稲田'] = p.inada.slice(); }
+      if(Array.isArray(p.nagao)){ prioItems['長尾'] = p.nagao.slice(); }
+      renderPrio('稲田'); renderPrio('長尾');
     });
   }
   function planRows(plan){
