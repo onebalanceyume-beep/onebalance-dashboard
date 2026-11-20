@@ -16,7 +16,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ONE-BALANCE">
 <meta name="theme-color" content="#DD0B1B">
-<meta name="app-version" content="2026-11-20-1">
+<meta name="app-version" content="2026-11-20-2">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -275,7 +275,7 @@
   .qr-zoom-card{ background:#fff;border-radius:12px;padding:22px 22px 16px;text-align:center;max-width:92vw; }
   .qr-zoom-name{ font-size:15px;font-weight:800;color:#111;margin:0 0 14px;word-break:break-all; }
   .qr-zoom-box{ display:inline-block;padding:10px;background:#fff; }
-  .qr-zoom-box img,.qr-zoom-box canvas{ width:min(340px,82vw)!important;height:min(340px,82vw)!important;display:block;image-rendering:pixelated; }
+  .qr-zoom-box img,.qr-zoom-box canvas{ width:min(340px,calc(100vw - 112px))!important;height:min(340px,calc(100vw - 112px))!important;display:block;margin:0 auto;image-rendering:pixelated; }
   .qr-zoom-close{ font-size:12px;color:#666;margin:12px 0 0;font-weight:700; }
   .share-info{ flex:1;min-width:0; }
   .share-info .name{ font-weight:800;font-size:14px;margin:0 0 4px; }
