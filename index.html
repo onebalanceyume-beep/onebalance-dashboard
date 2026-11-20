@@ -267,6 +267,16 @@
   }
   .share-qr{ width:84px;height:84px;flex:none;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden; }
   .share-qr img{ width:100%;height:100%; }
+  /* QRタップで拡大（検索ワード：qr-zoom） */
+  .share-qr{ cursor:zoom-in;-webkit-tap-highlight-color:transparent;position:relative; }
+  .share-qr-hint{ font-size:10px;color:var(--muted,#8a8a8a);margin:4px 0 0;font-weight:700; }
+  .qr-zoom{ position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;padding:20px;-webkit-tap-highlight-color:transparent; }
+  .qr-zoom.show{ display:flex; }
+  .qr-zoom-card{ background:#fff;border-radius:12px;padding:22px 22px 16px;text-align:center;max-width:92vw; }
+  .qr-zoom-name{ font-size:15px;font-weight:800;color:#111;margin:0 0 14px;word-break:break-all; }
+  .qr-zoom-box{ display:inline-block;padding:10px;background:#fff; }
+  .qr-zoom-box img,.qr-zoom-box canvas{ width:min(340px,82vw)!important;height:min(340px,82vw)!important;display:block;image-rendering:pixelated; }
+  .qr-zoom-close{ font-size:12px;color:#666;margin:12px 0 0;font-weight:700; }
   .share-info{ flex:1;min-width:0; }
   .share-info .name{ font-weight:800;font-size:14px;margin:0 0 4px; }
   .share-info .url{ font-size:12px;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0 0 8px; }
@@ -1978,6 +1988,8 @@
     { id:'fx-b-google', biz:'boxing', name:'ボクシングジム Google口コミ', url:'https://maps.app.goo.gl/Wcp2dAwDsb2m3RP39' },
     { id:'fx-b-hp', biz:'boxing', name:'ボクシングジム ホームページ', url:'https://one-balance.jp' },
     { id:'fx-b-insta', biz:'boxing', name:'ボクシングジム Instagram', url:'https://www.instagram.com/one.balance.yume/' },
+    { id:'fx-b-personal', biz:'boxing', name:'パーソナルボクシング（紹介・予約）', url:'https://onebalanceyume-beep.github.io/personal-BOXING/personal_boxing_top.html' },
+    { id:'fx-b-taiken', biz:'boxing', name:'体験受付（来店時）', url:'https://onebalanceyume-beep.github.io/onebalance-member/taiken-reception.html' },
     { id:'fx-o-google', biz:'onetre', name:'ONE-TRE Google口コミ', url:'https://maps.app.goo.gl/g3ec7wtdrPRzcHWJ6' },
     { id:'fx-o-hp', biz:'onetre', name:'ONE-TRE ホームページ', url:'https://one-tre.com' },
     { id:'fx-o-insta', biz:'onetre', name:'ONE-TRE Instagram', url:'https://www.instagram.com/personal_one_tre/' },
@@ -2104,6 +2116,22 @@
     if(this.value === '__new__') addBizNewInput.focus();
   });
 
+  /* QRタップで拡大（直すときの検索ワード：openQrZoom） */
+  function openQrZoom(name, url){
+    var ov = document.getElementById('qr-zoom');
+    var box = document.getElementById('qr-zoom-box');
+    document.getElementById('qr-zoom-name').textContent = name || '';
+    box.innerHTML = '';
+    try{
+      new QRCode(box, { text: url, width: 300, height: 300, correctLevel: QRCode.CorrectLevel.M });
+    }catch(e){ box.textContent = 'QRを作れませんでした'; }
+    ov.classList.add('show');
+  }
+  document.addEventListener('click', function(e){
+    var ov = document.getElementById('qr-zoom');
+    if(ov && ov.classList.contains('show') && e.target.closest('#qr-zoom')){ ov.classList.remove('show'); document.getElementById('qr-zoom-box').innerHTML = ''; }
+  });
+
   function renderLinks(){
     var links = loadLinks();
     var filtered = (currentShareFilter === 'all') ? links : links.filter(function(l){ return l.biz === currentShareFilter; });
@@ -2144,6 +2172,11 @@
       try{
         new QRCode(qrBox, { text: link.url, width: 84, height: 84, correctLevel: QRCode.CorrectLevel.M });
       }catch(e){ qrBox.textContent = 'QR'; }
+      qrBox.setAttribute('role', 'button');
+      qrBox.setAttribute('aria-label', 'QRコードを拡大');
+      qrBox.addEventListener('click', function(){ openQrZoom(link.name, link.url); });
+      var qrHint = document.createElement('p'); qrHint.className = 'share-qr-hint'; qrHint.textContent = 'QRをタップで拡大';
+      info.insertBefore(qrHint, info.querySelector('.share-actions'));
 
       var selectEl = info.querySelector('[data-editbiz]');
       var placeholderOpt = document.createElement('option');
@@ -2304,5 +2337,12 @@
 
 })();
 </script>
+<div class="qr-zoom" id="qr-zoom" aria-modal="true" role="dialog">
+  <div class="qr-zoom-card">
+    <p class="qr-zoom-name" id="qr-zoom-name"></p>
+    <div class="qr-zoom-box" id="qr-zoom-box"></div>
+    <p class="qr-zoom-close">画面をタップで閉じる</p>
+  </div>
+</div>
 </body>
 </html>
